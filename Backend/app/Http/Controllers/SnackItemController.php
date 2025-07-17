@@ -14,9 +14,9 @@ class SnackItemController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        // if (!$user || !$user->hasAnyRole(['admin', 'manager'])) {          
-        //     return response()->json(['message' => 'Forbidden.'], 403);
-        // }
+        if (!$user || !$user->hasAnyRole(['admin', 'manager'])) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
         $snackItems = SnackItem::all();
         return response()->json([
             'success' => true,
@@ -98,15 +98,6 @@ class SnackItemController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'SnackItem deleted.'
-        ]);
-    }
-
-    public function getSnackItemsByCategory($category)
-    {
-        $snackItems = SnackItem::where('category', $category)->get();
-        return response()->json([
-            'success' => true,
-            'data' => $snackItems
         ]);
     }
 }

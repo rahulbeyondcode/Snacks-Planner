@@ -16,7 +16,11 @@ class UserController extends Controller
         if (!$user || !$user->hasRole('admin')) {
             return response()->json(['message' => 'Forbidden.'], 403);
         }
-        return response()->json(['success' => true, 'message' => 'User list (stub).']);
+        $users = \App\Models\User::all();
+        return response()->json([
+            'success' => true,
+            'data' => $users
+        ]);
     }
 
     /**
@@ -24,7 +28,19 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        return response()->json(['success' => true, 'message' => 'User created (stub).']);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $validated['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        $user = \App\Models\User::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'data' => $user
+        ], 201);
     }
 
     /**

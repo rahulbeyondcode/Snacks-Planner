@@ -17,9 +17,9 @@ class SnackPlanController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        // if (!$user || !$user->hasAnyRole(['admin', 'manager', 'operations'])) {
-        //     return response()->json(['message' => 'Forbidden.'], 403);
-        // }
+        if (!$user || !$user->hasAnyRole(['admin', 'manager', 'operations'])) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
         $snackPlans = SnackPlan::with([
             'planner', // planned_by -> users table
             'snackPlanDetails.snackItem', // snack_item_id -> snack_items table

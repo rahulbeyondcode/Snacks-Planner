@@ -14,10 +14,10 @@ class ShopController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        // if (!$user || !$user->hasAnyRole(['admin', 'manager'])) {
-        //     return response()->json(['message' => 'Forbidden.'], 403);
-        // }
-        // Continue with logic for allowed roles...
+        if (!$user || !$user->hasAnyRole(['admin', 'manager'])) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+       
         $shops = Shop::all();
         return response()->json([
             'success' => true,
