@@ -14,11 +14,11 @@ class ShopController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['admin', 'manager'])) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        // if (!$user || !$user->hasAnyRole(['admin', 'manager'])) {
+        //     return response()->json(['message' => 'Forbidden.'], 403);
+        // }
         // Continue with logic for allowed roles...
-        $shops = \App\Models\Shop::all();
+        $shops = Shop::all();
         return response()->json([
             'success' => true,
             'data' => $shops
@@ -30,7 +30,18 @@ class ShopController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'shop_name' => 'required|string|max:255|unique:shops,shop_name',
+            'address' => 'required|string|max:255',
+            'phone_number' => ['required', 'regex:/^[0-9]{10}$/'],
+            'location' => 'nullable|string|max:255'
+        ]);
+        $shop = Shop::create($validated);
+        return response()->json([
+            'success' => true,
+            'data' => $shop,
+            'message' => 'Shop created successfully.'
+        ]);
     }
 
     /**
@@ -38,7 +49,7 @@ class ShopController extends Controller
      */
     public function show($id)
     {
-        $shop = \App\Models\Shop::find($id);
+        $shop = Shop::find($id);
         if (!$shop) {
             return response()->json(['message' => 'Not found.'], 404);
         }
@@ -53,7 +64,7 @@ class ShopController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $shop = \App\Models\Shop::find($id);
+        $shop = Shop::find($id);
         if (!$shop) {
             return response()->json(['message' => 'Not found.'], 404);
         }
@@ -69,7 +80,7 @@ class ShopController extends Controller
      */
     public function destroy($id)
     {
-        $shop = \App\Models\Shop::find($id);
+        $shop = Shop::find($id);
         if (!$shop) {
             return response()->json(['message' => 'Not found.'], 404);
         }

@@ -47,7 +47,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 // SNACK ITEMS MASTERLIST
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::apiResource('snack-items', \App\Http\Controllers\SnackItemController::class);
+    Route::apiResource('snack-items', \App\Http\Controllers\SnackItemController::class);    
 });
 
 // SHOPS MASTERLIST

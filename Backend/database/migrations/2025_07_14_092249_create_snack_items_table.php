@@ -12,14 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('snack_items', function (Blueprint $table) {
-    $table->id();
-    $table->string('category');
-    $table->string('name');
-    $table->decimal('price', 10, 2);
-    $table->unsignedBigInteger('shop_id');
-    $table->timestamps();
-    $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
-});
+            $table->id();   
+            $table->string('snack_name');
+            $table->string('snack_description')->nullable();             
+            $table->enum('snack_size', ['small', 'medium', 'large'])->default('medium');    
+            $table->timestamps();    
+        });
     }
 
     /**

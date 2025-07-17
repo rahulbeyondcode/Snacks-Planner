@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class SnackPlan extends Model
 {
-    protected $fillable = ['snack_day_id', 'snack_item_id', 'quantity', 'delivery_charge', 'total', 'receipt', 'notes', 'planned_by'];
+    protected $primaryKey = 'snack_plan_id';
+    
+    protected $fillable = [
+        'snack_date', 
+        'planned_by', 
+        'total_amount'
+    ];
 
     public function snackDay()
     {
@@ -21,5 +27,10 @@ class SnackPlan extends Model
     public function planner()
     {
         return $this->belongsTo(User::class, 'planned_by');
+    }
+
+    public function snackPlanDetails()
+    {
+        return $this->hasMany(SnackPlanDetail::class, 'snack_plan_id', 'snack_plan_id');
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SnackItem extends Model
 {
-    protected $fillable = ['category', 'name', 'price', 'shop_id'];
+    protected $fillable = ['category', 'snack_name', 'snack_size', 'snack_description'];
 
     public function shop()
     {

@@ -11,22 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('snack_plans', function (Blueprint $table) {
-    $table->id();
-    $table->unsignedBigInteger('snack_day_id');
-    $table->unsignedBigInteger('snack_item_id');
-    $table->integer('quantity');
-    $table->decimal('delivery_charge', 10, 2)->nullable();
-    $table->decimal('total', 12, 2);
-    $table->string('receipt')->nullable();
-    $table->text('notes')->nullable();
-    $table->unsignedBigInteger('planned_by');
-    $table->timestamps();
-
-    $table->foreign('snack_day_id')->references('id')->on('snack_days')->onDelete('cascade');
-    $table->foreign('snack_item_id')->references('id')->on('snack_items')->onDelete('cascade');
-    $table->foreign('planned_by')->references('id')->on('users')->onDelete('cascade');
-});
+       Schema::create('snack_plans', function (Blueprint $table) {
+            $table->bigIncrements('snack_plan_id');
+            $table->date('snack_date');
+            $table->unsignedBigInteger('planned_by');
+            $table->decimal('total_amount', 10, 2);         
+            $table->timestamps();   
+        });
     }
 
     /**
