@@ -18,7 +18,7 @@ class ContributionController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
         $contributions = Contribution::with('user')->get();
-        $contributions = $contributions->map(function($item) {
+        $contributions = $contributions->map(function ($item) {
             $data = $item->toArray();
             $data['user_name'] = $item->user ? $item->user->name : null;
             return $data;
@@ -36,7 +36,6 @@ class ContributionController extends Controller
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'amount' => 'required|numeric',
             'date' => 'required|date',
             'status' => 'required|string',
             'remarks' => 'nullable|string',
@@ -76,7 +75,6 @@ class ContributionController extends Controller
         }
         $validated = $request->validate([
             'user_id' => 'sometimes|exists:users,id',
-            'amount' => 'sometimes|numeric',
             'date' => 'sometimes|date',
             'status' => 'sometimes|string',
             'remarks' => 'nullable|string',
@@ -144,20 +142,31 @@ class ContributionController extends Controller
     public function search(Request $request)
     {
         $query = Contribution::with('user');
-        if ($request->has('status')) {
-            $query->where('status', $request->input('status'));
-        }
-        if ($request->has('user_id')) {
-            $query->where('user_id', $request->input('user_id'));
-        }
+        $hasFilter = false;
+
+        // if ($request->has('status')) {
+        //     $query->where('status', $request->input('status'));
+        //     $hasFilter = true;
+        // }
+        // if ($request->has('user_id')) {
+        //     $query->where('user_id', $request->input('user_id'));
+        //     $hasFilter = true;
+        // }
         if ($request->has('user_name')) {
-            $query->whereHas('user', function($q) use ($request) {
+            $query->whereHas('user', function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->input('user_name') . '%');
             });
+            $hasFilter = true;
         }
-        $results = $query->get();
-        // Attach user name to each result
-        $results = $results->map(function($item) {
+
+        if (!$hasFilter) {
+            return response()->json([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        $results = $query->get()->map(function ($item) {
             $data = $item->toArray();
             $data['user_name'] = $item->user ? $item->user->name : null;
             return $data;

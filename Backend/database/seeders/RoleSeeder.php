@@ -12,12 +12,15 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Role::insert([
-            ['name' => 'admin'], // True admin for middleware
-            ['name' => 'accounts'], // Admin
-            ['name' => 'manager'], // Monthly Admin
-            ['name' => 'operations'], // Weekly Executor
-            ['name' => 'employee'], // Future viewer role
-        ]);
+        $roles = [
+            'admin', // True admin for middleware
+            'accounts', // Admin
+            'manager', // Monthly Admin
+            'operations', // Weekly Executor
+            'employee', // Future viewer role
+        ];
+        foreach ($roles as $role) {
+            \App\Models\Role::firstOrCreate(['name' => $role]);
+        }
     }
 }
