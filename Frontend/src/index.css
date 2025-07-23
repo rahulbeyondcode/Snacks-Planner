@@ -4,4 +4,5 @@ html,
 body {
   height: 100vh;
   overflow: hidden;
+  background-color: #10194b;
 }
