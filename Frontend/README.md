@@ -1,127 +1,70 @@
-# 🍽️ SnackPlanner - Office Snacks Management System
+## ⚡ React + TypeScript + Tailwind Starter Template
 
-**SnackPlanner** is an open-source web app designed to streamline snack distribution in office environments. Employees contribute money, the company contributes a multiplier amount, and rotating teams manage snacks weekly. Built for privacy-focused companies who want local control over their operational tools.
+A production-ready React 19 + TypeScript + Tailwind CSS + Vite template, built for speed, clarity, and zero setup overhead.
 
----
+Perfect for developers who are tired of setting up the same boilerplate every time a new idea strikes. Just clone and code. Built with 💚 by [@rahulbeyondcode](https://github.com/rahulbeyondcode) 💻✨
 
-## 📚 Table of Contents
+## 🚀 Features You Get Out of the Box
 
-* [Project Overview](#project-overview)
-* [Features](#features)
-* [Role System](#role-system)
-* [Tech Stack](#tech-stack)
-* [Project Setup](#project-setup)
-* [Pages Overview](#pages-overview)
-* [Future Roadmap](#future-roadmap)
-* [License](#license)
+✅ **React 19 + TypeScript**  
+✅ **Vite** for lightning-fast dev and builds  
+✅ **Tailwind CSS** with official Vite plugin  
+✅ **Prettier + ESLint** (strict TypeScript rules)  
+✅ **Project aliases** for `components/`, `pages/`, etc.  
+✅ **Node 22 compatibility** (with NVM auto-handling)  
+✅ **Clean folder structure**  
+✅ **Auto-initialization script** to kick off new projects in 10 seconds
 
----
+## ⚙️ Create a New Project (Using Automation Script)
 
-## 🌟 Project Overview
+Use the included shell script to spin up a new project instantly:
 
-SnackPlanner digitizes office snack distribution with a simple role-based web app. It replaces paper sheets and Excel tracking, offering real-time tracking, receipts upload, money visualization, and employee management.
-
----
-
-## ✨ Features
-
-* Role-based system for Accounts, Team Managers, Operations, and Employees.
-* Employee payment tracking.
-* Money pool calculation (employee contributions + company multiplier).
-* Snack planning per day (supports multiple items).
-* Veg/Non-Veg categorization.
-* Delivery charge, discount, shop tracking.
-* Upload snack receipts.
-* Flexible fund blocking for special days/events.
-* Profit/Loss visualization to aid planning.
-* Data exports (PDF/XLS) for accounts team.
-* Masterlists for Snacks and Shops.
-* Holiday management.
-* Fully internal use with local data control.
-
----
-
-## 👮‍ Role System
-
-| Role             | Permissions                                                                                                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Accounts**     | Add/remove employees, assign team managers, manage masterlists, manage holidays, download reports. Cannot handle daily snack operations.                   |
-| **Team Manager** | Monthly admins. Manage snack planning, payment tracking, holidays, fund blocking, assign weekly operations team. Operate within their assigned month only. |
-| **Operations**   | Weekly subgroup. Handle snack planning, marking payments, receipt uploads, and tracking for their week. Limited to their week only.                        |
-| **Employees**    | Future features: view menus, payment status, suggest snacks, rate snacks.                                                                                  |
-
----
-
-## 🛠️ Tech Stack
-
-* React JS (Frontend)
-* Tailwind CSS (UI Styling)
-* Redux (State Management)
-* Axios (API Calls)
-* Node.js / Express.js (Backend)
-* MongoDB / Local JSON Storage
-
----
-
-## 📚 Project Setup
+### ✅ Step 1: Download the script (or clone this repo)
 
 ```bash
-# Clone Repository
-git clone https://github.com/rahulbeyondcode/SnackPlanner.git
+curl -O https://gist.githubusercontent.com/rahulbeyondcode/dc8d4732165d1f87b3f9fa1fc4b08af1/raw/5a295e2bf7c85bdc6dc450bca50a72139661ab6a/create-idea
 
-# Install Dependencies
-cd SnackPlanner
-npm install
-
-# Start Development Server
-npm start
+chmod +x create-idea
 ```
 
----
+### ✅ Step 2: Run it!
 
-## 🔢 Pages Overview
+```bash
+./create-idea my-awesome-app
+```
 
-* **Page 1: Employee Contributions**
+This will:
 
-  * List employees.
-  * Mark Paid / Unpaid.
-  * Search functionality.
+- Clone the starter repo into `my-awesome-app`
+- Remove existing git history
+- Use Node 22 (installs it via NVM if needed)
+- Rename the project in `package.json`
+- Install dependencies
+- Open in VS Code (if installed)
 
-* **Page 2: Money Pool Setup**
+## 🛠 Scripts Available
 
-  * Input amount per person.
-  * Select company multiplier.
-  * Real-time pool calculation.
+```bash
+pnpm start     # Start local dev server
+pnpm build     # Production build
+pnpm lint      # Lint code
+pnpm preview   # Preview build
+```
 
-* **Page 3: Snack Planning**
+## 🧪 Tech Stack
 
-  * Add multiple snacks per day.
-  * Receipt uploads.
-  * Delivery, discount tracking.
-  * Shop dropdown (add new shops).
-  * Profit/Loss tracking.
+- React 19
+- TypeScript 5
+- Vite 7
+- TailwindCSS 4
+- ESLint + Prettier
+- PNPM (recommended, works with npm too)
 
----
+## 🙌 Credits
 
-## 📊 Future Roadmap
+Created and maintained by [@rahulbeyondcode](https://github.com/rahulbeyondcode).
+Feel free to fork, improve, and use it for any of your projects.
 
-* Employee-facing features (suggest snacks, rate snacks).
-* Auto-access rotation.
-* Analytics: Snack frequency, cost trends.
-* Mobile-friendly UI.
-* Multi-language support.
-* Self-hosting guides.
+## 📄 License
 
----
-
-## 📚 License
-
-SnackPlanner is released under the [MIT License](LICENSE). Free to use, modify, and distribute.
-
----
-
-## 📢 Contributing
-
-Contributions are welcome! Please raise issues, request features, or submit pull requests via GitHub.
-
-Happy snacking! 🍽️
+MIT — use it freely.
