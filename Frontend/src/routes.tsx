@@ -1,6 +1,10 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import Dashboard from "features/dashboard";
+import MoneyPool from "features/money-pool";
+import Notifications from "features/notifications";
+import RoleManagement from "features/role-management";
+import UserContribution from "features/user-contribution";
 import Layout from "shared/components/layout";
 
 export default function AppRoutes() {
@@ -9,10 +13,10 @@ export default function AppRoutes() {
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="money-pool" element={<div>Money Pool Page</div>} />
-        <Route path="assign-roles" element={<div>Assign Roles Page</div>} />
-        <Route path="manage" element={<div>Manage Page</div>} />
-        <Route path="notifications" element={<div>Notifications Page</div>} />
+        <Route path="money-pool" element={<MoneyPool />} />
+        <Route path="assign-roles" element={<RoleManagement />} />
+        <Route path="manage" element={<UserContribution />} />
+        <Route path="notifications" element={<Notifications />} />
       </Route>
     </Routes>
   );
