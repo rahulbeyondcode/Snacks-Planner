@@ -1,20 +1,21 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     port: 3000,
     open: true,
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      features: "src/features",
+      assets: "src/assets",
+      shared: "src/shared",
     },
   },
   optimizeDeps: {
-    include: ['@heroicons/react/24/outline'],
+    include: ["@heroicons/react/24/outline"],
   },
 });
