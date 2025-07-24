@@ -2,251 +2,98 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SnackPlan;
-use App\Models\SnackPlanDetail;
-
+use App\Services\SnackPlanServiceInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Http\Resources\SnackPlanResource;
+use App\Http\Requests\StoreSnackPlanRequest;
 
 class SnackPlanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Upload receipt for a snack plan detail
+    public function uploadReceipt(Request $request, $detailId)
+    {
+        $request->validate([
+            'receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:4096',
+        ]);
+        $file = $request->file('receipt');
+        $path = $file->store('receipts');
+        $url = url('/storage/' . $path);
+
+        // Optionally update the SnackPlanDetail record
+        $detail = \App\Models\SnackPlanDetail::find($detailId);
+        if ($detail) {
+            $detail->upload_receipt = $url;
+            $detail->save();
+        }
+
+        return response()->json(['url' => $url, 'detail' => $detail], 201);
+    }
+
+    // List all snack plans (with optional filters)
     public function index(Request $request)
     {
-        $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['admin', 'manager', 'operations'])) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-        $snackPlans = SnackPlan::with([
-            'planner', // planned_by -> users table
-            'snackPlanDetails.snackItem', // snack_item_id -> snack_items table
-            'snackPlanDetails.shop' // shop_id -> shops table
-        ])->get();
-
-        // dd($snackPlans);
-        $plans = [];
-        foreach ($snackPlans as $snackPlan) {
-            $snackDetails = [];
-            foreach ($snackPlan->snackPlanDetails as $detail) {
-                $snackDetails[] = [
-                    'snack_plan_detail_id' => $detail->id,
-                    'snack_name' => $detail->snackItem->snack_name,
-                    'shop_id' => $detail->shop->shop_name,
-                    'quantity' => $detail->quantity,
-                    'price_per_item' => $detail->price_per_item,
-                    'category' => $detail->category,
-                    'discount' => $detail->discount,
-                    'delivery_charge' => $detail->delivery_charge,
-                ];
-            }
-            $plans[] = [
-                'snack_plan_id' => $snackPlan->snack_plan_id,
-                'snack_date' => $snackPlan->snack_date,
-                'planned_by' => $snackPlan->planner->name,
-                'total_amount' => $snackPlan->total_amount,
-                'snack_plan_description' => $snackPlan->snack_plan_description,
-                'snack_details' => $snackDetails,
-            ];
-        }
+        $filters = $request->only(['user_id', 'date_from', 'date_to']);
+        $plans = $this->snackPlanService->listSnackPlans($filters);
         return response()->json($plans);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    protected $snackPlanService;
+
+    public function __construct(SnackPlanServiceInterface $snackPlanService)
     {
-        // Validate snack plan data
-        $validatedPlan = $request->validate([
-            'snack_date' => 'required|date',
-            'planned_by' => 'required|exists:users,id',
-            'total_amount' => 'required|numeric|min:0',
-            'snack_details' => 'required|array|min:1',
-            'snack_details.*.snack_item_id' => 'required|exists:snack_items,id',
-            'snack_details.*.shop_id' => 'required|exists:shops,shop_id',
-            'snack_details.*.quantity' => 'required|integer|min:1',
-            'snack_details.*.price_per_item' => 'required|numeric|min:0',
-            'snack_details.*.category' => 'required|in:veg,non-veg,other',
-            'snack_details.*.discount' => 'nullable|numeric|min:0',
-            'snack_details.*.delivery_charge' => 'nullable|numeric|min:0',
-            'snack_details.*.notes' => 'nullable|string|max:255',
-            'snack_details.*.upload_receipt' => 'nullable|string|max:255',
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            // Create snack plan
-            $snackPlan = SnackPlan::create([
-                'snack_date' => $validatedPlan['snack_date'],
-                'planned_by' => $validatedPlan['planned_by'],
-                'total_amount' => $validatedPlan['total_amount'],
-            ]);
-
-            // Create multiple snack plan detailssnack_date
-            foreach ($validatedPlan['snack_details'] as $detail) {
-                SnackPlanDetail::create([
-                    'snack_plan_id' => $snackPlan->snack_plan_id,
-                    'snack_item_id' => $detail['snack_item_id'],
-                    'shop_id' => $detail['shop_id'],
-                    'quantity' => $detail['quantity'],
-                    'price_per_item' => $detail['price_per_item'],
-                    'category' => $detail['category'],
-                    'discount' => $detail['discount'] ?? null,
-                    'delivery_charge' => $detail['delivery_charge'] ?? null,
-                    'notes' => $detail['notes'] ?? null,
-                    'upload_receipt' => $detail['upload_receipt'] ?? null,
-                ]);
-            }
-
-            DB::commit();
-
-            // Load the snack plan with its details
-            $snackPlan->load('snackPlanDetails.snackItem', 'snackPlanDetails.shop');
-
-            return response()->json([
-                'success' => true,
-                'data' => $snackPlan,
-                'message' => 'Snack plan created successfully with details.'
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create snack plan: ' . $e->getMessage()
-            ], 500);
-        }
+        $this->snackPlanService = $snackPlanService;
     }
 
-    /**
-     * Display the specified resource.
-     */
+    public function store(StoreSnackPlanRequest $request)
+    {
+        $validated = $request->validated();
+        $planData = [
+            'snack_date' => $validated['snack_date'],
+            'user_id' => $validated['user_id'],
+            'total_amount' => $validated['total_amount'],
+        ];
+        $snackItems = $validated['snack_items'];
+
+        // Handle file uploads for each snack item
+        foreach ($snackItems as $i => $item) {
+            if (isset($item['upload_receipt']) && $request->hasFile("snack_items.$i.upload_receipt")) {
+                $file = $request->file("snack_items.$i.upload_receipt");
+                $path = $file->store('receipts');
+                $snackItems[$i]['upload_receipt'] = url('/storage/' . $path);
+            } else {
+                $snackItems[$i]['upload_receipt'] = null;
+            }
+        }
+
+        $snackPlan = $this->snackPlanService->planFullSnackDay($planData, $snackItems);
+        return (new \App\Http\Resources\SnackPlanResource($snackPlan))->response()->setStatusCode(201);
+    }
+
     public function show($id)
     {
-        $snackPlan = SnackPlan::with([
-            'planner', // planned_by -> users table
-            'snackPlanDetails.snackItem', // snack_item_id -> snack_items table
-            'snackPlanDetails.shop' // shop_id -> shops table
-        ])->find($id);
-
+        $snackPlan = $this->snackPlanService->getSnackPlan($id);
         if (!$snackPlan) {
-            return response()->json(['message' => 'Not found.'], 404);
+            return response()->json(['message' => 'Snack Plan not found'], 404);
         }
-        return new SnackPlanResource($snackPlan);
+        return response()->json($snackPlan);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+    // Update a snack plan
+    public function update(UpdateSnackPlanRequest $request, $id)
     {
-        $snackPlan = SnackPlan::find($id);
-        if (!$snackPlan) {
-            return response()->json(['message' => 'Not found.'], 404);
+        $updated = $this->snackPlanService->updateSnackPlan($id, $request->validated());
+        if (!$updated) {
+            return response()->json(['message' => 'Snack Plan not found'], 404);
         }
-
-        $validatedPlan = $request->validate([
-            'snack_date' => 'required|date',
-            'planned_by' => 'required|exists:users,id',
-            'total_amount' => 'required|numeric|min:0',
-            'snack_details' => 'required|array|min:1',
-            'snack_details.*.snack_item_id' => 'required|exists:snack_items,id',
-            'snack_details.*.shop_id' => 'required|exists:shops,shop_id',
-            'snack_details.*.quantity' => 'required|integer|min:1',
-            'snack_details.*.price_per_item' => 'required|numeric|min:0',
-            'snack_details.*.category' => 'required|in:veg,non-veg,other',
-            'snack_details.*.discount' => 'nullable|numeric|min:0',
-            'snack_details.*.delivery_charge' => 'nullable|numeric|min:0',
-            'snack_details.*.notes' => 'nullable|string|max:255',
-            'snack_details.*.upload_receipt' => 'nullable|string|max:255',
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            // Update the main snack plan
-            $snackPlan->update([
-                'snack_date' => $validatedPlan['snack_date'],
-                'planned_by' => $validatedPlan['planned_by'],
-                'total_amount' => $validatedPlan['total_amount'],
-            ]);
-
-            // Delete old details
-            $snackPlan->snackPlanDetails()->delete();
-
-            // Insert new details
-            foreach ($validatedPlan['snack_details'] as $detail) {
-                $snackPlan->snackPlanDetails()->create([
-                    'snack_item_id' => $detail['snack_item_id'],
-                    'shop_id' => $detail['shop_id'],
-                    'quantity' => $detail['quantity'],
-                    'price_per_item' => $detail['price_per_item'],
-                    'category' => $detail['category'],
-                    'discount' => $detail['discount'] ?? null,
-                    'delivery_charge' => $detail['delivery_charge'] ?? null,
-                    'notes' => $detail['notes'] ?? null,
-                    'upload_receipt' => $detail['upload_receipt'] ?? null,
-                ]);
-            }
-
-            DB::commit();
-
-            // Reload with relations
-            $snackPlan->load('snackPlanDetails.snackItem', 'snackPlanDetails.shop', 'planner');
-
-            return response()->json([
-                'success' => true,
-                'data' => $snackPlan,
-                'message' => 'Snack plan updated successfully with details.'
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update snack plan: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json($updated);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // Delete a snack plan
     public function destroy($id)
     {
-        $snackPlan = SnackPlan::find($id);
-        if (!$snackPlan) {
-            return response()->json(['message' => 'Not found.'], 404);
+        $deleted = $this->snackPlanService->deleteSnackPlan($id);
+        if (!$deleted) {
+            return response()->json(['message' => 'Snack Plan not found'], 404);
         }
-        $snackPlan->delete();
-        return response()->json([
-            'success' => true,
-            'message' => 'SnackPlan deleted.'
-        ]);
-    }
-
-    /**
-     * Upload a receipt for a snack plan.
-     */
-    public function uploadReceipt(Request $request, $snack_plan)
-    {
-        return response()->json([
-            'success' => true,
-            'message' => 'Receipt uploaded (stub).'
-        ]);
-    }
-
-    /**
-     * Get profit/loss for a snack plan.
-     */
-    public function profitLoss($snack_plan)
-    {
-        return response()->json([
-            'success' => true,
-            'message' => 'Profit/loss (stub).'
-        ]);
+        return response()->json(['message' => 'Snack Plan deleted successfully']);
     }
 }

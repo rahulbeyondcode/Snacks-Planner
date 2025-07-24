@@ -2,16 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Shop extends Model
 {
-    protected $fillable = ['shop_name', 'address', 'phone_number', 'location'];
+    use HasFactory;
 
     protected $primaryKey = 'shop_id';
 
-    public function snackItems()
+    protected $fillable = [
+        'name',
+        'address',
+        'contact_number',
+        'created_at',
+    ];
+
+    public function snackPlanDetails()
     {
-        return $this->hasMany(SnackItem::class);
+        return $this->hasMany(SnackPlanDetail::class, 'shop_id', 'shop_id');
     }
 }

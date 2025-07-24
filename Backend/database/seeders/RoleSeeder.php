@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class RoleSeeder extends Seeder
 {
@@ -12,15 +13,36 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        $roles = [
-            'admin', // True admin for middleware
-            'accounts', // Admin
-            'manager', // Monthly Admin
-            'operations', // Weekly Executor
-            'employee', // Future viewer role
-        ];
-        foreach ($roles as $role) {
-            \App\Models\Role::firstOrCreate(['name' => $role]);
-        }
+        $now = Carbon::now();
+        DB::table('roles')->insert([
+            [
+                'role_id' => 1,
+                'name' => 'account_manager',
+                'description' => 'Account Manager',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'role_id' => 2,
+                'name' => 'operation_manager',
+                'description' => 'Operation Manager',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'role_id' => 3,
+                'name' => 'operation',
+                'description' => 'Operation Staff',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'role_id' => 4,
+                'name' => 'employee',
+                'description' => 'Employee',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        ]);
     }
 }

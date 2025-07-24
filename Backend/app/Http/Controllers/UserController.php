@@ -2,136 +2,118 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\UserServiceInterface;
 use Illuminate\Http\Request;
-use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\UpdateUserProfileRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\AssignUserRoleRequest;
+use App\Http\Requests\StoreUserRequest;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Update own profile
+    public function updateProfile(UpdateUserProfileRequest $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $user->fill($request->validated());
+        $user->save();
+        return response()->json($user);
+    }
+
+    protected $userService;
+
+    public function __construct(UserServiceInterface $userService)
+    {
+        $this->userService = $userService;
+    }
+
+    // List users (admin only)
     public function index(Request $request)
     {
-        $user = $request->user();
-        if (!$user || !$user->hasRole('admin')) {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
-        $users = \App\Models\User::all();
-        return response()->json([
-            'success' => true,
-            'data' => $users
-        ]);
+        $filters = $request->only(['role_id', 'search']);
+        $users = $this->userService->listUsers($filters);
+        return response()->json($users);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
-        ]);
-
-        $validated['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
-        $user = \App\Models\User::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ], 201);
-    }
-
-    /**
-     * Display the specified resource.
-     */
+    // Show user details (admin only)
     public function show($id)
     {
-        $user = \App\Models\User::find($id);
-        if (!$user) {
-            return response()->json(['message' => 'Not found.'], 404);
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ]);
+        $userData = $this->userService->getUser($id);
+        if (!$userData) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        return response()->json($userData);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+    // Create user (admin only)
+    public function store(StoreUserRequest $request)
     {
-        $user = \App\Models\User::find($id);
-        if (!$user) {
-            return response()->json(['message' => 'Not found.'], 404);
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
-        $user->update($request->all());
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ]);
+        $validated = $request->validated();
+        $validated['password'] = bcrypt($validated['password']);
+        $created = $this->userService->createUser($validated);
+        return response()->json($created, 201);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // Update user (admin only)
+    public function update(UpdateUserRequest $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $validated = $request->validated();
+        if (isset($validated['password'])) {
+            $validated['password'] = bcrypt($validated['password']);
+        }
+        $updatedUser = $this->userService->updateUser($id, $validated);
+        if (!$updatedUser) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        return response()->json($updatedUser);
+    }
+
+    // Delete user (admin only)
     public function destroy($id)
     {
-        $user = \App\Models\User::find($id);
-        if (!$user) {
-            return response()->json(['message' => 'Not found.'], 404);
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
-        $user->delete();
-        return response()->json([
-            'success' => true,
-            'message' => 'User deleted.'
-        ]);
+        $deleted = $this->userService->deleteUser($id);
+        if (!$deleted) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        return response()->json(['message' => 'User deleted successfully']);
     }
 
-    /**
-     * Assign a role to a user.
-     */
-    public function assignRole(Request $request, $user)
+    // Assign role (admin only)
+    public function assignRole(AssignUserRoleRequest $request, $id)
     {
-        // TODO: Implement role assignment logic
-        return response()->json([
-            'success' => true,
-            'message' => 'Role assigned (stub).'
-        ]);
-    }
-
-    /**
-     * Get roles of the currently authenticated user.
-     */
-    public function getRoles(Request $request)
-    {
-        $roles = $request->user()->roles->pluck('name')->toArray();
-        return response()->json([
-            'success' => true,
-            'roles' => $roles
-        ]);
-    }
-
-    /**
-     * Programmatically check if the user passes the CheckRole middleware for 'admin'.
-     */
-    public function checkRoleAdmin(Request $request)
-    {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
-        $allowedRoles = ['admin'];
-        $userRoles = $user->roles->pluck('name')->toArray();
-        if (!array_intersect($allowedRoles, $userRoles)) {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        $validated = $request->validated();
+        $updatedUser = $this->userService->assignRole($id, $validated['role_id']);
+        if (!$updatedUser) {
+            return response()->json(['message' => 'User not found'], 404);
         }
-        return response()->json([
-            'success' => true,
-            'message' => 'User has admin access.',
-            'roles' => $userRoles
-        ]);
+        return response()->json($updatedUser);
     }
 }
