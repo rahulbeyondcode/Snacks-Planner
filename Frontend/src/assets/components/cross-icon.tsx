@@ -1,6 +1,4 @@
-import React from 'react';
-
-const Tick: React.FC = () => {
+const CrossIcon = () => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -13,10 +11,10 @@ const Tick: React.FC = () => {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
-        d="M5 13l4 4L19 7"
+        d="M6 18L18 6M6 6l12 12"
       />
     </svg>
   );
 };
 
-export default Tick;
+export default CrossIcon;
