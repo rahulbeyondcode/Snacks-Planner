@@ -1,3 +1,4 @@
+import { useAuthStore } from "features/auth/store";
 import {
   HiOutlineBell,
   HiOutlineCog,
@@ -17,15 +18,19 @@ const navItems = [
 
 const Sidebar = () => {
   const location = useLocation();
+  const { user } = useAuthStore();
+
+  const userNameSplit = user?.name?.split(" ");
+
   return (
     <div className="w-full h-full flex flex-col items-center">
       {/* Avatar and name */}
       <div className="flex flex-col items-center mb-8">
         <div className="w-14 h-14 rounded-full bg-blue-200 flex items-center justify-center text-xl font-bold text-blue-900 mb-2 shadow-lg">
-          RR
+          {(userNameSplit?.[0]?.[0] || "") + (userNameSplit?.[1]?.[0] || "")}
         </div>
         <div className="text-white text-base font-semibold tracking-wide">
-          Rahul R
+          {user?.name || ""}
         </div>
       </div>
       {/* Nav list */}
