@@ -28,4 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         App\Providers\RepositoryServiceProvider::class,
     ])
+    ->withBindings([
+        Illuminate\Contracts\Http\Kernel::class => App\Http\Kernel::class,
+    ])
     ->create();
