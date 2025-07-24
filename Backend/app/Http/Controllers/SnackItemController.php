@@ -3,101 +3,52 @@
 namespace App\Http\Controllers;
 
 use App\Models\SnackItem;
-
 use Illuminate\Http\Request;
 
 class SnackItemController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+    // List all snack items
+    public function index()
     {
-        $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['admin', 'manager'])) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
-        $snackItems = SnackItem::all();
-        return response()->json([
-            'success' => true,
-            'data' => $snackItems
-        ]);
+        return response()->json(SnackItem::all());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'snack_name' => 'required|string|max:255|unique:snack_items,snack_name',
-            'snack_description' => 'nullable|string|max:255',            
-            'snack_size' => 'required|string|max:255'            
-            // Add other fields and rules as needed
-        ]);
-
-        $snackItem = SnackItem::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'data' => $snackItem,
-            'message' => 'Snack item created successfully.'
-        ]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
+    // Show a single snack item
     public function show($id)
     {
-        $snackItem = SnackItem::find($id);
-        if (!$snackItem) {
-            return response()->json(['message' => 'Not found.'], 404);
+        $item = SnackItem::find($id);
+        if (!$item) {
+            return response()->json(['message' => 'Not found'], 404);
         }
-        return response()->json([
-            'success' => true,
-            'data' => $snackItem
-        ]);
+        return response()->json($item);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+    // Create a snack item (admin only)
+    public function store(\App\Http\Requests\StoreSnackItemRequest $request)
     {
-        $snackItem = SnackItem::find($id);
-       
-        if (!$snackItem) {
-            return response()->json(['message' => 'Not found.'], 404);
-        }
-
-        $validated = $request->validate([
-            'snack_name' => 'required|string|max:255|unique:snack_items,snack_name,' . $id,
-            'snack_description' => 'nullable|string|max:255',            
-            'snack_size' => 'required|string|max:255|in:small,medium,large' 
-        ]);
-
-        $snackItem->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'data' => $snackItem
-        ]);
+        $item = SnackItem::create($request->validated());
+        return response()->json($item, 201);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // Update a snack item (admin only)
+    public function update(\App\Http\Requests\UpdateSnackItemRequest $request, $id)
+    {
+        $item = SnackItem::find($id);
+        if (!$item) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+        $item->update($request->validated());
+        return response()->json($item);
+    }
+
+    // Delete a snack item (admin only)
     public function destroy($id)
     {
-        $snackItem = SnackItem::find($id);
-        if (!$snackItem) {
-            return response()->json(['message' => 'Not found.'], 404);
+        $item = SnackItem::find($id);
+        if (!$item) {
+            return response()->json(['message' => 'Not found'], 404);
         }
-        $snackItem->delete();
-        return response()->json([
-            'success' => true,
-            'message' => 'SnackItem deleted.'
-        ]);
+        $item->delete();
+        return response()->json(['message' => 'Deleted']);
     }
 }

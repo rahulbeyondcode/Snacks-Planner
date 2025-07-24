@@ -2,21 +2,28 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SnackPlanDetail extends Model
 {
+    use HasFactory;
+
+    protected $primaryKey = 'snack_plan_detail_id';
+
     protected $fillable = [
         'snack_plan_id',
-        'snack_item_id', 
+        'snack_item_id',
         'shop_id',
         'quantity',
-        'price_per_item',
         'category',
+        'price_per_item',
+        'total_price',
+        'payment_mode',
         'discount',
         'delivery_charge',
-        'notes',
-        'upload_receipt'
+        'upload_receipt',
+        'created_at',
     ];
 
     public function snackPlan()
@@ -26,11 +33,11 @@ class SnackPlanDetail extends Model
 
     public function snackItem()
     {
-        return $this->belongsTo(SnackItem::class);
+        return $this->belongsTo(SnackItem::class, 'snack_item_id', 'snack_item_id');
     }
 
     public function shop()
     {
         return $this->belongsTo(Shop::class, 'shop_id', 'shop_id');
     }
-} 
+}

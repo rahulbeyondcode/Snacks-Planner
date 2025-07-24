@@ -2,196 +2,54 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contribution;
-
 use Illuminate\Http\Request;
+use App\Http\Requests\UpdateContributionStatusRequest;
+use App\Services\ContributionServiceInterface;
+use Illuminate\Support\Facades\Auth;
 
 class ContributionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Admin listing of all contributions with filters/pagination
     public function index(Request $request)
     {
-        $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['admin', 'manager', 'operations'])) {
-            return response()->json(['message' => 'Forbidden.'], 403);
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
-        $contributions = Contribution::with('user')->get();
-        $contributions = $contributions->map(function ($item) {
-            $data = $item->toArray();
-            $data['user_name'] = $item->user ? $item->user->name : null;
-            return $data;
-        });
-        return response()->json([
-            'success' => true,
-            'data' => $contributions
-        ]);
+        $filters = $request->only(['user_id', 'status', 'from', 'to', 'per_page']);
+        $contributions = $this->contributionService->listAllContributions($filters);
+        return \App\Http\Resources\ContributionResource::collection($contributions);
+    }
+    protected $contributionService;
+
+    public function __construct(ContributionServiceInterface $contributionService)
+    {
+        $this->contributionService = $contributionService;
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    // Only account_manager can mark paid/unpaid
+    public function updateStatus(UpdateContributionStatusRequest $request, $id)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'date' => 'required|date',
-            'status' => 'required|string',
-            'remarks' => 'nullable|string',
-        ]);
-        $contribution = Contribution::create($validated);
-        return response()->json([
-            'success' => true,
-            'data' => $contribution
-        ], 201);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show($id)
-    {
-        $contribution = Contribution::with('user')->find($id);
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $validated = $request->validated();
+        $contribution = $this->contributionService->updateContribution($id, ['status' => $validated['status']]);
         if (!$contribution) {
-            return response()->json(['message' => 'Not found.'], 404);
+            return response()->json(['message' => 'Contribution not found'], 404);
         }
-        $data = $contribution->toArray();
-        $data['user_name'] = $contribution->user ? $contribution->user->name : null;
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+        return new \App\Http\Resources\ContributionResource($contribution);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
+    // User can view their own contribution history
+    public function myContributions()
     {
-        $contribution = Contribution::find($id);
-        if (!$contribution) {
-            return response()->json(['message' => 'Not found.'], 404);
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
-        $validated = $request->validate([
-            'user_id' => 'sometimes|exists:users,id',
-            'date' => 'sometimes|date',
-            'status' => 'sometimes|string',
-            'remarks' => 'nullable|string',
-        ]);
-        $contribution->update($validated);
-        return response()->json([
-            'success' => true,
-            'data' => $contribution
-        ]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        $contribution = Contribution::find($id);
-        if (!$contribution) {
-            return response()->json(['message' => 'Not found.'], 404);
-        }
-        $contribution->delete();
-        return response()->json([
-            'success' => true,
-            'message' => 'Contribution deleted.'
-        ]);
-    }
-
-    /**
-     * Mark a contribution as paid.
-     */
-    public function markPaid($contribution)
-    {
-        $contribution = Contribution::find($contribution);
-        if (!$contribution) {
-            return response()->json(['message' => 'Not found.'], 404);
-        }
-        $contribution->status = 'paid';
-        $contribution->save();
-        return response()->json([
-            'success' => true,
-            'data' => $contribution
-        ]);
-    }
-
-    /**
-     * Mark a contribution as unpaid.
-     */
-    public function markUnpaid($contribution)
-    {
-        $contribution = Contribution::find($contribution);
-        if (!$contribution) {
-            return response()->json(['message' => 'Not found.'], 404);
-        }
-        $contribution->status = 'unpaid';
-        $contribution->save();
-        return response()->json([
-            'success' => true,
-            'data' => $contribution
-        ]);
-    }
-
-    /**
-     * Search contributions.
-     */
-    public function search(Request $request)
-    {
-        $query = Contribution::with('user');
-        $hasFilter = false;
-
-        // if ($request->has('status')) {
-        //     $query->where('status', $request->input('status'));
-        //     $hasFilter = true;
-        // }
-        // if ($request->has('user_id')) {
-        //     $query->where('user_id', $request->input('user_id'));
-        //     $hasFilter = true;
-        // }
-        if ($request->has('user_name')) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->input('user_name') . '%');
-            });
-            $hasFilter = true;
-        }
-
-        if (!$hasFilter) {
-            return response()->json([
-                'success' => true,
-                'data' => []
-            ]);
-        }
-
-        $results = $query->get()->map(function ($item) {
-            $data = $item->toArray();
-            $data['user_name'] = $item->user ? $item->user->name : null;
-            return $data;
-        });
-        return response()->json([
-            'success' => true,
-            'data' => $results
-        ]);
-    }
-
-    /**
-     * Summary of contributions.
-     */
-    public function summary(Request $request)
-    {
-        $total = Contribution::count();
-        $paid = Contribution::where('status', 'paid')->count();
-        $unpaid = Contribution::where('status', 'unpaid')->count();
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total' => $total,
-                'paid' => $paid,
-                'unpaid' => $unpaid
-            ]
-        ]);
+        $contributions = $this->contributionService->getUserContributions($user->user_id);
+        return \App\Http\Resources\ContributionResource::collection($contributions);
     }
 }

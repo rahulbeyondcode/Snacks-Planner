@@ -1,70 +1,122 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
 
-// AUTHENTICATION
-Route::post('login', [\App\Http\Controllers\AuthController::class, 'login']);
-Route::post('logout', [\App\Http\Controllers\AuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('me', [\App\Http\Controllers\AuthController::class, 'me'])->middleware('auth:sanctum');
-Route::get('my-roles', [\App\Http\Controllers\UserController::class, 'getRoles'])->middleware('auth:sanctum');
-Route::get('checkrole-admin', [\App\Http\Controllers\UserController::class, 'checkRoleAdmin'])->middleware('auth:sanctum');
+Route::prefix('v1')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
 
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/user', [AuthController::class, 'profile']);
+        Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
 
-// USERS (CRUD & ROLE ASSIGNMENT)
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::apiResource('users', \App\Http\Controllers\UserController::class);
-    Route::post('users/{user}/assign-role', [\App\Http\Controllers\UserController::class, 'assignRole']);
-});
+        // Account Manager routes
+        Route::middleware('role:account_manager')->group(function () {
+            // Money Pool Management
+            Route::get('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'index']);
+            Route::post('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'store']);
+            Route::get('/money-pools/{id}', [\App\Http\Controllers\MoneyPoolController::class, 'show']);
+            Route::post('/money-pools/{id}/block', [\App\Http\Controllers\MoneyPoolController::class, 'block']);
+            Route::get('/money-pools/{id}/total-collected', [\App\Http\Controllers\MoneyPoolController::class, 'totalCollected']);
+            Route::get('/money-pools/{id}/total-blocked', [\App\Http\Controllers\MoneyPoolController::class, 'totalBlocked']);
+            // Contribution status update
+            Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
+            // Admin listing all contributions
+            Route::get('/contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
 
-// EMPLOYEE CONTRIBUTIONS
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
-    Route::get('contributions/search', [\App\Http\Controllers\ContributionController::class, 'search']);
-    Route::get('contributions/summary', [\App\Http\Controllers\ContributionController::class, 'summary']);
-    Route::patch('contributions/{contribution}/mark-paid', [\App\Http\Controllers\ContributionController::class, 'markPaid']);
-    Route::patch('contributions/{contribution}/mark-unpaid', [\App\Http\Controllers\ContributionController::class, 'markUnpaid']);
-});
+            // User management (admin only)
+            Route::get('/users', [\App\Http\Controllers\UserController::class, 'index']);
+            Route::get('/users/{id}', [\App\Http\Controllers\UserController::class, 'show']);
+            Route::post('/users', [\App\Http\Controllers\UserController::class, 'store']);
+            Route::put('/users/{id}', [\App\Http\Controllers\UserController::class, 'update']);
+            Route::delete('/users/{id}', [\App\Http\Controllers\UserController::class, 'destroy']);
+            Route::patch('/users/{id}/role', [\App\Http\Controllers\UserController::class, 'assignRole']);
 
-// MONEY POOL SETUP
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('money-pool', [\App\Http\Controllers\FundController::class, 'index']);
-    Route::post('money-pool', [\App\Http\Controllers\FundController::class, 'store']);
-    Route::patch('money-pool/{fund}', [\App\Http\Controllers\FundController::class, 'update']);
-    Route::get('money-pool/balance', [\App\Http\Controllers\FundController::class, 'balance']);
-});
+            // Group management (admin only)
+            Route::get('/groups', [\App\Http\Controllers\GroupController::class, 'index']);
+            Route::get('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'show']);
+            Route::post('/groups', [\App\Http\Controllers\GroupController::class, 'store']);
+            Route::put('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'update']);
+            Route::delete('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);
+            Route::patch('/groups/{id}/leader', [\App\Http\Controllers\GroupController::class, 'assignLeader']);
+            Route::get('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'members']);
+            Route::post('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'addMembers']);
+            Route::delete('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'removeMembers']);
+            // Set office holidays
+            Route::post('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'setHoliday']);
+            Route::patch('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'update']);
+            Route::delete('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'destroy']);
+            // Reporting
+            Route::post('/reports/download', [\App\Http\Controllers\ReportController::class, 'download']);
 
-// SNACK PLANNING
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::apiResource('snack-plans', \App\Http\Controllers\SnackPlanController::class);
-    Route::post('snack-plans/{snack_plan}/upload-receipt', [\App\Http\Controllers\SnackPlanController::class, 'uploadReceipt']);
-    Route::get('snack-plans/{snack_plan}/profit-loss', [\App\Http\Controllers\SnackPlanController::class, 'profitLoss']);
-});
+        });
 
-// HOLIDAY MANAGEMENT
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::apiResource('holidays', \App\Http\Controllers\HolidayController::class);
-});
+        // Snack Item & Shop CRUD (account_manager, operations_manager, operations_staff)
+        Route::middleware('role:account_manager,operations_manager,operations_staff')->group(function () {
+            // Snack Item CRUD
+            Route::get('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'index']);
+            Route::get('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'show']);
+            Route::post('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'store']);
+            Route::put('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'update']);
+            Route::delete('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'destroy']);
 
-// SNACK ITEMS MASTERLIST
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::apiResource('snack-items', \App\Http\Controllers\SnackItemController::class);    
-});
+            // Shop CRUD
+            Route::get('/shops', [\App\Http\Controllers\ShopController::class, 'index']);
+            Route::get('/shops/{id}', [\App\Http\Controllers\ShopController::class, 'show']);
+            Route::post('/shops', [\App\Http\Controllers\ShopController::class, 'store']);
+            Route::put('/shops/{id}', [\App\Http\Controllers\ShopController::class, 'update']);
+            Route::delete('/shops/{id}', [\App\Http\Controllers\ShopController::class, 'destroy']);
+        });
 
-// SHOPS MASTERLIST
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::apiResource('shops', \App\Http\Controllers\ShopController::class);
-});
+        // Profit/Loss (account_manager only)
+        Route::middleware('role:account_manager')->group(function () {
+            Route::get('/profit-loss', [\App\Http\Controllers\ProfitLossController::class, 'index']);
+        });
 
-// REPORTS
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('reports/summary', [\App\Http\Controllers\ReportController::class, 'summary']);
-    Route::get('reports/receipts', [\App\Http\Controllers\ReportController::class, 'receipts']);
-    Route::get('reports/export/pdf', [\App\Http\Controllers\ReportController::class, 'exportPdf']);
-    Route::get('reports/export/xls', [\App\Http\Controllers\ReportController::class, 'exportXls']);
-});
+        // Operations Manager routes
+        Route::middleware('role:operations_manager')->group(function () {
+            // Weekly operations staff assignment
+            Route::post('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'assign']);
+            Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
+            Route::get('/weekly-operations/{id}', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'show']);
+        });
 
-// FUND BLOCKING (SPECIAL EVENTS)
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::post('fund-block', [\App\Http\Controllers\FundBlockController::class, 'block']);
-    Route::delete('fund-block/{id}', [\App\Http\Controllers\FundBlockController::class, 'unblock']);
+        // Operations Staff routes
+        Route::middleware('role:operations_staff')->group(function () {
+            // Update status for assigned weekly operations
+            Route::patch('/weekly-operations/{id}/status', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'updateStatus']);
+            Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
+            Route::get('/weekly-operations/{id}', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'show']);
+        });
+
+        // Employee routes
+        Route::middleware('role:employee')->group(function () {
+            // View own contributions
+            Route::get('/my-contributions', [\App\Http\Controllers\ContributionController::class, 'myContributions']);
+
+            // Snack suggestion endpoints
+            Route::post('/snack-suggestions', [\App\Http\Controllers\SnackSuggestionController::class, 'store']);
+            Route::get('/snack-suggestions', [\App\Http\Controllers\SnackSuggestionController::class, 'index']);
+            // Snack rating endpoints
+            Route::post('/snack-ratings', [\App\Http\Controllers\SnackRatingController::class, 'store']);
+            Route::get('/snack-ratings', [\App\Http\Controllers\SnackRatingController::class, 'index']);
+        });
+
+        // Shared features (all authenticated)
+        Route::get('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'index']);
+        Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
+        Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
+        Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);
+        // Snack plan detail access
+        Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
+        Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
+        // The following routes are only for operations_manager and operations_staff
+        Route::middleware(['role:operations_manager,operations_staff'])->group(function () {
+            Route::put('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'update']);
+            Route::delete('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'destroy']);
+            Route::patch('/snack-plan-details/{id}/receipt', [\App\Http\Controllers\SnackPlanController::class, 'uploadReceipt']);
+        });
+    });
 });
