@@ -15,7 +15,7 @@ class UpdateUserProfileRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255|unique:users,email,' . $this->user()->id,
+            'email' => 'sometimes|email|max:255|unique:users,email,' . $this->user()->user_id . ',user_id',
             'phone' => 'sometimes|string|max:20',
         ];
     }
