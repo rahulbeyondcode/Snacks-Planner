@@ -4,64 +4,17 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; // Added for Sanctum API tokens
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
-
-    public function userRoles()
-    {
-        return $this->hasMany(UserRole::class);
-    }
-
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class, 'user_roles');
-    }
-
-    /**
-     * Check if the user has a given role by name.
-     */
-    public function hasRole($role)
-    {
-        return $this->roles->pluck('name')->contains($role);
-    }
-
-    /**
-     * Check if the user has any of the given roles.
-     * @param array|string $roles
-     * @return bool
-     */
-    public function hasAnyRole($roles)
-    {
-        $roles = is_array($roles) ? $roles : func_get_args();
-        return $this->roles->pluck('name')->intersect($roles)->isNotEmpty();
-    }
-
-    public function contributions()
-    {
-        return $this->hasMany(Contribution::class);
-    }
-
-    public function teamAssignments()
-    {
-        return $this->hasMany(TeamAssignment::class);
-    }
-
-    public function snackPlans()
-    {
-        return $this->hasMany(SnackPlan::class, 'planned_by');
-    }
-
-    public function teams()
-    {
-        return $this->belongsToMany(TeamAssignment::class, 'team_assignments');
-    }
+    protected $primaryKey = 'user_id';
+    public $incrementing = true;
+    protected $keyType = 'int';
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -70,8 +23,11 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'role_id',
         'email',
-        'password',
+        'preference',
+        'created_at',
+        'password', // If you use password authentication
     ];
 
     /**
@@ -95,5 +51,57 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // Relationships
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'role_id');
+    }
+
+    public function groupMembers()
+    {
+        return $this->hasMany(GroupMember::class, 'user_id', 'user_id');
+    }
+
+    public function officeHolidays()
+    {
+        return $this->hasMany(OfficeHoliday::class, 'user_id', 'user_id');
+    }
+
+    public function groupWeeklyOperationsAsEmployee()
+    {
+        return $this->hasMany(GroupWeeklyOperation::class, 'employee_id', 'user_id');
+    }
+
+    public function groupWeeklyOperationsAssigned()
+    {
+        return $this->hasMany(GroupWeeklyOperation::class, 'assigned_by', 'user_id');
+    }
+
+    public function contributions()
+    {
+        return $this->hasMany(Contribution::class, 'user_id', 'user_id');
+    }
+
+    public function moneyPoolsCreated()
+    {
+        return $this->hasMany(MoneyPool::class, 'created_by', 'user_id');
+    }
+
+    public function moneyPoolBlocksCreated()
+    {
+        return $this->hasMany(MoneyPoolBlock::class, 'created_by', 'user_id');
+    }
+
+    public function snackPlans()
+    {
+        return $this->hasMany(SnackPlan::class, 'user_id', 'user_id');
+    }
+
+    public function groupSnackSupplyDaysSet()
+    {
+        return $this->hasMany(GroupSnackSupplyDay::class, 'set_by', 'user_id');
     }
 }
