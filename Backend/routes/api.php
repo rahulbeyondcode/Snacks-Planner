@@ -13,7 +13,7 @@ Route::prefix('v1')->group(function () {
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
 
         // Account Manager routes
-        Route::middleware('role:account_manager')->group(function () {
+        Route::middleware(['role:account_manager'])->group(function () {
             // Money Pool Management
             Route::get('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'index']);
             Route::post('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'store']);
@@ -54,7 +54,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Snack Item & Shop CRUD (account_manager, operations_manager, operations_staff)
-        Route::middleware('role:account_manager,operations_manager,operations_staff')->group(function () {
+        Route::middleware(['role:account_manager,operations_manager,operations_staff'])->group(function () {
             // Snack Item CRUD
             Route::get('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'index']);
             Route::get('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'show']);
@@ -71,12 +71,12 @@ Route::prefix('v1')->group(function () {
         });
 
         // Profit/Loss (account_manager only)
-        Route::middleware('role:account_manager')->group(function () {
+        Route::middleware(['role:account_manager'])->group(function () {
             Route::get('/profit-loss', [\App\Http\Controllers\ProfitLossController::class, 'index']);
         });
 
         // Operations Manager routes
-        Route::middleware('role:operations_manager')->group(function () {
+        Route::middleware(['role:operations_manager'])->group(function () {
             // Weekly operations staff assignment
             Route::post('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'assign']);
             Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
@@ -84,7 +84,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Operations Staff routes
-        Route::middleware('role:operations_staff')->group(function () {
+        Route::middleware(['role:operations_staff'])->group(function () {
             // Update status for assigned weekly operations
             Route::patch('/weekly-operations/{id}/status', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'updateStatus']);
             Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
@@ -92,7 +92,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Employee routes
-        Route::middleware('role:employee')->group(function () {
+        Route::middleware(['role:employee'])->group(function () {
             // View own contributions
             Route::get('/my-contributions', [\App\Http\Controllers\ContributionController::class, 'myContributions']);
 
