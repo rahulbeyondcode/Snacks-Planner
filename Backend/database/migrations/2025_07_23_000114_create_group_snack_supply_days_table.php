@@ -12,7 +12,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('group_id');
             $table->date('supply_date');
             $table->unsignedBigInteger('set_by');
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();
             $table->foreign('group_id')->references('group_id')->on('groups')->onDelete('cascade');
             $table->foreign('set_by')->references('user_id')->on('users')->onDelete('cascade');
         });

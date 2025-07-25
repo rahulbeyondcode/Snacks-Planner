@@ -15,7 +15,8 @@ return new class extends Migration {
             $table->decimal('total_pool_amount', 12, 2)->default(0);
             $table->decimal('blocked_amount', 12, 2)->default(0);
             $table->unsignedBigInteger('created_by');
-            $table->date('created_at')->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();
             $table->foreign('created_by')->references('user_id')->on('users')->onDelete('cascade');
         });
     }

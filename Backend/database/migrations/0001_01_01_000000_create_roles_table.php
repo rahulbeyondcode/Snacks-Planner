@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->enum('name', ['account_manager', 'operation_manager', 'operation', 'employee']);
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
