@@ -18,7 +18,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             $table->foreign('created_by')->references('user_id')->on('users')->onDelete('cascade');
-            $table->softDeletes();
         });
     }
 
