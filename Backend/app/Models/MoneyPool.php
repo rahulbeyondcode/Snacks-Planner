@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class MoneyPool extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'money_pool_id';
 
@@ -19,6 +21,8 @@ class MoneyPool extends Model
         'blocked_amount',
         'created_by',
         'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
     public function creator()

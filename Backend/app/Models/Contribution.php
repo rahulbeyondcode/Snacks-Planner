@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contribution extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'contribution_id';
 
@@ -15,7 +16,7 @@ class Contribution extends Model
         'user_id',
         'amount',
         'status',
-        'created_at',
+        'created_at'
     ];
 
     public function user()

@@ -12,8 +12,8 @@ class GroupWeeklyOperationRepository implements GroupWeeklyOperationRepositoryIn
         if (isset($filters['group_id'])) {
             $query->where('group_id', $filters['group_id']);
         }
-        if (isset($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
+        if (isset($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
         }
         if (isset($filters['week_start_date'])) {
             $query->where('week_start_date', $filters['week_start_date']);

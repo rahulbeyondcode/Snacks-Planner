@@ -69,6 +69,7 @@ class GroupController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:groups,name',
             'description' => 'nullable|string|max:255',
+            
         ]);
 
         $newGroup = $this->groupService->createGroup($validated);

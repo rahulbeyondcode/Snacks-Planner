@@ -73,7 +73,7 @@ class User extends Authenticatable
 
     public function groupWeeklyOperationsAsEmployee()
     {
-        return $this->hasMany(GroupWeeklyOperation::class, 'employee_id', 'user_id');
+        return $this->hasMany(GroupWeeklyOperation::class, 'user_id', 'user_id');
     }
 
     public function groupWeeklyOperationsAssigned()

@@ -11,7 +11,8 @@ return new class extends Migration {
             $table->id('group_id');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->timestamps();
+            $table->enum('group_status', ['active', 'inactive'])->default('inactive');
+            $table->integer('sort_order')->nullable();
             $table->softDeletes();
         });
     }

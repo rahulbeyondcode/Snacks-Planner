@@ -11,12 +11,12 @@ return new class extends Migration {
             $table->id('group_weekly_operation_id');
             $table->unsignedBigInteger('group_id');
             $table->date('week_start_date');
-            $table->unsignedBigInteger('employee_id');
+            $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('assigned_by');
             $table->timestamps();
-            $table->softDeletes();  
+            $table->softDeletes();
             $table->foreign('group_id')->references('group_id')->on('groups')->onDelete('cascade');
-            $table->foreign('employee_id')->references('user_id')->on('users')->onDelete('cascade');
+            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
             $table->foreign('assigned_by')->references('user_id')->on('users')->onDelete('cascade');
         });
     }
