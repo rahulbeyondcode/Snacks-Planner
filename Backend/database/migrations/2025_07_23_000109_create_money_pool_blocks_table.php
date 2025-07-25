@@ -14,7 +14,8 @@ return new class extends Migration {
             $table->text('reason')->nullable();
             $table->date('block_date');
             $table->unsignedBigInteger('created_by');
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();
             $table->foreign('money_pool_id')->references('money_pool_id')->on('money_pools')->onDelete('cascade');
             $table->foreign('created_by')->references('user_id')->on('users')->onDelete('cascade');
         });

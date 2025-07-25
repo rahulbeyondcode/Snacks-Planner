@@ -13,9 +13,3 @@ export type BlockedFundType = {
   date: string; // ISO string
   amount: string;
 };
-
-export type UserRoleType =
-  | "accounts"
-  | "snack-manager"
-  | "operations"
-  | "employee";

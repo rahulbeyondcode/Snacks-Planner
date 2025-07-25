@@ -39,17 +39,7 @@ const SnackManagerMoneyPoolView: React.FC = () => {
           <span className="text-3xl font-bold">{pool.finalPoolAmount}</span>
         </div>
       </div>
-      <div className="mt-6">
-        <BlockFundsForm
-          maxAmount={
-            pool.finalPoolAmount -
-            blockedFunds.reduce(
-              (sum, fund) => Number(sum) + Number(fund.amount),
-              0
-            )
-          }
-        />
-      </div>
+
       <div className="mt-4">
         <h3 className="font-semibold mb-2">Blocked Funds</h3>
         <ul>
@@ -67,6 +57,18 @@ const SnackManagerMoneyPoolView: React.FC = () => {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="mt-6">
+        <BlockFundsForm
+          maxAmount={
+            pool.finalPoolAmount -
+            blockedFunds.reduce(
+              (sum, fund) => Number(sum) + Number(fund.amount),
+              0
+            )
+          }
+        />
       </div>
     </div>
   );

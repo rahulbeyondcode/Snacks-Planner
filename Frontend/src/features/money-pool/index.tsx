@@ -1,16 +1,15 @@
 import AccountsMoneyPoolView from "features/money-pool/components/accounts-money-pool-view";
 import SnackManagerMoneyPoolView from "features/money-pool/components/snack-manager-money-pool-view";
 
-import type { UserRoleType } from "features/money-pool/types/money-pool-types";
-
-// TODO: Replace this with actual user role from auth/context
-const mockUserRole: UserRoleType = "accounts"; // Change to 'snack-manager' to test
+import { useAuthStore } from "features/auth/store";
 
 const MoneyPoolManagement = () => {
-  if (mockUserRole === "accounts") {
+  const { hasAnyOfTheseRoles } = useAuthStore();
+
+  if (hasAnyOfTheseRoles(["accounts"])) {
     return <AccountsMoneyPoolView />;
   }
-  if (mockUserRole === "snack-manager") {
+  if (hasAnyOfTheseRoles(["snack-manager"])) {
     return <SnackManagerMoneyPoolView />;
   }
   // No access for other roles

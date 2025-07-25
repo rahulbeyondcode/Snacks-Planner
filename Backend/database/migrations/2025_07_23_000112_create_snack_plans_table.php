@@ -12,7 +12,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('snack_date');
             $table->unsignedBigInteger('user_id');
             $table->decimal('total_amount', 10, 2);
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();  
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
         });
     }
