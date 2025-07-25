@@ -35,15 +35,14 @@ Route::prefix('v1')->group(function () {
             Route::patch('/users/{id}/role', [\App\Http\Controllers\UserController::class, 'assignRole']);
 
             // Group management (admin only)
-            Route::get('/groups', [\App\Http\Controllers\GroupController::class, 'index']);
-            Route::get('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'show']);
-            Route::post('/groups', [\App\Http\Controllers\GroupController::class, 'store']);
-            Route::put('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'update']);
-            Route::delete('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);
-            Route::patch('/groups/{id}/leader', [\App\Http\Controllers\GroupController::class, 'assignLeader']);
-            Route::get('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'members']);
-            Route::post('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'addMembers']);
-            Route::delete('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'removeMembers']);
+            Route::prefix('groups')->group(function () {
+                Route::get('/', [\App\Http\Controllers\GroupController::class, 'index']);
+                Route::get('/{id}', [\App\Http\Controllers\GroupController::class, 'show']);
+                Route::post('/', [\App\Http\Controllers\GroupController::class, 'store']);
+                Route::put('/{id}', [\App\Http\Controllers\GroupController::class, 'update']);
+                Route::delete('/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);               
+            });
+
             // Set office holidays
             Route::post('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'setHoliday']);
             Route::patch('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'update']);

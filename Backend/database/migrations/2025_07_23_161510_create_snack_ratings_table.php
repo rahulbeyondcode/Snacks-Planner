@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->tinyInteger('rating'); // 1-5 stars
             $table->text('comment')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
             $table->foreign('snack_item_id')->references('snack_item_id')->on('snack_items')->onDelete('cascade');
         });

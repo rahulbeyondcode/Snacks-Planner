@@ -12,7 +12,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('group_weekly_operation_id');
             $table->text('task_description')->nullable();
             $table->enum('status', ['pending', 'completed', 'in-progress'])->default('pending');
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();  
             $table->foreign('group_weekly_operation_id')->references('group_weekly_operation_id')->on('group_weekly_operations')->onDelete('cascade');
         });
     }

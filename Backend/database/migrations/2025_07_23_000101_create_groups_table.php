@@ -11,7 +11,8 @@ return new class extends Migration {
             $table->id('group_id');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

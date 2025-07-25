@@ -12,7 +12,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('user_id'); // references users.user_id (should have role 'account')
             $table->date('holiday_date');
             $table->text('description')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
         });
     }

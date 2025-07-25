@@ -61,16 +61,19 @@ class GroupController extends Controller
     // Create group (admin only)
     public function store(Request $request)
     {
-        $user = Auth::user();
+        $user = $request->user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return apiResponse(false, __('messages.forbidden'), null, 403);
         }
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:groups,name',
             'description' => 'nullable|string|max:255',
         ]);
+
         $newGroup = $this->groupService->createGroup($validated);
-        return response()->json($newGroup, 201);
+
+        return apiResponse(true, __('messages.success'), $newGroup, 201);
     }
 
     // Update group (admin only)
