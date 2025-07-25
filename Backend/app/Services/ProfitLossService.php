@@ -27,25 +27,25 @@ class ProfitLossService implements ProfitLossServiceInterface
         $month = $filters['month'] ?? null;
         // Contributions
         $totalContributionsRaw = $this->contributionRepo->getTotalContributions();
-$totalContributions = is_array($totalContributionsRaw) && isset($totalContributionsRaw['total']) && is_numeric($totalContributionsRaw['total'])
-    ? (float)$totalContributionsRaw['total']
-    : (is_numeric($totalContributionsRaw) ? (float)$totalContributionsRaw : 0);
+        $totalContributions = is_array($totalContributionsRaw) && isset($totalContributionsRaw['total']) && is_numeric($totalContributionsRaw['total'])
+            ? (float)$totalContributionsRaw['total']
+            : (is_numeric($totalContributionsRaw) ? (float)$totalContributionsRaw : 0);
         // Expenses
         $expensesRaw = $month
-    ? $this->snackPlanRepo->getMonthlyExpense($month)
-    : $this->snackPlanRepo->getMonthlyExpense(date('Y-m'));
-if (is_array($expensesRaw)) {
-    $totalExpenses = 0;
-    foreach ($expensesRaw as $expense) {
-        if (is_array($expense) && isset($expense['total_amount'])) {
-            $totalExpenses += (float)$expense['total_amount'];
-        } elseif (is_object($expense) && isset($expense->total_amount)) {
-            $totalExpenses += (float)$expense->total_amount;
+            ? $this->snackPlanRepo->getMonthlyExpense($month)
+            : $this->snackPlanRepo->getMonthlyExpense(date('Y-m'));
+        if (is_array($expensesRaw)) {
+            $totalExpenses = 0;
+            foreach ($expensesRaw as $expense) {
+                if (is_array($expense) && isset($expense['total_amount'])) {
+                    $totalExpenses += (float)$expense['total_amount'];
+                } elseif (is_object($expense) && isset($expense->total_amount)) {
+                    $totalExpenses += (float)$expense->total_amount;
+                }
+            }
+        } else {
+            $totalExpenses = is_numeric($expensesRaw) ? (float)$expensesRaw : 0;
         }
-    }
-} else {
-    $totalExpenses = is_numeric($expensesRaw) ? (float)$expensesRaw : 0;
-}
         // Blocked Funds (if any)
         $blocked = 0;
         if ($month) {
