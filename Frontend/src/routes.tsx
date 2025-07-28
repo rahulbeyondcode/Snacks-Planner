@@ -15,6 +15,7 @@ export default function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="money-pool" element={<MoneyPool />} />
         <Route path="assign-roles" element={<RoleManagement />} />
+        <Route path="user-contribution" element={<UserContribution />} />
         <Route path="manage" element={<UserContribution />} />
         <Route path="notifications" element={<Notifications />} />
       </Route>

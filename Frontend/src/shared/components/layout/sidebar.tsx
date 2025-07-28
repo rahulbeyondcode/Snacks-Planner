@@ -5,11 +5,13 @@ import {
   HiOutlineCurrencyDollar,
   HiOutlineUserGroup,
   HiOutlineViewGrid,
+  HiUserAdd,
 } from "react-icons/hi";
 import { Link, useLocation } from "react-router-dom";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: HiOutlineViewGrid },
+  { label: "User Contribution", path: "/user-contribution", icon: HiUserAdd },
   { label: "Money Pool", path: "/money-pool", icon: HiOutlineCurrencyDollar },
   { label: "Assign Roles", path: "/assign-roles", icon: HiOutlineUserGroup },
   { label: "Manage", path: "/manage", icon: HiOutlineCog },
