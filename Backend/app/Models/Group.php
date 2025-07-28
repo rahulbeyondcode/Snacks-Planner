@@ -36,4 +36,14 @@ class Group extends Model
     {
         return $this->hasMany(GroupSnackSupplyDay::class, 'group_id', 'group_id');
     }
+
+    public function setSortOrder($sortOrders)
+    {
+        foreach ($sortOrders as $groupId => $sortOrder) {
+            $group = self::find($groupId);
+            if ($group) {
+                $group->update(['sort_order' => $sortOrder]);
+            }
+        }
+    }
 }
