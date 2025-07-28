@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class MoneyPool extends Model
 {
     use HasFactory, SoftDeletes;
@@ -14,8 +13,7 @@ class MoneyPool extends Model
     protected $primaryKey = 'money_pool_id';
 
     protected $fillable = [
-        'per_month_amount',
-        'multiplier',
+        'money_pool_setting_id',
         'total_collected_amount',
         'total_pool_amount',
         'blocked_amount',
@@ -33,5 +31,10 @@ class MoneyPool extends Model
     public function blocks()
     {
         return $this->hasMany(MoneyPoolBlock::class, 'money_pool_id', 'money_pool_id');
+    }
+
+    public function settings()
+    {
+        return $this->belongsTo(MoneyPoolSettings::class, 'money_pool_setting_id', 'money_pool_setting_id');
     }
 }

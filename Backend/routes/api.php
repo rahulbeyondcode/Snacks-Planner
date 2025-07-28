@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\MoneyPoolSettingsController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -14,6 +14,12 @@ Route::prefix('v1')->group(function () {
 
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
+
+            // Money Pool Settings
+            Route::post('/money-pool-settings', [MoneyPoolSettingsController::class, 'store']);
+            Route::get('/money-pool-settings/{id}', [MoneyPoolSettingsController::class, 'show']);
+            Route::get('/money-pool-settings/latest', [MoneyPoolSettingsController::class, 'latest']);
+
             // Money Pool Management
             Route::get('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'index']);
             Route::post('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'store']);
@@ -21,6 +27,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/money-pools/{id}/block', [\App\Http\Controllers\MoneyPoolController::class, 'block']);
             Route::get('/money-pools/{id}/total-collected', [\App\Http\Controllers\MoneyPoolController::class, 'totalCollected']);
             Route::get('/money-pools/{id}/total-blocked', [\App\Http\Controllers\MoneyPoolController::class, 'totalBlocked']);
+
             // Contribution status update
             Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
             // Admin listing all contributions
@@ -40,7 +47,7 @@ Route::prefix('v1')->group(function () {
                 Route::get('/{id}', [\App\Http\Controllers\GroupController::class, 'show']);
                 Route::post('/', [\App\Http\Controllers\GroupController::class, 'store']);
                 Route::put('/{id}', [\App\Http\Controllers\GroupController::class, 'update']);
-                Route::delete('/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);               
+                Route::delete('/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);
             });
 
             // Set office holidays
