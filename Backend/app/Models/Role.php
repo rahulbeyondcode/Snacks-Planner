@@ -10,6 +10,12 @@ class Role extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Role ID constants
+    public const ACCOUNT_MANAGER = 1;
+    public const OPERATION_MANAGER = 2;
+    public const OPERATION = 3;
+    public const EMPLOYEE = 4;
+
     protected $primaryKey = 'role_id';
 
     protected $fillable = [
