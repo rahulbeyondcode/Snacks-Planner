@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->enum('group_status', ['active', 'inactive'])->default('inactive');
             $table->integer('sort_order')->nullable();
+            $table->timestamps();
             $table->softDeletes();
         });
     }

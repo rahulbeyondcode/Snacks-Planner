@@ -489,7 +489,7 @@ class UserSeeder extends Seeder
                 'name' => 'Parvathy Krishnan',
                 'email' => 'parvathy@quintetsolutions.com',
                 'password' => Hash::make('password'),
-                'role_id' => 4,
+                'role_id' => 1,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],

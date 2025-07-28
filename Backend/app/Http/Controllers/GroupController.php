@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\GroupServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Group;
 
 class GroupController extends Controller
 {
@@ -55,10 +56,12 @@ class GroupController extends Controller
         if (!$group) {
             return response()->json(['message' => 'Group not found'], 404);
         }
-        return response()->json($group);
+
+        return apiResponse(true, __('messages.success'), $group, 201);
     }
 
     // Create group (admin only)
+
     public function store(Request $request)
     {
         $user = $request->user();
@@ -69,7 +72,8 @@ class GroupController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:groups,name',
             'description' => 'nullable|string|max:255',
-            
+            'employees' => 'required|array',
+            'operation_managers' => 'required|array',
         ]);
 
         $newGroup = $this->groupService->createGroup($validated);
@@ -82,17 +86,20 @@ class GroupController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return apiResponse(false, __('messages.forbidden'), null, 403);
         }
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
+            'employees' => 'required|array',
+            'operation_managers' => 'required|array',
         ]);
         $updatedGroup = $this->groupService->updateGroup($id, $validated);
         if (!$updatedGroup) {
-            return response()->json(['message' => 'Group not found'], 404);
+            return apiResponse(false, __('Group not found'), null, 404);
         }
-        return response()->json($updatedGroup);
+
+        return apiResponse(true, __('messages.success'), $updatedGroup, 201);
     }
 
     // Delete group (admin only)
@@ -104,9 +111,10 @@ class GroupController extends Controller
         }
         $deleted = $this->groupService->deleteGroup($id);
         if (!$deleted) {
-            return response()->json(['message' => 'Group not found'], 404);
+            return apiResponse(true, __('Group not found'), [], 404);
         }
-        return response()->json(['message' => 'Group deleted successfully']);
+
+        return apiResponse(true, __('Group deleted successfully'), [], 201);
     }
 
     // List members of a group (admin only)
@@ -157,5 +165,27 @@ class GroupController extends Controller
             return response()->json(['message' => 'Group not found'], 404);
         }
         return response()->json($members);
+    }
+
+    public function setSortOrder(Request $request)
+    {
+        $$sortOrders = $request->input('sort_orders');
+
+        if (!is_array($sortOrders)) {
+            return response()->json(['message' => 'Invalid input format. Expected an array.'], 400);
+        }
+
+        $groupIds = array_keys($sortOrders);
+
+        // Get only existing group_ids
+        $validGroupIds = Group::whereIn('group_id', $groupIds)->pluck('group_id')->toArray();
+
+        foreach ($sortOrders as $groupId => $sortOrder) {
+            if (in_array($groupId, $validGroupIds)) {
+                Group::where('group_id', $groupId)->update(['sort_order' => $sortOrder]);
+            }
+        }
+
+        return response()->json(['message' => 'Sort order updated for valid groups only.']);
     }
 }

@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id('group_weekly_operation_id');
             $table->unsignedBigInteger('group_id');
             $table->date('week_start_date');
+            $table->date('week_end_date');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('assigned_by');
             $table->timestamps();

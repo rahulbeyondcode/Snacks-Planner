@@ -48,6 +48,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('/', [\App\Http\Controllers\GroupController::class, 'store']);
                 Route::put('/{id}', [\App\Http\Controllers\GroupController::class, 'update']);
                 Route::delete('/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);
+                Route::put('/update-sort-order', [\App\Http\Controllers\GroupController::class, 'setSortOrder']);
             });
 
             // Set office holidays
