@@ -6,7 +6,5 @@ interface MoneyPoolSettingsServiceInterface
 {
     public function saveSettings(array $data);
 
-    public function getSettings(int $id);
-
-    public function getLatestSettings();
+    public function getSettings();
 }

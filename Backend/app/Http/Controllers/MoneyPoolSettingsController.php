@@ -30,10 +30,10 @@ class MoneyPoolSettingsController extends Controller
         }
     }
 
-    public function show($id)
+    public function index()
     {
         try {
-            $settings = $this->moneyPoolSettingsService->getSettings($id);
+            $settings = $this->moneyPoolSettingsService->getSettings();
 
             if (! $settings) {
                 return ApiResponse::error('Money pool settings not found', 404);
@@ -42,21 +42,6 @@ class MoneyPoolSettingsController extends Controller
             return new MoneyPoolSettingsResource($settings);
         } catch (\Exception $e) {
             return ApiResponse::error('Failed to retrieve money pool settings', 500);
-        }
-    }
-
-    public function latest()
-    {
-        try {
-            $settings = $this->moneyPoolSettingsService->getLatestSettings();
-
-            if (! $settings) {
-                return ApiResponse::error('No money pool settings found', 404);
-            }
-
-            return new MoneyPoolSettingsResource($settings);
-        } catch (\Exception $e) {
-            return ApiResponse::error('Failed to retrieve latest money pool settings', 500);
         }
     }
 }

@@ -37,12 +37,7 @@ class MoneyPoolSettingsService implements MoneyPoolSettingsServiceInterface
         return $this->moneyPoolSettingsRepository->update($settingsId, $data);
     }
 
-    public function getSettings(int $id)
-    {
-        return $this->moneyPoolSettingsRepository->find($id);
-    }
-
-    public function getLatestSettings()
+    public function getSettings()
     {
         return $this->moneyPoolSettingsRepository->getLatestSettings();
     }

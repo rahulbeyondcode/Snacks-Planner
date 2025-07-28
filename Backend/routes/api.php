@@ -17,16 +17,7 @@ Route::prefix('v1')->group(function () {
 
             // Money Pool Settings
             Route::post('/money-pool-settings', [MoneyPoolSettingsController::class, 'store']);
-            Route::get('/money-pool-settings/{id}', [MoneyPoolSettingsController::class, 'show']);
-            Route::get('/money-pool-settings/latest', [MoneyPoolSettingsController::class, 'latest']);
-
-            // Money Pool Management
-            Route::get('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'index']);
-            Route::post('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'store']);
-            Route::get('/money-pools/{id}', [\App\Http\Controllers\MoneyPoolController::class, 'show']);
-            Route::post('/money-pools/{id}/block', [\App\Http\Controllers\MoneyPoolController::class, 'block']);
-            Route::get('/money-pools/{id}/total-collected', [\App\Http\Controllers\MoneyPoolController::class, 'totalCollected']);
-            Route::get('/money-pools/{id}/total-blocked', [\App\Http\Controllers\MoneyPoolController::class, 'totalBlocked']);
+            Route::get('/money-pool-settings', [MoneyPoolSettingsController::class, 'index']);
 
             // Contribution status update
             Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
@@ -88,6 +79,14 @@ Route::prefix('v1')->group(function () {
             Route::post('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'assign']);
             Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
             Route::get('/weekly-operations/{id}', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'show']);
+
+            // Money Pool Management
+            Route::get('/money-pools', [MoneyPoolController::class, 'index']);
+            Route::post('/money-pools', [MoneyPoolController::class, 'store']);
+            Route::get('/money-pools/{id}', [MoneyPoolController::class, 'show']);
+            Route::post('/money-pools/{id}/block', [MoneyPoolController::class, 'block']);
+            Route::get('/money-pools/{id}/total-collected', [MoneyPoolController::class, 'totalCollected']);
+            Route::get('/money-pools/{id}/total-blocked', [MoneyPoolController::class, 'totalBlocked']);
         });
 
         // Operations Staff routes
