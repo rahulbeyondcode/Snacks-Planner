@@ -66,6 +66,7 @@ class UserController extends Controller
         }
         $validated = $request->validated();
         $validated['password'] = bcrypt($validated['password']);
+        $validated['role_id'] = 4; // Always assign Employee role
         $created = $this->userService->createUser($validated);
         return response()->json($created, 201);
     }
