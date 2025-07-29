@@ -8,8 +8,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        // Bulk update contribution status (operation_manager and operation only)
-        Route::middleware(['role:operation_manager,operation'])->post('/contributions/bulk-update-status', [\App\Http\Controllers\ContributionController::class, 'bulkUpdateStatus']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/user', [AuthController::class, 'profile']);
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
@@ -20,12 +18,6 @@ Route::prefix('v1')->group(function () {
             // Money Pool Settings
             Route::post('/money-pool-settings', [MoneyPoolSettingsController::class, 'store']);
             Route::get('/money-pool-settings', [MoneyPoolSettingsController::class, 'index']);
-
-            // Contribution status update
-            Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
-
-            // Admin listing all contributions
-            Route::get('/contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
 
             // User management (admin only)
             Route::get('/users', [\App\Http\Controllers\UserController::class, 'index']);
@@ -51,11 +43,21 @@ Route::prefix('v1')->group(function () {
             Route::delete('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'destroy']);
             // Reporting
             Route::post('/reports/download', [\App\Http\Controllers\ReportController::class, 'download']);
-
         });
 
-        // Snack Item & Shop CRUD (account_manager, operations_manager, operations_staff)
-        Route::middleware(['role:account_manager,operations_manager,operations_staff'])->group(function () {
+        // Contribution management (operation_manager and operation only)
+        Route::middleware(['role:operation_manager,operation'])->group(function () {
+            // Contribution status update
+            Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
+            // Listing all contributions
+            Route::get('/contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
+            // Bulk update contribution status 
+            Route::post('/contributions/bulk-update-status', [\App\Http\Controllers\ContributionController::class, 'bulkUpdateStatus']);
+        });
+
+
+        // Snack Item & Shop CRUD (account_manager, operations_manager, operation)
+        Route::middleware(['role:account_manager,operations_manager,operation'])->group(function () {
             // Snack Item CRUD
             Route::get('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'index']);
             Route::get('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'show']);
@@ -93,7 +95,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Operations Staff routes
-        Route::middleware(['role:operations_staff'])->group(function () {
+        Route::middleware(['role:operation'])->group(function () {
             // Update status for assigned weekly operations
             Route::patch('/weekly-operations/{id}/status', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'updateStatus']);
             Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
@@ -121,8 +123,8 @@ Route::prefix('v1')->group(function () {
         // Snack plan detail access
         Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
         Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
-        // The following routes are only for operations_manager and operations_staff
-        Route::middleware(['role:operations_manager,operations_staff'])->group(function () {
+        // The following routes are only for operations_manager and operation
+        Route::middleware(['role:operations_manager,operation'])->group(function () {
             Route::put('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'update']);
             Route::delete('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'destroy']);
             Route::patch('/snack-plan-details/{id}/receipt', [\App\Http\Controllers\SnackPlanController::class, 'uploadReceipt']);

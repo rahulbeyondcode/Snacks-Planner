@@ -27,11 +27,11 @@ class ContributionController extends Controller
         return response()->json(['updated' => $count]);
     }
 
-    // Admin listing of all contributions with filters/pagination
+    // Listing of all contributions with filters/pagination (operation_manager and operation only)
     public function index(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
+        if (!$user || !in_array($user->role->name, ['operation_manager', 'operation'])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         $filters = $request->only(['user_id', 'status', 'from', 'to', 'per_page']);
@@ -57,7 +57,7 @@ class ContributionController extends Controller
     public function updateStatus(UpdateContributionStatusRequest $request, $id)
     {
         $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
+        if (!$user || !in_array($user->role->name, ['operation_manager', 'operation'])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         $validated = $request->validated();
