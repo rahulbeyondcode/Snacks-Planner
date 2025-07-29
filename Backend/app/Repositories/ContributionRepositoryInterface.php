@@ -5,6 +5,13 @@ namespace App\Repositories;
 interface ContributionRepositoryInterface
 {
     /**
+     * Bulk update status for multiple contributions.
+     * @param array $contributions Array of ['id' => int, 'status' => string]
+     * @return int Number of updated records
+     */
+    public function bulkUpdateStatus(array $contributions);
+
+    /**
      * List all contributions with optional filters and pagination.
      * @param array $filters
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator|\Illuminate\Support\Collection
