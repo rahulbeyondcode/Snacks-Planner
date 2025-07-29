@@ -14,7 +14,7 @@ class StoreOfficeHolidayRequest extends FormRequest
     public function rules()
     {
         return [
-            'holiday_date' => 'required|date',
+            'holiday_date' => 'required|date_format:d-M-Y|unique:office_holidays,holiday_date',
             'description' => 'nullable|string|max:255',
         ];
     }

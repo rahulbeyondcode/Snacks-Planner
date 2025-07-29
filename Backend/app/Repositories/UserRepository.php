@@ -9,6 +9,10 @@ class UserRepository implements UserRepositoryInterface
     public function all(array $filters = [])
     {
         $query = User::query();
+        // Exclude users with the 'account_manager' role
+        $query->whereHas('role', function($q) {
+            $q->where('name', '!=', 'account_manager');
+        });
         if (!empty($filters['role_id'])) {
             $query->where('role_id', $filters['role_id']);
         }
@@ -34,6 +38,10 @@ class UserRepository implements UserRepositoryInterface
     public function update(int $id, array $data)
     {
         $user = User::find($id);
+        if ($user && $user->role && $user->role->name === 'account_manager') {
+            // Prevent update for account_manager role
+            return null;
+        }
         if ($user) {
             $user->update($data);
         }
@@ -43,6 +51,10 @@ class UserRepository implements UserRepositoryInterface
     public function delete(int $id)
     {
         $user = User::find($id);
+        if ($user && $user->role && $user->role->name === 'account_manager') {
+            // Prevent delete for account_manager role
+            return false;
+        }
         if ($user) {
             $user->delete();
             return true;

@@ -44,6 +44,19 @@ class OfficeHolidayController extends Controller
         $holidays = $this->officeHolidayService->getAllHolidays();
         return \App\Http\Resources\OfficeHolidayResource::collection($holidays);
     }
+
+    // Add a new office holiday (pill-style add)
+    public function store(StoreOfficeHolidayRequest $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $data = $request->validated();
+        $data['user_id'] = $user->user_id;
+        $holiday = $this->officeHolidayService->createHoliday($data);
+        return new \App\Http\Resources\OfficeHolidayResource($holiday);
+    }
     protected $officeHolidayService;
 
     public function __construct(OfficeHolidayServiceInterface $officeHolidayService)
