@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\MoneyPoolSettingsController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -14,17 +14,10 @@ Route::prefix('v1')->group(function () {
 
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
-            // Money Pool Management
-            Route::get('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'index']);
-            Route::post('/money-pools', [\App\Http\Controllers\MoneyPoolController::class, 'store']);
-            Route::get('/money-pools/{id}', [\App\Http\Controllers\MoneyPoolController::class, 'show']);
-            Route::post('/money-pools/{id}/block', [\App\Http\Controllers\MoneyPoolController::class, 'block']);
-            Route::get('/money-pools/{id}/total-collected', [\App\Http\Controllers\MoneyPoolController::class, 'totalCollected']);
-            Route::get('/money-pools/{id}/total-blocked', [\App\Http\Controllers\MoneyPoolController::class, 'totalBlocked']);
-            // Contribution status update
-            Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
-            // Admin listing all contributions
-            Route::get('/contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
+
+            // Money Pool Settings
+            Route::post('/money-pool-settings', [MoneyPoolSettingsController::class, 'store']);
+            Route::get('/money-pool-settings', [MoneyPoolSettingsController::class, 'index']);
 
             // User management (admin only)
             Route::get('/users', [\App\Http\Controllers\UserController::class, 'index']);
@@ -35,26 +28,36 @@ Route::prefix('v1')->group(function () {
             Route::patch('/users/{id}/role', [\App\Http\Controllers\UserController::class, 'assignRole']);
 
             // Group management (admin only)
-            Route::get('/groups', [\App\Http\Controllers\GroupController::class, 'index']);
-            Route::get('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'show']);
-            Route::post('/groups', [\App\Http\Controllers\GroupController::class, 'store']);
-            Route::put('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'update']);
-            Route::delete('/groups/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);
-            Route::patch('/groups/{id}/leader', [\App\Http\Controllers\GroupController::class, 'assignLeader']);
-            Route::get('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'members']);
-            Route::post('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'addMembers']);
-            Route::delete('/groups/{id}/members', [\App\Http\Controllers\GroupController::class, 'removeMembers']);
+            Route::prefix('groups')->group(function () {
+                Route::get('/', [\App\Http\Controllers\GroupController::class, 'index']);
+                Route::get('/{id}', [\App\Http\Controllers\GroupController::class, 'show']);
+                Route::post('/', [\App\Http\Controllers\GroupController::class, 'store']);
+                Route::put('/{id}', [\App\Http\Controllers\GroupController::class, 'update']);
+                Route::delete('/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);
+                Route::put('/update-sort-order', [\App\Http\Controllers\GroupController::class, 'setSortOrder']);
+            });
+
             // Set office holidays
             Route::post('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'setHoliday']);
             Route::patch('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'update']);
             Route::delete('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'destroy']);
             // Reporting
             Route::post('/reports/download', [\App\Http\Controllers\ReportController::class, 'download']);
-
         });
 
-        // Snack Item & Shop CRUD (account_manager, operations_manager, operations_staff)
-        Route::middleware(['role:account_manager,operations_manager,operations_staff'])->group(function () {
+        // Contribution management (operation_manager and operation only)
+        Route::middleware(['role:operation_manager,operation'])->group(function () {
+            // Contribution status update
+            Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
+            // Listing all contributions
+            Route::get('/contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
+            // Bulk update contribution status 
+            Route::post('/contributions/bulk-update-status', [\App\Http\Controllers\ContributionController::class, 'bulkUpdateStatus']);
+        });
+
+
+        // Snack Item & Shop CRUD (account_manager, operations_manager, operation)
+        Route::middleware(['role:account_manager,operations_manager,operation'])->group(function () {
             // Snack Item CRUD
             Route::get('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'index']);
             Route::get('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'show']);
@@ -81,10 +84,18 @@ Route::prefix('v1')->group(function () {
             Route::post('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'assign']);
             Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
             Route::get('/weekly-operations/{id}', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'show']);
+
+            // Money Pool Management
+            Route::get('/money-pools', [MoneyPoolController::class, 'index']);
+            Route::post('/money-pools', [MoneyPoolController::class, 'store']);
+            Route::get('/money-pools/{id}', [MoneyPoolController::class, 'show']);
+            Route::post('/money-pools/{id}/block', [MoneyPoolController::class, 'block']);
+            Route::get('/money-pools/{id}/total-collected', [MoneyPoolController::class, 'totalCollected']);
+            Route::get('/money-pools/{id}/total-blocked', [MoneyPoolController::class, 'totalBlocked']);
         });
 
         // Operations Staff routes
-        Route::middleware(['role:operations_staff'])->group(function () {
+        Route::middleware(['role:operation'])->group(function () {
             // Update status for assigned weekly operations
             Route::patch('/weekly-operations/{id}/status', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'updateStatus']);
             Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
@@ -112,8 +123,8 @@ Route::prefix('v1')->group(function () {
         // Snack plan detail access
         Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
         Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
-        // The following routes are only for operations_manager and operations_staff
-        Route::middleware(['role:operations_manager,operations_staff'])->group(function () {
+        // The following routes are only for operations_manager and operation
+        Route::middleware(['role:operations_manager,operation'])->group(function () {
             Route::put('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'update']);
             Route::delete('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'destroy']);
             Route::patch('/snack-plan-details/{id}/receipt', [\App\Http\Controllers\SnackPlanController::class, 'uploadReceipt']);

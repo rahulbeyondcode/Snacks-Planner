@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OfficeHoliday extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'holiday_id';
 
@@ -16,6 +17,8 @@ class OfficeHoliday extends Model
         'holiday_date',
         'description',
         'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
     public function user()

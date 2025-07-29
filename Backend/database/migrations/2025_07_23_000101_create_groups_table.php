@@ -11,7 +11,10 @@ return new class extends Migration {
             $table->id('group_id');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->enum('group_status', ['active', 'inactive'])->default('inactive');
+            $table->integer('sort_order')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

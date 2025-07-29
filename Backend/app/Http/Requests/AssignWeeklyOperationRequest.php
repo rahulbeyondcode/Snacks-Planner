@@ -17,7 +17,7 @@ class AssignWeeklyOperationRequest extends FormRequest
         return [
             'group_id' => 'required|integer|exists:groups,group_id',
             'week_start_date' => 'required|date',
-            'employee_id' => 'required|integer|exists:users,user_id',
+            'user_id' => 'required|integer|exists:users,user_id',
             'assigned_by' => 'required|integer|exists:users,user_id',
             'details' => 'nullable|array',
             'details.*.task_description' => 'required_with:details|string',

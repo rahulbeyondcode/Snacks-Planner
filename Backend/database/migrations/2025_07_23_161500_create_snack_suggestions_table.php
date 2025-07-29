@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->string('snack_name');
             $table->text('reason')->nullable();
             $table->timestamps();
-
+            $table->softDeletes();
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
         });
     }

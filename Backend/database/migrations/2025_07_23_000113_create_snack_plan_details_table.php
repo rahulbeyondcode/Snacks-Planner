@@ -20,7 +20,8 @@ return new class extends Migration {
             $table->decimal('discount', 10, 2)->nullable();
             $table->decimal('delivery_charge', 10, 2)->nullable();
             $table->text('upload_receipt')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
+            $table->softDeletes();
             $table->foreign('snack_plan_id')->references('snack_plan_id')->on('snack_plans')->onDelete('cascade');
             $table->foreign('snack_item_id')->references('snack_item_id')->on('snack_items')->onDelete('cascade');
             $table->foreign('shop_id')->references('shop_id')->on('shops')->onDelete('cascade');

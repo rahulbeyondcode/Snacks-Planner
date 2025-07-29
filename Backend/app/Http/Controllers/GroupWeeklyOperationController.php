@@ -24,14 +24,14 @@ class GroupWeeklyOperationController extends Controller
         return new GroupWeeklyOperationResource($assignment->load(['group', 'employee', 'assignedBy', 'details']));
     }
 
-    // Update status (operations_staff or operations_manager)
+    // Update status (operation or operations_manager)
     public function updateStatus(UpdateWeeklyOperationStatusRequest $request, $id)
     {
         $detail = $this->service->updateDetailStatus($request->input('detail_id'), $request->input('status'));
         return response()->json(['message' => 'Status updated', 'detail' => $detail]);
     }
 
-    // List assignments (operations_manager or operations_staff)
+    // List assignments (operations_manager or operation)
     public function index(Request $request)
     {
         $assignments = $this->service->listAssignments($request->all());

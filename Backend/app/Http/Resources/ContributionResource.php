@@ -9,11 +9,11 @@ class ContributionResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id' => $this->id,
+            'contribution_id' => $this->contribution_id,
             'user_id' => $this->user_id,
-            'amount' => $this->amount,
-            'status' => $this->status,
-            'month' => $this->month,
+            'user_name' => $this->user ? $this->user->name : null,
+            'status' => $this->status === 'paid',
+            
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
