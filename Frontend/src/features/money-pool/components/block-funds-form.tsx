@@ -2,6 +2,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import React from "react";
 import { useForm } from "react-hook-form";
 
+import Button from "shared/components/save-button";
+
 import {
   blockFundsFormDefaultValues,
   blockFundsFormSchema,
@@ -94,12 +96,7 @@ const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
         </p>
       )}
 
-      <button
-        type="submit"
-        className="w-full bg-blue-200 border border-blue-400 text-blue-900 font-bold py-2 rounded-lg text-lg mt-2 hover:bg-blue-300 transition"
-      >
-        Save
-      </button>
+      <Button type="submit">Save</Button>
     </form>
   );
 };

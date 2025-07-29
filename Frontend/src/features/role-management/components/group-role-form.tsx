@@ -1,14 +1,15 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import React from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { HiOutlineArchiveBoxXMark } from "react-icons/hi2";
 import { v4 as uuidv4 } from "uuid";
 
 import EmployeeMultiSelect from "features/role-management/components/employee-multi-select";
-import SaveButton from "features/role-management/components/save-button";
 import SnackManagerMultiSelect from "features/role-management/components/snack-manager-multi-select";
 
 import { schema } from "features/role-management/components/form-config";
 import type { Employee, Group } from "features/role-management/types";
+import Button from "shared/components/save-button";
 
 // Mock employee data (replace with API integration later)
 const initialEmployees: Employee[] = [
@@ -109,27 +110,17 @@ const GroupRoleForm: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button
+                  <Button
                     type="button"
-                    className="hover:text-red-600"
+                    className="border border-red-500 text-red-500 p-2 rounded-3xl"
+                    shouldUseDefaultClass={false}
                     onClick={(e) => {
                       e.stopPropagation();
                       remove(index);
                     }}
                   >
-                    <svg
-                      width="20"
-                      height="20"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <rect x="5" y="6" width="10" height="10" rx="2" />
-                      <path d="M3 6h14" />
-                      <path d="M8 9v4" />
-                      <path d="M12 9v4" />
-                    </svg>
-                  </button>
+                    <HiOutlineArchiveBoxXMark />
+                  </Button>
                 </div>
               </div>
               {/* Accordion Panel */}
@@ -221,7 +212,7 @@ const GroupRoleForm: React.FC = () => {
         + Add New Group
       </button>
       <div className="flex justify-center mt-6">
-        <SaveButton onClick={handleSubmit(onSubmit)} />
+        <Button onClick={handleSubmit(onSubmit)}>Save</Button>
       </div>
       {errors.groups && typeof errors.groups.message === "string" && (
         <div className="text-red-600 mt-2 text-center">

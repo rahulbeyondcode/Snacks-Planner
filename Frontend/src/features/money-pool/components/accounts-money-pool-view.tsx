@@ -2,6 +2,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 
 import { useMoneyPoolStore } from "features/money-pool/store/money-pool-store";
+import Button from "shared/components/save-button";
 
 const multipliers = [0, 1, 2, 3, 4];
 
@@ -58,12 +59,7 @@ const AccountsMoneyPoolView: React.FC = () => {
         ))}
       </select>
 
-      <button
-        type="submit"
-        className="w-full bg-yellow-200 border border-yellow-400 text-red-500 font-bold py-2 rounded-lg text-xl mt-4 hover:bg-yellow-300 transition"
-      >
-        Save
-      </button>
+      <Button type="submit">Save</Button>
     </form>
   );
 };

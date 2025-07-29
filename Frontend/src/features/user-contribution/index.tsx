@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import EmployeeContributionList from "features/user-contribution/components/employee-contribution-list";
 import FilterBar from "features/user-contribution/components/filter-bar";
-import SaveButton from "features/user-contribution/components/save-button";
+import Button from "shared/components/save-button";
 
 import type { EmployeeContribution } from "features/user-contribution/type";
 
@@ -57,7 +57,7 @@ const UserContributionManagement = () => {
           onTogglePaid={handleTogglePaid}
         />
         <div className="flex justify-center mt-4">
-          <SaveButton onClick={handleSave} />
+          <Button onClick={handleSave}>Save</Button>
         </div>
       </div>
     </div>
