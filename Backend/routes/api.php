@@ -8,6 +8,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 
     Route::middleware('auth:sanctum')->group(function () {
+        // Bulk update contribution status (operation_manager and operation only)
+        Route::middleware(['role:operation_manager,operation'])->post('/contributions/bulk-update-status', [\App\Http\Controllers\ContributionController::class, 'bulkUpdateStatus']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/user', [AuthController::class, 'profile']);
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
@@ -23,6 +25,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/money-pools/{id}/total-blocked', [\App\Http\Controllers\MoneyPoolController::class, 'totalBlocked']);
             // Contribution status update
             Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
+
             // Admin listing all contributions
             Route::get('/contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
 

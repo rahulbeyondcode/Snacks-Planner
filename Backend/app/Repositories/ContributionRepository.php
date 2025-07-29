@@ -9,27 +9,70 @@ use App\Models\Contribution;
 class ContributionRepository implements ContributionRepositoryInterface
 {
     /**
+     * Bulk update status for multiple contributions.
+     * @param array $contributions Array of ['id' => int, 'status' => string]
+     * @return int Number of updated records
+     */
+    /**
+     * Bulk update status for all users for the current month.
+     * @param array $paidUserIds
+     * @return int Number of updated records
+     */
+    public function bulkUpdateStatus(array $paidUserIds)
+    {
+        $now = now();
+        $monthStart = $now->copy()->startOfMonth();
+        $monthEnd = $now->copy()->endOfMonth();
+
+        // Get all users
+        $allUsers = \App\Models\User::pluck('user_id')->toArray();
+        $count = 0;
+        foreach ($allUsers as $userId) {
+            $status = in_array($userId, $paidUserIds) ? 'paid' : 'unpaid';
+            $existing = \App\Models\Contribution::where('user_id', $userId)
+                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->first();
+            if ($existing) {
+                if ($existing->status !== $status) {
+                    $existing->status = $status;
+                    $existing->save();
+                    $count++;
+                }
+            } else {
+                \App\Models\Contribution::create([
+                    'user_id' => $userId,
+                    'status' => $status,
+                    'created_at' => $now
+                ]);
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    /**
      * List all contributions with optional filters and pagination.
      * @param array $filters
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function listAll(array $filters = [])
     {
-        $query = Contribution::query();
-        if (!empty($filters['user_id'])) {
-            $query->where('user_id', $filters['user_id']);
+        $query = Contribution::query()->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->select('contributions.*');
+        if (!empty($filters['name'])) {
+            $query->where('users.name', 'like', '%' . $filters['name'] . '%');
         }
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            $query->where('contributions.status', $filters['status']);
         }
         if (!empty($filters['from'])) {
-            $query->whereDate('created_at', '>=', $filters['from']);
+            $query->whereDate('contributions.created_at', '>=', $filters['from']);
         }
         if (!empty($filters['to'])) {
-            $query->whereDate('created_at', '<=', $filters['to']);
+            $query->whereDate('contributions.created_at', '<=', $filters['to']);
         }
         $perPage = $filters['per_page'] ?? 15;
-        return $query->orderByDesc('created_at')->paginate($perPage);
+        return $query->orderByDesc('contributions.created_at')->paginate($perPage);
     }
     public function create(array $data)
     {
@@ -69,8 +112,8 @@ class ContributionRepository implements ContributionRepositoryInterface
     {
         // Example: sum by user and overall
         return [
-            'total' => Contribution::sum('amount'),
-            'by_user' => Contribution::select('user_id', \DB::raw('SUM(amount) as total_contributed'))
+            'total' => Contribution::count(),
+            'by_user' => Contribution::select('user_id', \DB::raw('COUNT(*) as total_contributions'))
                 ->groupBy('user_id')
                 ->get()
                 ->toArray(),

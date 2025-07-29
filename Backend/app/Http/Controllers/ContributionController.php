@@ -9,6 +9,24 @@ use Illuminate\Support\Facades\Auth;
 
 class ContributionController extends Controller
 {
+    /**
+     * Bulk insert or update status for multiple contributions for the current month.
+     * Expects: [{user_id: int, status: string}, ...]
+     */
+    public function bulkUpdateStatus(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role->name, ['operation_manager', 'operation'])) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        $data = $request->validate([
+            'contributors' => 'required|array|min:1',
+            'contributors.*' => 'required|integer|exists:users,user_id',
+        ]);
+        $count = $this->contributionService->bulkUpdateStatus($data['contributors']);
+        return response()->json(['updated' => $count]);
+    }
+
     // Admin listing of all contributions with filters/pagination
     public function index(Request $request)
     {
@@ -18,7 +36,15 @@ class ContributionController extends Controller
         }
         $filters = $request->only(['user_id', 'status', 'from', 'to', 'per_page']);
         $contributions = $this->contributionService->listAllContributions($filters);
-        return \App\Http\Resources\ContributionResource::collection($contributions);
+        $resource = \App\Http\Resources\ContributionResource::collection($contributions);
+        $response = $resource->response()->getData(true);
+        $result = [];
+        if (isset($response['data'])) $result['data'] = $response['data'];
+        if (isset($response['meta'])) {
+            unset($response['meta']['links']);
+            $result['meta'] = $response['meta'];
+        }
+        return response()->json($result);
     }
     protected $contributionService;
 
