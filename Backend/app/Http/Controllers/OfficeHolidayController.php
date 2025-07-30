@@ -8,6 +8,7 @@ use App\Http\Requests\StoreOfficeHolidayRequest;
 use App\Http\Requests\UpdateOfficeHolidayRequest;
 use App\Services\OfficeHolidayServiceInterface;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class OfficeHolidayController extends Controller
 {
@@ -18,7 +19,12 @@ class OfficeHolidayController extends Controller
         if (!$user || $user->role->name !== 'account_manager') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
-        $holiday = $this->officeHolidayService->updateHoliday($id, $request->validated());
+        $data = $request->validated();
+        // Convert 'holiday_date' from d-M-Y (UI/API) to Y-m-d (DB)
+        if (isset($data['holiday_date'])) {
+            $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
+        }
+        $holiday = $this->officeHolidayService->updateHoliday($id, $data);
         if (!$holiday) {
             return response()->json(['message' => 'Holiday not found'], 404);
         }
@@ -53,6 +59,10 @@ class OfficeHolidayController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
         $data = $request->validated();
+        // Convert 'holiday_date' from d-M-Y (UI/API) to Y-m-d (DB)
+        if (isset($data['holiday_date'])) {
+            $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
+        }
         $data['user_id'] = $user->user_id;
         $holiday = $this->officeHolidayService->createHoliday($data);
         return new \App\Http\Resources\OfficeHolidayResource($holiday);

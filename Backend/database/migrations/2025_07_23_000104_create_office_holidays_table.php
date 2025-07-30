@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('office_holidays', function (Blueprint $table) {
             $table->id('holiday_id');
             $table->unsignedBigInteger('user_id'); // references users.user_id (should have role 'account')
-            $table->date('holiday_date');
+            $table->date('holiday_date')->unique();
             $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();
