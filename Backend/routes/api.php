@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\MoneyPoolController;
 use App\Http\Controllers\MoneyPoolSettingsController;
 use Illuminate\Support\Facades\Route;
 

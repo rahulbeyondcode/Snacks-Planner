@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Models\MoneyPool;
-use App\Models\MoneyPoolBlock;
 
 class MoneyPoolRepository implements MoneyPoolRepositoryInterface
 {
@@ -12,33 +11,12 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
         return MoneyPool::query();
     }
 
-    public function create(array $data)
+    public function getCurrentMonthMoneyPools()
     {
-        return MoneyPool::create($data);
-    }
-
-    public function find(int $id)
-    {
-        return MoneyPool::with('blocks')->find($id);
-    }
-
-    public function update(int $id, array $data)
-    {
-        $pool = MoneyPool::find($id);
-        if ($pool) {
-            $pool->update($data);
-        }
-        return $pool;
-    }
-
-    public function getTotalCollected(int $moneyPoolId): float
-    {
-        $pool = MoneyPool::find($moneyPoolId);
-        return $pool ? (float)$pool->total_collected_amount : 0;
-    }
-
-    public function getTotalBlocked(int $moneyPoolId): float
-    {
-        return MoneyPoolBlock::where('money_pool_id', $moneyPoolId)->sum('amount');
+        return MoneyPool::with(['creator', 'settings', 'blocks'])
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 }
