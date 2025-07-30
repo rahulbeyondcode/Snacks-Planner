@@ -20,4 +20,11 @@ class MoneyPoolController extends Controller
 
         return new MoneyPoolResource($pool);
     }
+
+    public function poolBlocks()
+    {
+        $blocks = $this->moneyPoolService->getPoolBlocks();
+
+        return new MoneyPoolBlockCollection($blocks);
+    }
 }

@@ -13,7 +13,7 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
 
     public function getCurrentMonthMoneyPool()
     {
-        return MoneyPool::with(['creator', 'settings'])
+        return MoneyPool::with(['creator', 'settings', 'blocks'])
             ->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->orderBy('created_at', 'desc')
