@@ -30,6 +30,8 @@ class MoneyPoolSettingsService implements MoneyPoolSettingsServiceInterface
 
         // If settings are already used, create a new row
         if ($isUsedInMoneyPools || $isUsedInMoneyPoolBlocks) {
+            $this->moneyPoolSettingsRepository->destroyMoneyPoolSettings($settingsId);
+
             return $this->moneyPoolSettingsRepository->create($data);
         }
 

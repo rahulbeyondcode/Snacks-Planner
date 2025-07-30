@@ -44,4 +44,9 @@ class MoneyPoolSettingsRepository implements MoneyPoolSettingsRepositoryInterfac
     {
         return MoneyPoolSettings::latest()->first();
     }
+
+    public function destroyMoneyPoolSettings(int $id)
+    {
+        return MoneyPoolSettings::destroy($id);
+    }
 }
