@@ -23,7 +23,7 @@ class ContributionController extends Controller
             'contributors' => 'required|array|min:1',
             'contributors.*' => 'required|integer|exists:users,user_id',
         ]);
-        $count = $this->contributionService->bulkUpdateStatus($data['contributors']);
+        $count = $this->contributionService->bulkUpdateStatus($data['contributors'], $user->user_id);
         return response()->json(['updated' => $count]);
     }
 
@@ -35,6 +35,10 @@ class ContributionController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
         $filters = $request->only(['user_id', 'status', 'from', 'to', 'per_page']);
+        // Add support for employee name search (case-insensitive)
+        if ($request->filled('search')) {
+            $filters['search'] = $request->input('search');
+        }
         $contributions = $this->contributionService->listAllContributions($filters);
         $resource = \App\Http\Resources\ContributionResource::collection($contributions);
         $response = $resource->response()->getData(true);

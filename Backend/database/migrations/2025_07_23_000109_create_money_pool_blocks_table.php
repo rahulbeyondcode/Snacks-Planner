@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('money_pool_blocks', function (Blueprint $table) {
@@ -17,7 +18,6 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
             $table->foreign('money_pool_id')->references('money_pool_id')->on('money_pools')->onDelete('cascade');
-            $table->foreign('created_by')->references('user_id')->on('users')->onDelete('cascade');
         });
     }
 

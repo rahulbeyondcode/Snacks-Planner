@@ -2,24 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\MoneyPoolServiceInterface;
-use Illuminate\Http\Request;
-use App\Http\Requests\StoreMoneyPoolRequest;
-use App\Http\Requests\BlockMoneyPoolRequest;
 use App\Http\Resources\MoneyPoolResource;
-use App\Http\Resources\MoneyPoolBlockResource;
-use App\Http\Requests\ListMoneyPoolRequest;
-use App\Http\Resources\MoneyPoolCollection;
+use App\Services\MoneyPoolServiceInterface;
 
 class MoneyPoolController extends Controller
 {
-    public function index(ListMoneyPoolRequest $request)
-    {
-        $filters = $request->validated();
-        $pools = $this->moneyPoolService->listPools($filters);
-        return new MoneyPoolCollection($pools);
-    }
-
     protected $moneyPoolService;
 
     public function __construct(MoneyPoolServiceInterface $moneyPoolService)
@@ -27,38 +14,17 @@ class MoneyPoolController extends Controller
         $this->moneyPoolService = $moneyPoolService;
     }
 
-    public function store(StoreMoneyPoolRequest $request)
+    public function index()
     {
-        $validated = $request->validated();
-        $pool = $this->moneyPoolService->createPool($validated);
-        return (new MoneyPoolResource($pool))->response()->setStatusCode(201);
-    }
+        $pool = $this->moneyPoolService->getCurrentMonthMoneyPool();
 
-    public function show($id)
-    {
-        $pool = $this->moneyPoolService->getPool($id);
-        if (!$pool) {
-            return response()->json(['message' => 'Money Pool not found'], 404);
-        }
         return new MoneyPoolResource($pool);
     }
 
-    public function block(BlockMoneyPoolRequest $request, $moneyPoolId)
+    public function poolBlocks()
     {
-        $validated = $request->validated();
-        $block = $this->moneyPoolService->blockAmount($moneyPoolId, $validated);
-        return (new MoneyPoolBlockResource($block))->response()->setStatusCode(201);
-    }
+        $blocks = $this->moneyPoolService->getPoolBlocks();
 
-    public function totalCollected($moneyPoolId)
-    {
-        $total = $this->moneyPoolService->getTotalCollected($moneyPoolId);
-        return response()->json(['total_collected' => $total]);
-    }
-
-    public function totalBlocked($moneyPoolId)
-    {
-        $total = $this->moneyPoolService->getTotalBlocked($moneyPoolId);
-        return response()->json(['total_blocked' => $total]);
+        return new MoneyPoolBlockCollection($blocks);
     }
 }

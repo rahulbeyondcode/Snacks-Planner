@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\ApiResponse;
 use App\Http\Requests\StoreMoneyPoolSettingsRequest;
 use App\Http\Resources\MoneyPoolSettingsResource;
 use App\Services\MoneyPoolSettingsServiceInterface;
@@ -26,7 +25,8 @@ class MoneyPoolSettingsController extends Controller
                 ->response()
                 ->setStatusCode(201);
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to save money pool settings', 500);
+            return apiResponse(false, 'Failed to save money pool settings', null, 500);
+
         }
     }
 
@@ -36,12 +36,12 @@ class MoneyPoolSettingsController extends Controller
             $settings = $this->moneyPoolSettingsService->getSettings();
 
             if (! $settings) {
-                return ApiResponse::error('Money pool settings not found', 404);
+                return apiResponse(false, 'Money pool settings not found', null, 404);
             }
 
             return new MoneyPoolSettingsResource($settings);
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to retrieve money pool settings', 500);
+            return apiResponse(false, 'Failed to retrieve money pool settings', null, 500);
         }
     }
 }
