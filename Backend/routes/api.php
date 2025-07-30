@@ -14,6 +14,15 @@ Route::prefix('v1')->group(function () {
 
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
+            // Working Days Management
+            Route::get('/working-days', [\App\Http\Controllers\WorkingDayController::class, 'show']);
+            Route::put('/working-days', [\App\Http\Controllers\WorkingDayController::class, 'update']);
+
+            // Office Holidays (pill-style CRUD)
+            Route::get('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'index']);
+            Route::post('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'store']);
+            Route::patch('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'update']);
+            Route::delete('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'destroy']);
 
             // Money Pool Settings
             Route::post('/money-pool-settings', [MoneyPoolSettingsController::class, 'store']);
@@ -37,10 +46,6 @@ Route::prefix('v1')->group(function () {
                 Route::put('/update-sort-order', [\App\Http\Controllers\GroupController::class, 'setSortOrder']);
             });
 
-            // Set office holidays
-            Route::post('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'setHoliday']);
-            Route::patch('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'update']);
-            Route::delete('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'destroy']);
             // Reporting
             Route::post('/reports/download', [\App\Http\Controllers\ReportController::class, 'download']);
         });

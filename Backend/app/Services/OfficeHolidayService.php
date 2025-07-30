@@ -31,6 +31,11 @@ class OfficeHolidayService implements OfficeHolidayServiceInterface
         return $this->officeHolidayRepository->create($data);
     }
 
+    public function createHoliday(array $data)
+    {
+        return $this->officeHolidayRepository->create($data);
+    }
+
     public function isHolidaySet(string $holidayDate)
     {
         return $this->officeHolidayRepository->findByDate($holidayDate) !== null;

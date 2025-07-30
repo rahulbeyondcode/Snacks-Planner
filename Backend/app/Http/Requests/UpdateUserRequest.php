@@ -19,7 +19,7 @@ class UpdateUserRequest extends FormRequest
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $userId . ',user_id',
             'password' => 'nullable|string|min:8',
-            'role_id' => 'sometimes|exists:roles,role_id',
+
         ];
     }
 }
