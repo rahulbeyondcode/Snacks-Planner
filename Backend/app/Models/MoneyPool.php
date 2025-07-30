@@ -15,8 +15,10 @@ class MoneyPool extends Model
     protected $fillable = [
         'money_pool_setting_id',
         'total_collected_amount',
+        'employer_contribution',
         'total_pool_amount',
         'blocked_amount',
+        'total_available_amount',
         'created_by',
         'created_at',
         'updated_at',
