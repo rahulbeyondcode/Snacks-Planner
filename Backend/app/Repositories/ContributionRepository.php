@@ -59,8 +59,9 @@ class ContributionRepository implements ContributionRepositoryInterface
     {
         $query = Contribution::query()->join('users', 'contributions.user_id', '=', 'users.user_id')
             ->select('contributions.*');
-        if (!empty($filters['name'])) {
-            $query->where('users.name', 'like', '%' . $filters['name'] . '%');
+        if (!empty($filters['search'])) {
+            $searchTerm = strtolower($filters['search']);
+            $query->whereRaw('LOWER(users.name) LIKE ?', ['%' . $searchTerm . '%']);
         }
         if (!empty($filters['status'])) {
             $query->where('contributions.status', $filters['status']);
