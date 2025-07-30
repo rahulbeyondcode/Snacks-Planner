@@ -23,7 +23,7 @@ class ContributionController extends Controller
             'contributors' => 'required|array|min:1',
             'contributors.*' => 'required|integer|exists:users,user_id',
         ]);
-        $count = $this->contributionService->bulkUpdateStatus($data['contributors']);
+        $count = $this->contributionService->bulkUpdateStatus($data['contributors'], $user->user_id);
         return response()->json(['updated' => $count]);
     }
 

@@ -18,7 +18,7 @@ class ContributionRepository implements ContributionRepositoryInterface
      * @param array $paidUserIds
      * @return int Number of updated records
      */
-    public function bulkUpdateStatus(array $paidUserIds)
+    public function bulkUpdateStatus(array $paidUserIds, $userId = null)
     {
         $now = now();
         $monthStart = $now->copy()->startOfMonth();
@@ -27,9 +27,9 @@ class ContributionRepository implements ContributionRepositoryInterface
         // Get all users
         $allUsers = \App\Models\User::pluck('user_id')->toArray();
         $count = 0;
-        foreach ($allUsers as $userId) {
-            $status = in_array($userId, $paidUserIds) ? 'paid' : 'unpaid';
-            $existing = \App\Models\Contribution::where('user_id', $userId)
+        foreach ($allUsers as $targetUserId) {
+            $status = in_array($targetUserId, $paidUserIds) ? 'paid' : 'unpaid';
+            $existing = \App\Models\Contribution::where('user_id', $targetUserId)
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->first();
             if ($existing) {
@@ -40,13 +40,47 @@ class ContributionRepository implements ContributionRepositoryInterface
                 }
             } else {
                 \App\Models\Contribution::create([
-                    'user_id' => $userId,
+                    'user_id' => $targetUserId,
                     'status' => $status,
                     'created_at' => $now
                 ]);
                 $count++;
             }
         }
+        // --- Money Pool Insert/Update Logic ---
+        // 1. Get active money_pool_settings (assuming 'active' means latest or with a status column)
+        $activeSetting = \App\Models\MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+        if ($activeSetting) {
+            $perMonthAmount = $activeSetting->per_month_amount;
+            $multiplier = $activeSetting->multiplier;
+            // 2. Count paid contributions for this month
+            $paidCount = \App\Models\Contribution::where('status', 'paid')
+                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->count();
+            $totalCollected = $paidCount * $perMonthAmount;
+            $employerContribution = $totalCollected * $multiplier;
+            $totalPoolAmount = $totalCollected + $employerContribution;
+            // 3. Insert or update money_pools row for this month
+            $pool = \App\Models\MoneyPool::whereDate('created_at', '>=', $monthStart)
+                ->whereDate('created_at', '<=', $monthEnd)
+                ->first();
+            $poolData = [
+                'money_pool_setting_id' => $activeSetting->money_pool_setting_id,
+                'total_collected_amount' => $totalCollected,
+                'employer_contribution' => $employerContribution,
+                'total_pool_amount' => $totalPoolAmount,
+            ];
+            if ($pool) {
+                // Only update relevant fields, do not overwrite created_by
+                $pool->update($poolData);
+            } else {
+                $poolData['created_by'] = $userId;
+                $poolData['created_at'] = $now;
+                $poolData['updated_at'] = $now;
+                \App\Models\MoneyPool::create($poolData);
+            }
+        }
+        // --- End Money Pool Logic ---
         return $count;
     }
 
