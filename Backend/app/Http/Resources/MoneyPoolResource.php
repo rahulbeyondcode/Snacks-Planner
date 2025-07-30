@@ -9,15 +9,12 @@ class MoneyPoolResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id' => $this->money_pool_id,
+            'money_pool_id' => $this->money_pool_id,
             'total_collected_amount' => (float) $this->total_collected_amount,
             'employer_contribution' => (float) $this->employer_contribution,
             'total_pool_amount' => (float) $this->total_pool_amount,
             'blocked_amount' => (float) $this->blocked_amount,
             'total_available_amount' => (float) $this->total_available_amount,
-            'created_by' => $this->created_by,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
             'creator' => $this->whenLoaded('creator', function () {
                 return [
                     'id' => $this->creator->user_id,
