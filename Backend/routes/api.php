@@ -92,9 +92,6 @@ Route::prefix('v1')->group(function () {
 
             // Money Pool Management
             Route::get('/money-pools', [MoneyPoolController::class, 'index']);
-            Route::post('/money-pools/{id}/block', [MoneyPoolController::class, 'block']);
-            Route::get('/money-pools/{id}/total-collected', [MoneyPoolController::class, 'totalCollected']);
-            Route::get('/money-pools/{id}/total-blocked', [MoneyPoolController::class, 'totalBlocked']);
         });
 
         // Operations Staff routes

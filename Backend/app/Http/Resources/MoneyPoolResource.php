@@ -23,11 +23,10 @@ class MoneyPoolResource extends JsonResource
                 ];
             }),
             'settings' => $this->whenLoaded('settings', function () {
-                return [
-                    'id' => $this->settings->money_pool_setting_id,
-                    'per_month_amount' => (float) $this->settings->per_month_amount,
-                    'multiplier' => (int) $this->settings->multiplier,
-                ];
+                return new MoneyPoolSettingsResource($this->settings);
+            }),
+            'blocks' => $this->whenLoaded('blocks', function () {
+                return MoneyPoolBlockResource::collection($this->blocks);
             }),
         ];
     }
