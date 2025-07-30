@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('group_weekly_operations', function (Blueprint $table) {
@@ -17,8 +18,6 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
             $table->foreign('group_id')->references('group_id')->on('groups')->onDelete('cascade');
-            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
-            $table->foreign('assigned_by')->references('user_id')->on('users')->onDelete('cascade');
         });
     }
 

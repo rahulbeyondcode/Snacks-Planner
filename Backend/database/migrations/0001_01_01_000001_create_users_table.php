@@ -17,7 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('role_id');
             $table->string('email')->unique();
             $table->enum('preference', ['veg', 'non-veg'])->nullable();
-            $table->foreign('role_id')->references('role_id')->on('roles')->onDelete('cascade');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->rememberToken();

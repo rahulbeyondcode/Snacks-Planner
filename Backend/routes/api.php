@@ -51,10 +51,9 @@ Route::prefix('v1')->group(function () {
             Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
             // Listing all contributions
             Route::get('/contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
-            // Bulk update contribution status 
+            // Bulk update contribution status
             Route::post('/contributions/bulk-update-status', [\App\Http\Controllers\ContributionController::class, 'bulkUpdateStatus']);
         });
-
 
         // Snack Item & Shop CRUD (account_manager, operations_manager, operation)
         Route::middleware(['role:account_manager,operations_manager,operation'])->group(function () {
@@ -87,8 +86,6 @@ Route::prefix('v1')->group(function () {
 
             // Money Pool Management
             Route::get('/money-pools', [MoneyPoolController::class, 'index']);
-            Route::post('/money-pools', [MoneyPoolController::class, 'store']);
-            Route::get('/money-pools/{id}', [MoneyPoolController::class, 'show']);
             Route::post('/money-pools/{id}/block', [MoneyPoolController::class, 'block']);
             Route::get('/money-pools/{id}/total-collected', [MoneyPoolController::class, 'totalCollected']);
             Route::get('/money-pools/{id}/total-blocked', [MoneyPoolController::class, 'totalBlocked']);
