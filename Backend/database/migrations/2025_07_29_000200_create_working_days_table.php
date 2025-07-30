@@ -7,19 +7,17 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('office_holidays', function (Blueprint $table) {
-            $table->id('holiday_id');
-            $table->unsignedBigInteger('user_id'); // references users.user_id (should have role 'account')
-            $table->date('holiday_date')->unique();
-            $table->text('description')->nullable();
+        Schema::create('working_days', function (Blueprint $table) {
+            $table->id('id');
+            $table->json('working_days'); // e.g., ["monday","tuesday",...]
+            $table->unsignedBigInteger('user_id'); // who set it
             $table->timestamps();
-            $table->softDeletes();
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('office_holidays');
+        Schema::dropIfExists('working_days');
     }
 };
