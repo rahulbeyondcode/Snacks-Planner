@@ -11,12 +11,12 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
         return MoneyPool::query();
     }
 
-    public function getCurrentMonthMoneyPools()
+    public function getCurrentMonthMoneyPool()
     {
-        return MoneyPool::with(['creator', 'settings', 'blocks'])
+        return MoneyPool::with(['creator', 'settings'])
             ->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->first();
     }
 }
