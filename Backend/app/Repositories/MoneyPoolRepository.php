@@ -19,4 +19,9 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->first();
     }
+
+    public function find(int $id)
+    {
+        return MoneyPool::with(['creator', 'settings', 'blocks'])->find($id);
+    }
 }

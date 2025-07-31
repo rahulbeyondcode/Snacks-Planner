@@ -2,16 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BlockMoneyPoolRequest;
+use App\Http\Resources\MoneyPoolBlockResource;
 use App\Http\Resources\MoneyPoolResource;
+use App\Services\MoneyPoolBlockServiceInterface;
 use App\Services\MoneyPoolServiceInterface;
 
 class MoneyPoolController extends Controller
 {
     protected $moneyPoolService;
 
-    public function __construct(MoneyPoolServiceInterface $moneyPoolService)
-    {
+    protected $moneyPoolBlockService;
+
+    public function __construct(
+        MoneyPoolServiceInterface $moneyPoolService,
+        MoneyPoolBlockServiceInterface $moneyPoolBlockService
+    ) {
         $this->moneyPoolService = $moneyPoolService;
+        $this->moneyPoolBlockService = $moneyPoolBlockService;
     }
 
     public function index()
@@ -21,10 +29,37 @@ class MoneyPoolController extends Controller
         return new MoneyPoolResource($pool);
     }
 
-    public function poolBlocks()
+    public function block(BlockMoneyPoolRequest $request)
     {
-        $blocks = $this->moneyPoolService->getPoolBlocks();
+        try {
+            $validated = $request->validated();
+            $block = $this->moneyPoolBlockService->blockMoneyPool($validated);
 
-        return new MoneyPoolBlockCollection($blocks);
+            $statusCode = isset($validated['block_id']) ? 200 : 201;
+            $message = isset($validated['block_id']) ? 'Money pool block updated successfully' : 'Money pool block created successfully';
+
+            return (new MoneyPoolBlockResource($block))
+                ->response()
+                ->setStatusCode($statusCode);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to process money pool block',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getBlock(int $moneyPoolId)
+    {
+        try {
+            $blocks = $this->moneyPoolBlockService->getBlocksByPoolId($moneyPoolId);
+
+            return MoneyPoolBlockResource::collection($blocks);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve money pool blocks',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

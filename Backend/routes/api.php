@@ -143,6 +143,12 @@ Route::prefix('v1')->group(function () {
 
             // Money Pool Management
             Route::get('/money-pools', [MoneyPoolController::class, 'index']);
+
+            // Money Pool Blocks
+            Route::post('/money-pool-blocks', [MoneyPoolController::class, 'block']);
+            Route::put('/money-pool-blocks', [MoneyPoolController::class, 'block']);
+            Route::get('/money-pool-blocks/{moneyPoolId}', [MoneyPoolController::class, 'getBlock']);
+            Route::delete('/money-pool-blocks/{moneyPoolId}', [MoneyPoolController::class, 'deleteBlock']);
         });
 
         // Operations Staff routes
