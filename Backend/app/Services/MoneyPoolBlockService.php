@@ -70,4 +70,9 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
             $moneyPool->save();
         }
     }
+
+    public function deleteBlock(int $moneyPoolId)
+    {
+        return $this->moneyPoolBlockRepository->delete($moneyPoolId);
+    }
 }

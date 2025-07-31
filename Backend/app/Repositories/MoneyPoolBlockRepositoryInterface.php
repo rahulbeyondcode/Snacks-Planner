@@ -13,4 +13,6 @@ interface MoneyPoolBlockRepositoryInterface
     public function getTotalBlockedAmount(int $moneyPoolId): float;
 
     public function find(int $id);
+
+    public function delete(int $moneyPoolId);
 }

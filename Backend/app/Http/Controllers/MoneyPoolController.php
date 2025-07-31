@@ -62,4 +62,11 @@ class MoneyPoolController extends Controller
             ], 500);
         }
     }
+
+    public function deleteBlock(int $moneyPoolId)
+    {
+        $this->moneyPoolBlockService->deleteBlock($moneyPoolId);
+
+        return response()->json(['message' => 'Money pool block deleted successfully']);
+    }
 }
