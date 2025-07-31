@@ -105,4 +105,64 @@ class User extends Authenticatable
     {
         return $this->hasMany(GroupSnackSupplyDay::class, 'set_by', 'user_id');
     }
+
+    /**
+     * Check if user has a specific permission.
+     */
+    public function hasPermission($module, $action, $resource = null)
+    {
+        return $this->role && $this->role->hasPermission($module, $action, $resource);
+    }
+
+    /**
+     * Check if user has any permission for a module.
+     */
+    public function hasModulePermission($module)
+    {
+        return $this->role && $this->role->hasModulePermission($module);
+    }
+
+    /**
+     * Get all permissions for the user's role.
+     */
+    public function getPermissions()
+    {
+        return $this->role ? $this->role->permissions()->wherePivot('is_active', true)->get() : collect();
+    }
+
+    /**
+     * Get permissions grouped by module.
+     */
+    public function getPermissionsByModule()
+    {
+        $permissions = $this->getPermissions();
+        
+        return $permissions->groupBy('module')->map(function ($modulePermissions) {
+            return $modulePermissions->pluck('action')->unique()->values()->toArray();
+        });
+    }
+
+    /**
+     * Check if user has any of the specified roles.
+     */
+    public function hasAnyRole($roles)
+    {
+        if (is_string($roles)) {
+            $roles = [$roles];
+        }
+        
+        return $this->role && in_array($this->role->name, $roles);
+    }
+
+    /**
+     * Check if user has all of the specified roles.
+     */
+    public function hasAllRoles($roles)
+    {
+        if (is_string($roles)) {
+            $roles = [$roles];
+        }
+        
+        return $this->role && in_array($this->role->name, $roles);
+    }
 }

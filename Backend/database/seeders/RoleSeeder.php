@@ -14,7 +14,7 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $now = Carbon::now();
-        DB::table('roles')->insert([
+        DB::table('roles')->insert([            
             [
                 'role_id' => 1,
                 'name' => 'account_manager',

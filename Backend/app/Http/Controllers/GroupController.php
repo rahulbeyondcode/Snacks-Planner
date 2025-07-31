@@ -6,6 +6,7 @@ use App\Services\GroupServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Group;
+use Illuminate\Validation\Rule;
 
 class GroupController extends Controller
 {
@@ -70,7 +71,11 @@ class GroupController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:groups,name',
+            'name' => [
+                'required','string',
+                'max:255',
+                Rule::unique('groups', 'name')->whereNull('deleted_at'),
+            ],
             'description' => 'nullable|string|max:255',
             'employees' => 'required|array',
             'operation_managers' => 'required|array',
