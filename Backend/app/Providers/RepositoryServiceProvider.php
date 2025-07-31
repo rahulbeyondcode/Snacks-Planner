@@ -32,6 +32,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Services\GroupWeeklyOperationService::class, \App\Services\GroupWeeklyOperationService::class); // No interface found
         $this->app->bind(\App\Services\MoneyPoolServiceInterface::class, \App\Services\MoneyPoolService::class);
         $this->app->bind(\App\Services\MoneyPoolSettingsServiceInterface::class, \App\Services\MoneyPoolSettingsService::class);
+        $this->app->bind(\App\Services\MoneyPoolBlockServiceInterface::class, \App\Services\MoneyPoolBlockService::class);
         $this->app->bind(\App\Services\OfficeHolidayServiceInterface::class, \App\Services\OfficeHolidayService::class);
         $this->app->bind(\App\Services\ProfitLossServiceInterface::class, \App\Services\ProfitLossService::class);
         $this->app->bind(\App\Services\ReportServiceInterface::class, \App\Services\ReportService::class);
