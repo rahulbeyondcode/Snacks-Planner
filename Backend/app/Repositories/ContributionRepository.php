@@ -3,8 +3,10 @@
 namespace App\Repositories;
 
 use Illuminate\Support\Facades\DB;
-
+use App\Models\User;
 use App\Models\Contribution;
+use App\Models\MoneyPool;
+use App\Models\MoneyPoolSettings;
 
 class ContributionRepository implements ContributionRepositoryInterface
 {
@@ -25,11 +27,11 @@ class ContributionRepository implements ContributionRepositoryInterface
         $monthEnd = $now->copy()->endOfMonth();
 
         // Get all users
-        $allUsers = \App\Models\User::pluck('user_id')->toArray();
+        $allUsers = User::pluck('user_id')->toArray();
         $count = 0;
         foreach ($allUsers as $targetUserId) {
             $status = in_array($targetUserId, $paidUserIds) ? 'paid' : 'unpaid';
-            $existing = \App\Models\Contribution::where('user_id', $targetUserId)
+            $existing = Contribution::where('user_id', $targetUserId)
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->first();
             if ($existing) {
@@ -39,7 +41,7 @@ class ContributionRepository implements ContributionRepositoryInterface
                     $count++;
                 }
             } else {
-                \App\Models\Contribution::create([
+                Contribution::create([
                     'user_id' => $targetUserId,
                     'status' => $status,
                     'created_at' => $now
@@ -49,23 +51,34 @@ class ContributionRepository implements ContributionRepositoryInterface
         }
         // --- Money Pool Insert/Update Logic ---
         // 1. Get active money_pool_settings (assuming 'active' means latest or with a status column)
-        $activeSetting = \App\Models\MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
-        if ($activeSetting) {
-            $perMonthAmount = $activeSetting->per_month_amount;
-            $multiplier = $activeSetting->multiplier;
+        $pool = MoneyPool::whereDate('created_at', '>=', $monthStart)
+            ->whereDate('created_at', '<=', $monthEnd)
+            ->first();
+
+        if ($pool) {
+            // On update: use the MoneyPoolSettings associated with the existing pool
+            $setting = MoneyPoolSettings::find($pool->money_pool_setting_id);
+            if (!$setting) {
+                // Fallback: use latest if missing (should not happen)
+                $setting = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+            }
+        } else {
+            // On insert: use the latest MoneyPoolSettings
+            $setting = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+        }
+
+        if ($setting) {
+            $perMonthAmount = $setting->per_month_amount;
+            $multiplier = $setting->multiplier;
             // 2. Count paid contributions for this month
-            $paidCount = \App\Models\Contribution::where('status', 'paid')
+            $paidCount = Contribution::where('status', 'paid')
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->count();
             $totalCollected = $paidCount * $perMonthAmount;
             $employerContribution = $totalCollected * $multiplier;
             $totalPoolAmount = $totalCollected + $employerContribution;
-            // 3. Insert or update money_pools row for this month
-            $pool = \App\Models\MoneyPool::whereDate('created_at', '>=', $monthStart)
-                ->whereDate('created_at', '<=', $monthEnd)
-                ->first();
             $poolData = [
-                'money_pool_setting_id' => $activeSetting->money_pool_setting_id,
+                'money_pool_setting_id' => $setting->money_pool_setting_id,
                 'total_collected_amount' => $totalCollected,
                 'employer_contribution' => $employerContribution,
                 'total_pool_amount' => $totalPoolAmount,
@@ -77,7 +90,7 @@ class ContributionRepository implements ContributionRepositoryInterface
                 $poolData['created_by'] = $userId;
                 $poolData['created_at'] = $now;
                 $poolData['updated_at'] = $now;
-                \App\Models\MoneyPool::create($poolData);
+                MoneyPool::create($poolData);
             }
         }
         // --- End Money Pool Logic ---
