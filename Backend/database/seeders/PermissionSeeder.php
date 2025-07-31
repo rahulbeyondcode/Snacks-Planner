@@ -14,33 +14,40 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Define modules and their actions
         $modules = [
-            'groups' => ['create', 'read', 'update', 'delete', 'list'],
-            'weekly_group' => ['create', 'read', 'update', 'delete', 'list'],
-            'employees' => ['create', 'read', 'update', 'delete', 'list'],
-            'money_pool' => ['create', 'read', 'update', 'delete', 'list'],
-            'reports' => ['create', 'read', 'update', 'delete', 'list'],
-            'contributions' => ['create', 'read', 'update', 'delete', 'list'],
-            'shops' => ['create', 'read', 'update', 'delete', 'list'],
-            'snacks' => ['create', 'read', 'update', 'delete', 'list'],
-            'permissions' => ['create', 'read', 'update', 'delete', 'list'],
-            'snack_orders' => ['create', 'read', 'update', 'delete', 'list']
+            'groups'         => ['create', 'read', 'update', 'delete', 'list'],
+            'weekly_group'   => ['create', 'read', 'update', 'delete', 'list'],
+            'employees'      => ['create', 'read', 'update', 'delete', 'list'],
+            'money_pool'     => ['create', 'read', 'update', 'delete', 'list'],
+            'reports'        => ['create', 'read', 'update', 'delete', 'list'],
+            'contributions'  => ['create', 'read', 'update', 'delete', 'list'],
+            'shops'          => ['create', 'read', 'update', 'delete', 'list'],
+            'snacks'         => ['create', 'read', 'update', 'delete', 'list'],
+            'permissions'    => ['create', 'read', 'update', 'delete', 'list'],
+            'snack_orders'   => ['create', 'read', 'update', 'delete', 'list']
         ];
 
-        $resources = ['account_manager', 'snack_manager', 'operation', 'employee'];
+        // Define which modules each resource can access
+        $resourceModules = [
+            'account_manager' => ['groups', 'shops', 'snacks', 'reports'],
+            'snack_manager'   => ['snack_orders', 'weekly_group', 'money_pool', 'contributions'],
+            'operation'       => ['snack_orders', 'contributions'],
+            'employee'        => [] // Add modules if needed
+        ];
 
-        // Create permissions
-        foreach ($modules as $module => $actions) {
-            foreach ($actions as $action) {
-                foreach ($resources as $resource) {
-                    Permission::firstOrCreate([
-                        'module' => $module,
-                        'action' => $action,
-                        'resource' => $resource,
-                    ], [
-                        'description' => "Can {$action} {$module} ({$resource})",
-                    ]);
+        foreach ($resourceModules as $resource => $allowedModules) {
+            foreach ($allowedModules as $module) {
+                foreach ($modules[$module] as $action) {
+                    Permission::firstOrCreate(
+                        [
+                            'module' => $module,
+                            'action' => $action,
+                            'resource' => $resource,
+                        ],
+                        [
+                            'description' => "Can {$action} {$module} ({$resource})",
+                        ]
+                    );
                 }
             }
         }
@@ -62,8 +69,9 @@ class PermissionSeeder extends Seeder
 
             switch ($role->name) {
                 case 'account_manager':
-                    // Full access to all modules with account_manager resource
+                    // Only groups module access with account_manager resource
                     $permissionIds = $permissions
+                        ->where('module', 'groups')
                         ->where('resource', 'account_manager')
                         ->pluck('permission_id')
                         ->toArray();
@@ -103,4 +111,4 @@ class PermissionSeeder extends Seeder
             }
         }
     }
-} 
+}
