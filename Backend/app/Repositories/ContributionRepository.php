@@ -3,8 +3,10 @@
 namespace App\Repositories;
 
 use Illuminate\Support\Facades\DB;
-
+use App\Models\User;
 use App\Models\Contribution;
+use App\Models\MoneyPool;
+use App\Models\MoneyPoolSettings;
 
 class ContributionRepository implements ContributionRepositoryInterface
 {
@@ -18,18 +20,18 @@ class ContributionRepository implements ContributionRepositoryInterface
      * @param array $paidUserIds
      * @return int Number of updated records
      */
-    public function bulkUpdateStatus(array $paidUserIds)
+    public function bulkUpdateStatus(array $paidUserIds, $userId = null)
     {
         $now = now();
         $monthStart = $now->copy()->startOfMonth();
         $monthEnd = $now->copy()->endOfMonth();
 
         // Get all users
-        $allUsers = \App\Models\User::pluck('user_id')->toArray();
+        $allUsers = User::pluck('user_id')->toArray();
         $count = 0;
-        foreach ($allUsers as $userId) {
-            $status = in_array($userId, $paidUserIds) ? 'paid' : 'unpaid';
-            $existing = \App\Models\Contribution::where('user_id', $userId)
+        foreach ($allUsers as $targetUserId) {
+            $status = in_array($targetUserId, $paidUserIds) ? 'paid' : 'unpaid';
+            $existing = Contribution::where('user_id', $targetUserId)
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->first();
             if ($existing) {
@@ -39,14 +41,59 @@ class ContributionRepository implements ContributionRepositoryInterface
                     $count++;
                 }
             } else {
-                \App\Models\Contribution::create([
-                    'user_id' => $userId,
+                Contribution::create([
+                    'user_id' => $targetUserId,
                     'status' => $status,
                     'created_at' => $now
                 ]);
                 $count++;
             }
         }
+        // --- Money Pool Insert/Update Logic ---
+        // 1. Get active money_pool_settings (assuming 'active' means latest or with a status column)
+        $pool = MoneyPool::whereDate('created_at', '>=', $monthStart)
+            ->whereDate('created_at', '<=', $monthEnd)
+            ->first();
+
+        if ($pool) {
+            // On update: use the MoneyPoolSettings associated with the existing pool
+            $setting = MoneyPoolSettings::find($pool->money_pool_setting_id);
+            if (!$setting) {
+                // Fallback: use latest if missing (should not happen)
+                $setting = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+            }
+        } else {
+            // On insert: use the latest MoneyPoolSettings
+            $setting = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+        }
+
+        if ($setting) {
+            $perMonthAmount = $setting->per_month_amount;
+            $multiplier = $setting->multiplier;
+            // 2. Count paid contributions for this month
+            $paidCount = Contribution::where('status', 'paid')
+                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->count();
+            $totalCollected = $paidCount * $perMonthAmount;
+            $employerContribution = $totalCollected * $multiplier;
+            $totalPoolAmount = $totalCollected + $employerContribution;
+            $poolData = [
+                'money_pool_setting_id' => $setting->money_pool_setting_id,
+                'total_collected_amount' => $totalCollected,
+                'employer_contribution' => $employerContribution,
+                'total_pool_amount' => $totalPoolAmount,
+            ];
+            if ($pool) {
+                // Only update relevant fields, do not overwrite created_by
+                $pool->update($poolData);
+            } else {
+                $poolData['created_by'] = $userId;
+                $poolData['created_at'] = $now;
+                $poolData['updated_at'] = $now;
+                MoneyPool::create($poolData);
+            }
+        }
+        // --- End Money Pool Logic ---
         return $count;
     }
 

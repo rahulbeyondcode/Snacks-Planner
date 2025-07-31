@@ -16,9 +16,9 @@ class ContributionService implements ContributionServiceInterface
      * @param array $paidUserIds
      * @return int Number of updated records
      */
-    public function bulkUpdateStatus(array $paidUserIds)
+    public function bulkUpdateStatus(array $paidUserIds, $userId = null)
     {
-        return $this->contributionRepository->bulkUpdateStatus($paidUserIds);
+        return $this->contributionRepository->bulkUpdateStatus($paidUserIds, $userId);
     }
 
     /**

@@ -6,11 +6,62 @@ use App\Http\Controllers\MoneyPoolSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
+    // Authentication routes
+    Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
+    Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile'])->middleware('auth:sanctum');
+
+    // Permission management routes (admin only)
+    Route::middleware(['auth:sanctum', 'permission:permissions,list,account_manager'])->prefix('permissions')->group(function () {
+        Route::get('/', [App\Http\Controllers\PermissionController::class, 'index']);
+        Route::get('/module/{module}', [App\Http\Controllers\PermissionController::class, 'getByModule']);
+        Route::post('/', [App\Http\Controllers\PermissionController::class, 'store']);
+        Route::put('/{id}', [App\Http\Controllers\PermissionController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\PermissionController::class, 'destroy']);
+        Route::post('/bulk-create', [App\Http\Controllers\PermissionController::class, 'bulkCreate']);
+        Route::post('/roles/{roleId}/assign', [App\Http\Controllers\PermissionController::class, 'assignToRole']);
+        Route::get('/roles/{roleId}', [App\Http\Controllers\PermissionController::class, 'getRolePermissions']);
+    });
+
+    // Protected routes with permission middleware
+    Route::middleware(['auth:sanctum'])->group(function () {
+        
+        // Group management with permissions
+        Route::middleware(['permission:groups,list,account_manager'])->prefix('groups')->group(function () {
+            Route::get('/', [App\Http\Controllers\GroupController::class, 'index']);
+            Route::get('/{id}', [App\Http\Controllers\GroupController::class, 'show']);
+            Route::post('/', [App\Http\Controllers\GroupController::class, 'store'])->middleware('permission:groups,create,account_manager');
+            Route::put('/{id}', [App\Http\Controllers\GroupController::class, 'update'])->middleware('permission:groups,update,account_manager');
+            Route::delete('/{id}', [App\Http\Controllers\GroupController::class, 'destroy'])->middleware('permission:groups,delete,account_manager');
+            Route::patch('/{id}/leader', [App\Http\Controllers\GroupController::class, 'assignLeader'])->middleware('permission:groups,update,account_manager');
+            Route::get('/{id}/members', [App\Http\Controllers\GroupController::class, 'members']);
+            Route::post('/{id}/members', [App\Http\Controllers\GroupController::class, 'addMembers'])->middleware('permission:groups,update,account_manager');
+            Route::delete('/{id}/members', [App\Http\Controllers\GroupController::class, 'removeMembers'])->middleware('permission:groups,update,account_manager');
+            Route::post('/sort-order', [App\Http\Controllers\GroupController::class, 'setSortOrder'])->middleware('permission:groups,update,account_manager');
+        });
+
+        // User management with permissions
+        Route::middleware(['permission:users,list,account_manager'])->prefix('users')->group(function () {
+            Route::get('/', [App\Http\Controllers\UserController::class, 'index']);
+            Route::get('/{id}', [App\Http\Controllers\UserController::class, 'show']);
+            Route::post('/', [App\Http\Controllers\UserController::class, 'store'])->middleware('permission:users,create,account_manager');
+            Route::put('/{id}', [App\Http\Controllers\UserController::class, 'update'])->middleware('permission:users,update,account_manager');
+            Route::delete('/{id}', [App\Http\Controllers\UserController::class, 'destroy'])->middleware('permission:users,delete,account_manager');
+        });
+
+        // Shop management with permissions
+        Route::middleware(['permission:shops,list,account_manager'])->prefix('shops')->group(function () {
+            Route::get('/', [App\Http\Controllers\ShopController::class, 'index']);
+            Route::get('/{id}', [App\Http\Controllers\ShopController::class, 'show']);
+            Route::post('/', [App\Http\Controllers\ShopController::class, 'store'])->middleware('permission:shops,create,account_manager');
+            Route::put('/{id}', [App\Http\Controllers\ShopController::class, 'update'])->middleware('permission:shops,update,account_manager');
+            Route::delete('/{id}', [App\Http\Controllers\ShopController::class, 'destroy'])->middleware('permission:shops,delete,account_manager');
+        });
+
+        // Add other module routes with similar permission structure...
+    });
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/user', [AuthController::class, 'profile']);
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
 
         // Account Manager routes
