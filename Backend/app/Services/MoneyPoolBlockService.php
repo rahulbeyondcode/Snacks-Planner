@@ -71,8 +71,8 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
         }
     }
 
-    public function deleteBlock(int $moneyPoolId)
+    public function deleteBlock(int $blockId)
     {
-        return $this->moneyPoolBlockRepository->delete($moneyPoolId);
+        return $this->moneyPoolBlockRepository->delete($blockId);
     }
 }

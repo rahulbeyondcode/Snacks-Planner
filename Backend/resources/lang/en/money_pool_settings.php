@@ -9,4 +9,6 @@ return [
     'multiplier_integer' => 'The multiplier must be an integer.',
     'multiplier_min' => 'The multiplier must be at least 0.',
     'multiplier_max' => 'The multiplier may not be greater than 5.',
+    'pool_not_found' => 'Money pool not found.',
+    'pool_settings_not_found' => 'Money pool settings not found.',
 ];

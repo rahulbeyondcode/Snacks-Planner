@@ -14,5 +14,5 @@ interface MoneyPoolBlockRepositoryInterface
 
     public function find(int $id);
 
-    public function delete(int $moneyPoolId);
+    public function delete(int $blockId);
 }

@@ -39,8 +39,13 @@ class MoneyPoolBlockRepository implements MoneyPoolBlockRepositoryInterface
         return $block;
     }
 
-    public function delete(int $moneyPoolId)
+    public function delete(int $blockId)
     {
-        return MoneyPoolBlock::where('block_id', $moneyPoolId)->delete();
+        $block = MoneyPoolBlock::find($blockId);
+        if (! $block) {
+            throw new \Exception('Money pool block not found');
+        }
+
+        return $block->delete();
     }
 }

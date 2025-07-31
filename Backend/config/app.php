@@ -100,6 +100,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class, // Uncomment if using broadcasting
 
         App\Providers\RouteServiceProvider::class,
+        App\Providers\ResponseServiceProvider::class,
     ],
 
     /*

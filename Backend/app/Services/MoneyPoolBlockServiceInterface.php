@@ -10,5 +10,5 @@ interface MoneyPoolBlockServiceInterface
 
     public function getBlock(int $id);
 
-    public function deleteBlock(int $moneyPoolId);
+    public function deleteBlock(int $blockId);
 }

@@ -2,7 +2,7 @@
 
 return [
     'success' => 'Successfully Created.',
-    'error' => 'Something went wrong.',
+    'error' => 'We\'re experiencing technical difficulties. Please try again later.',
     'not_found' => 'Not Found.',
     'forbidden' => 'Forbidden.',
     'unauthorized' => 'Unauthorized.',

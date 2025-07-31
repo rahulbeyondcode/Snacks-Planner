@@ -147,7 +147,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/money-pool-blocks', [MoneyPoolController::class, 'block']);
             Route::put('/money-pool-blocks', [MoneyPoolController::class, 'block']);
             Route::get('/money-pool-blocks/{moneyPoolId}', [MoneyPoolController::class, 'getBlock']);
-            Route::delete('/money-pool-blocks/{moneyPoolId}', [MoneyPoolController::class, 'deleteBlock']);
+            Route::delete('/money-pool-blocks/{blockId}', [MoneyPoolController::class, 'deleteBlock']);
         });
 
         // Operations Staff routes

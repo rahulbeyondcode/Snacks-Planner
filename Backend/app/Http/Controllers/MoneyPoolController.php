@@ -26,6 +26,10 @@ class MoneyPoolController extends Controller
     {
         $pool = $this->moneyPoolService->getCurrentMonthMoneyPool();
 
+        if (! $pool) {
+            return response()->notFound(__('money_pool_settings.pool_not_found'));
+        }
+
         return new MoneyPoolResource($pool);
     }
 
@@ -43,8 +47,10 @@ class MoneyPoolController extends Controller
                 ->setStatusCode($statusCode);
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Failed to process money pool block',
                 'error' => $e->getMessage(),
+                'status' => 500,
             ], 500);
         }
     }
@@ -57,16 +63,32 @@ class MoneyPoolController extends Controller
             return MoneyPoolBlockResource::collection($blocks);
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Failed to retrieve money pool blocks',
                 'error' => $e->getMessage(),
+                'status' => 500,
             ], 500);
         }
     }
 
-    public function deleteBlock(int $moneyPoolId)
+    public function deleteBlock(int $blockId)
     {
-        $this->moneyPoolBlockService->deleteBlock($moneyPoolId);
+        try {
+            $this->moneyPoolBlockService->deleteBlock($blockId);
 
-        return response()->json(['message' => 'Money pool block deleted successfully']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Money pool block deleted successfully',
+                'data' => null,
+                'status' => 200,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete money pool block',
+                'error' => $e->getMessage(),
+                'status' => 500,
+            ], 500);
+        }
     }
 }
