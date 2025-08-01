@@ -24,7 +24,21 @@ class ContributionController extends Controller
             'contributors.*' => 'required|integer|exists:users,user_id',
         ]);
         $count = $this->contributionService->bulkUpdateStatus($data['contributors'], $user->user_id);
-        return response()->json(['updated' => $count]);
+        // Fetch all contributions for the current month
+        $filters = [
+            'per_page' => 1000 // or a sufficiently large number to get all
+        ];
+        $contributions = $this->contributionService->listAllContributions($filters);
+        $resource = \App\Http\Resources\ContributionResource::collection($contributions);
+        $response = $resource->response()->getData(true);
+        $result = [];
+        if (isset($response['data'])) $result['data'] = $response['data'];
+        if (isset($response['meta'])) {
+            unset($response['meta']['links']);
+            $result['meta'] = $response['meta'];
+        }
+        $result['updated'] = $count;
+        return response()->json($result);
     }
 
     // Listing of all contributions with filters/pagination (operation_manager and operation only)
