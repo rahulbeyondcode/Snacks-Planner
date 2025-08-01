@@ -23,4 +23,9 @@ class MoneyPoolService implements MoneyPoolServiceInterface
     {
         return $this->moneyPoolRepository->getCurrentMonthMoneyPool();
     }
+
+    public function find(int $id)
+    {
+        return $this->moneyPoolRepository->find($id);
+    }
 }

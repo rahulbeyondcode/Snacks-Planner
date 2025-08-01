@@ -68,7 +68,11 @@ class UserController extends Controller
         $validated['password'] = bcrypt($validated['password']);
         $validated['role_id'] = 4; // Always assign Employee role
         $created = $this->userService->createUser($validated);
-        return response()->json($created, 201);
+        $users = $this->userService->listUsers([]);
+        return response()->json([
+            'message' => 'User created successfully',
+            'users' => $users
+        ], 201);
     }
 
     // Update user (admin only)
@@ -86,7 +90,11 @@ class UserController extends Controller
         if (!$updatedUser) {
             return response()->json(['message' => 'User not found'], 404);
         }
-        return response()->json($updatedUser);
+        $users = $this->userService->listUsers([]);
+        return response()->json([
+            'message' => 'User updated successfully',
+            'users' => $users
+        ]);
     }
 
     // Delete user (admin only)
@@ -100,7 +108,11 @@ class UserController extends Controller
         if (!$deleted) {
             return response()->json(['message' => 'User not found'], 404);
         }
-        return response()->json(['message' => 'User deleted successfully']);
+        $users = $this->userService->listUsers([]);
+        return response()->json([
+            'message' => 'User deleted successfully',
+            'users' => $users
+        ]);
     }
 
     // Assign role (admin only)
