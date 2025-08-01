@@ -11,6 +11,8 @@ type MultiDatePickerProps = {
   disabledDates?: Date[];
   customError?: string;
   isDisabled?: boolean;
+  multiDatePickMode?: boolean;
+  placeholder?: string;
 };
 
 const MultiDatePicker: React.FC<MultiDatePickerProps> = ({
@@ -19,6 +21,8 @@ const MultiDatePicker: React.FC<MultiDatePickerProps> = ({
   disabledDates = [],
   customError,
   isDisabled = false,
+  multiDatePickMode = false,
+  placeholder = "Select a date",
 }) => {
   const {
     control,
@@ -36,20 +40,29 @@ const MultiDatePicker: React.FC<MultiDatePickerProps> = ({
         name={name}
         render={({ field: { value, onChange } }) => (
           <DatePicker
-            multiple
-            value={value}
+            placeholder={placeholder}
+            multiple={multiDatePickMode}
+            value={multiDatePickMode ? value : value?.[0] || null}
             onChange={(dates: DateObject[] | DateObject | null) => {
-              if (!dates) return onChange([]);
+              if (!dates) return onChange(multiDatePickMode ? [] : null);
 
-              if (Array.isArray(dates)) {
-                onChange(dates.map((date) => date.toDate()));
+              if (multiDatePickMode) {
+                if (Array.isArray(dates)) {
+                  onChange(dates.map((date) => date.toDate()));
+                } else {
+                  onChange([dates.toDate()]);
+                }
               } else {
-                onChange([dates.toDate()]);
+                if (Array.isArray(dates)) {
+                  onChange(dates[0]?.toDate() || null);
+                } else {
+                  onChange(dates.toDate());
+                }
               }
             }}
             format="DD-MMM-YYYY"
-            className="w-full border-none focus:ring-0"
-            inputClass="w-full border-none focus:ring-0 px-2 py-1"
+            className="w-full border-1 focus:ring-0"
+            inputClass="w-full border-1 focus:ring-0 px-2 py-1"
             disabled={isDisabled}
             mapDays={({ date }) => {
               const formatted = date.format("YYYY-MM-DD");

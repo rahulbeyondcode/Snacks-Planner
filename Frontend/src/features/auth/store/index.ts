@@ -9,6 +9,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     name: "John Snow",
     email: "john.doe@company.com",
     role: "snack-manager",
+    // role: "accounts",
   },
   isAuthenticated: true,
 
