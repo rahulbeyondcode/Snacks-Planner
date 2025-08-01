@@ -102,7 +102,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Contribution management (operation_manager and operation only)
-        Route::middleware(['role:operation_manager,operation'])->group(function () {
+        Route::middleware(['role:snack_manager,operation'])->group(function () {
             // Contribution status update
             Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
             // Listing all contributions
@@ -112,7 +112,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Snack Item & Shop CRUD (account_manager, operations_manager, operation)
-        Route::middleware(['role:account_manager,operation_manager,operation'])->group(function () {
+        Route::middleware(['role:account_manager,snack_manager,operation'])->group(function () {
             // Snack Item CRUD
             Route::get('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'index']);
             Route::get('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'show']);
@@ -134,7 +134,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Operations Manager routes
-        Route::middleware(['role:operation_manager'])->group(function () {
+        Route::middleware(['role:snack_manager'])->group(function () {
             // Weekly operations staff assignment
             Route::post('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'assign']);
             Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
@@ -180,7 +180,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
         Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
         // The following routes are only for operations_manager and operation
-        Route::middleware(['role:operation_manager,operation'])->group(function () {
+        Route::middleware(['role:snack_manager,operation'])->group(function () {
             Route::put('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'update']);
             Route::delete('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'destroy']);
             Route::patch('/snack-plan-details/{id}/receipt', [\App\Http\Controllers\SnackPlanController::class, 'uploadReceipt']);

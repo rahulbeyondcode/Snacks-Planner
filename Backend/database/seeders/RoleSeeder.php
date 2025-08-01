@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class RoleSeeder extends Seeder
 {
@@ -14,7 +14,7 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $now = Carbon::now();
-        DB::table('roles')->insert([            
+        DB::table('roles')->insert([
             [
                 'role_id' => 1,
                 'name' => 'account_manager',
@@ -24,8 +24,8 @@ class RoleSeeder extends Seeder
             ],
             [
                 'role_id' => 2,
-                'name' => 'operation_manager',
-                'description' => 'Operation Manager',
+                'name' => 'snack_manager',
+                'description' => 'Snack Manager',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
