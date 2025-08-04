@@ -5,6 +5,7 @@ import MoneyPool from "features/money-pool";
 import Notifications from "features/notifications";
 import RoleManagement from "features/role-management";
 import UserContribution from "features/user-contribution";
+import EmployeeDirectory from "features/employee-directory";
 import Layout from "shared/components/layout";
 
 export default function AppRoutes() {
@@ -14,6 +15,7 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="money-pool" element={<MoneyPool />} />
+        <Route path="employee-directory" element={<EmployeeDirectory />} />
         <Route path="assign-roles" element={<RoleManagement />} />
         <Route path="user-contribution" element={<UserContribution />} />
         <Route path="manage" element={<UserContribution />} />

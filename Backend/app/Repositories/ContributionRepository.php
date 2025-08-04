@@ -104,20 +104,23 @@ class ContributionRepository implements ContributionRepositoryInterface
      */
     public function listAll(array $filters = [])
     {
-        $query = Contribution::query()->join('users', 'contributions.user_id', '=', 'users.user_id')
-            ->select('contributions.*');
+        // Always filter for current month
+        $now = now();
+        $monthStart = $now->copy()->startOfMonth()->toDateString();
+        $monthEnd = $now->copy()->endOfMonth()->toDateString();
+        $query = Contribution::query()
+            ->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->select('contributions.*')
+            ->whereDate('contributions.created_at', '>=', $monthStart)
+            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->where('roles.name', '!=', 'account_manager');
         if (!empty($filters['search'])) {
             $searchTerm = strtolower($filters['search']);
             $query->whereRaw('LOWER(users.name) LIKE ?', ['%' . $searchTerm . '%']);
         }
         if (!empty($filters['status'])) {
             $query->where('contributions.status', $filters['status']);
-        }
-        if (!empty($filters['from'])) {
-            $query->whereDate('contributions.created_at', '>=', $filters['from']);
-        }
-        if (!empty($filters['to'])) {
-            $query->whereDate('contributions.created_at', '<=', $filters['to']);
         }
         $perPage = $filters['per_page'] ?? 15;
         return $query->orderByDesc('contributions.created_at')->paginate($perPage);
