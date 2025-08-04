@@ -9,34 +9,25 @@ use Illuminate\Support\Facades\DB;
 
 class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
 {
-    protected $moneyPoolBlockRepository;
-
-    protected $moneyPoolRepository;
-
     public function __construct(
-        MoneyPoolBlockRepositoryInterface $moneyPoolBlockRepository,
-        MoneyPoolRepositoryInterface $moneyPoolRepository
-    ) {
-        $this->moneyPoolBlockRepository = $moneyPoolBlockRepository;
-        $this->moneyPoolRepository = $moneyPoolRepository;
-    }
+        private readonly MoneyPoolBlockRepositoryInterface $moneyPoolBlockRepository,
+        private readonly MoneyPoolRepositoryInterface $moneyPoolRepository
+    ) {}
 
     public function blockMoneyPool(array $data)
     {
         return DB::transaction(function () use ($data) {
-            // Check if this is an update operation
-            if (isset($data['block_id'])) {
-                // Update existing block
+            $isUpdate = isset($data['block_id']);
+
+            if ($isUpdate) {
                 $block = $this->moneyPoolBlockRepository->update($data['block_id'], $data);
             } else {
-                // Add the authenticated user as creator for new blocks
                 $data['created_by'] = Auth::id();
-
-                // Create new money pool block
                 $block = $this->moneyPoolBlockRepository->create($data);
             }
 
-            // Update the money pool's blocked amount
+            dd($block);
+
             $this->updateMoneyPoolBlockedAmount($data['money_pool_id']);
 
             return $block;
@@ -50,29 +41,30 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
 
     public function getBlock(int $id)
     {
-        return $this->moneyPoolBlockRepository->find($id);
+        $block = $this->moneyPoolBlockRepository->find($id);
+
+        if (! $block) {
+            throw new Exception('Money pool block not found');
+        }
+
+        return $block;
     }
 
-    protected function updateMoneyPoolBlockedAmount(int $moneyPoolId)
+    public function deleteBlock(int $blockId): bool
+    {
+        return $this->moneyPoolBlockRepository->delete($blockId);
+    }
+
+    private function updateMoneyPoolBlockedAmount(int $moneyPoolId): void
     {
         $totalBlocked = $this->moneyPoolBlockRepository->getTotalBlockedAmount($moneyPoolId);
-
-        // Get the money pool by ID using repository
         $moneyPool = $this->moneyPoolRepository->find($moneyPoolId);
 
         if ($moneyPool) {
-            // Update blocked amount
-            $moneyPool->blocked_amount = $totalBlocked;
-
-            // Recalculate total available amount
-            $moneyPool->total_available_amount = $moneyPool->total_pool_amount - $totalBlocked;
-
-            $moneyPool->save();
+            $moneyPool->update([
+                'blocked_amount' => $totalBlocked,
+                'total_available_amount' => $moneyPool->total_pool_amount - $totalBlocked,
+            ]);
         }
-    }
-
-    public function deleteBlock(int $blockId)
-    {
-        return $this->moneyPoolBlockRepository->delete($blockId);
     }
 }

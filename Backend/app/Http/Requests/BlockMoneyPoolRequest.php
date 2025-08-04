@@ -6,12 +6,12 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BlockMoneyPoolRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
 
-    public function rules()
+    public function rules(): array
     {
         $rules = [
             'money_pool_id' => 'required|integer|exists:money_pools,money_pool_id',
@@ -28,7 +28,7 @@ class BlockMoneyPoolRequest extends FormRequest
         return $rules;
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'money_pool_id.required' => trans('messages.moneypoolblock.money_pool_id_required'),
