@@ -16,7 +16,7 @@ class MoneyPoolBlockRepository implements MoneyPoolBlockRepositoryInterface
         $block = MoneyPoolBlock::find($id);
 
         if (! $block) {
-            throw new Exception('Money pool block not found');
+            return null;
         }
 
         $block->update($data);

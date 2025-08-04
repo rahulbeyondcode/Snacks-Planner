@@ -27,23 +27,27 @@ class MoneyPoolController extends Controller
         return new MoneyPoolResource($pool);
     }
 
-    public function block(BlockMoneyPoolRequest $request): JsonResponse
+    public function block(BlockMoneyPoolRequest $request)
     {
         try {
             $validated = $request->validated();
             $block = $this->moneyPoolBlockService->blockMoneyPool($validated);
 
-            $blocks = $this->getBlocks($block->money_pool_id);
+            if (! $block) {
+                return response()->notFound(__('money_pool_blocks.block_not_found'));
+            }
 
-            return MoneyPoolBlockResource::collection($blocks);
+            return $this->getBlocks($block->money_pool_id);
         } catch (\Exception $e) {
             return response()->internalServerError(__('messages.error'));
         }
     }
 
-    public function getBlocks(int $moneyPoolId): JsonResponse
+    public function getBlocks(int $moneyPoolId)
     {
-        return $this->moneyPoolBlockService->getBlocksByPoolId($moneyPoolId);
+        $blocks = $this->moneyPoolBlockService->getBlocksByPoolId($moneyPoolId);
+
+        return MoneyPoolBlockResource::collection($blocks);
     }
 
     public function deleteBlock(int $blockId): JsonResponse

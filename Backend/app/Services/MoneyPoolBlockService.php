@@ -26,7 +26,9 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
                 $block = $this->moneyPoolBlockRepository->create($data);
             }
 
-            dd($block);
+            if (! $block) {
+                return null;
+            }
 
             $this->updateMoneyPoolBlockedAmount($data['money_pool_id']);
 
