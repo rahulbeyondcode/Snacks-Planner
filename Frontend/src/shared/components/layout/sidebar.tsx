@@ -13,6 +13,7 @@ const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: HiOutlineViewGrid },
   { label: "User Contribution", path: "/user-contribution", icon: HiUserAdd },
   { label: "Money Pool", path: "/money-pool", icon: HiOutlineCurrencyDollar },
+  { label: "Employee Directory", path: "/employee-directory", icon: HiOutlineUserGroup },
   { label: "Assign Roles", path: "/assign-roles", icon: HiOutlineUserGroup },
   { label: "Manage", path: "/manage", icon: HiOutlineCog },
   { label: "Notifications", path: "/notifications", icon: HiOutlineBell },

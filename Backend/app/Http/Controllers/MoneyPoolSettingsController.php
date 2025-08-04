@@ -25,7 +25,7 @@ class MoneyPoolSettingsController extends Controller
                 ->response()
                 ->setStatusCode(201);
         } catch (\Exception $e) {
-            return apiResponse(false, 'Failed to save money pool settings', null, 500);
+            return response()->internalServerError(__('messages.error'));
 
         }
     }
@@ -36,12 +36,12 @@ class MoneyPoolSettingsController extends Controller
             $settings = $this->moneyPoolSettingsService->getSettings();
 
             if (! $settings) {
-                return apiResponse(false, 'Money pool settings not found', null, 404);
+                return response()->notFound(__('money_pool_settings.pool_settings_not_found'));
             }
 
             return new MoneyPoolSettingsResource($settings);
         } catch (\Exception $e) {
-            return apiResponse(false, 'Failed to retrieve money pool settings', null, 500);
+            return response()->internalServerError(__('messages.error'));
         }
     }
 }

@@ -10,9 +10,17 @@ class MoneyPoolBlockResource extends JsonResource
     {
         return [
             'block_id' => $this->block_id,
-            'amount' => $this->amount,
+            'money_pool_id' => $this->money_pool_id,
+            'amount' => (float) $this->amount,
             'reason' => $this->reason,
             'block_date' => $this->block_date,
+            'creator' => $this->whenLoaded('creator', function () {
+                return [
+                    'id' => $this->creator->user_id,
+                    'name' => $this->creator->name,
+                    'email' => $this->creator->email,
+                ];
+            }),
         ];
     }
 }

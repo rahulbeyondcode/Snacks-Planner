@@ -4,12 +4,13 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('roles', function (Blueprint $table) {
             $table->id('role_id');
-            $table->enum('name', ['account_manager', 'operation_manager', 'operation', 'employee']);
+            $table->enum('name', ['account_manager', 'snack_manager', 'operation', 'employee']);
             $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();

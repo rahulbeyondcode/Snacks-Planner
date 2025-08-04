@@ -10,7 +10,7 @@ use App\Models\User;
 class AuthController extends Controller
 {
     public function login(Request $request)
-    {
+    {        
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -26,6 +26,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'role' => $user->role,
+            'permissions' => $user->getPermissionsByModule(),
             'token' => $token,
         ]);
     }
