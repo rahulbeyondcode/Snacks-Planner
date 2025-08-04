@@ -7,22 +7,16 @@ use App\Http\Resources\MoneyPoolBlockResource;
 use App\Http\Resources\MoneyPoolResource;
 use App\Services\MoneyPoolBlockServiceInterface;
 use App\Services\MoneyPoolServiceInterface;
+use Illuminate\Http\JsonResponse;
 
 class MoneyPoolController extends Controller
 {
-    protected $moneyPoolService;
-
-    protected $moneyPoolBlockService;
-
     public function __construct(
-        MoneyPoolServiceInterface $moneyPoolService,
-        MoneyPoolBlockServiceInterface $moneyPoolBlockService
-    ) {
-        $this->moneyPoolService = $moneyPoolService;
-        $this->moneyPoolBlockService = $moneyPoolBlockService;
-    }
+        private readonly MoneyPoolServiceInterface $moneyPoolService,
+        private readonly MoneyPoolBlockServiceInterface $moneyPoolBlockService
+    ) {}
 
-    public function index()
+    public function index(): MoneyPoolResource
     {
         $pool = $this->moneyPoolService->getCurrentMonthMoneyPool();
 
@@ -39,56 +33,31 @@ class MoneyPoolController extends Controller
             $validated = $request->validated();
             $block = $this->moneyPoolBlockService->blockMoneyPool($validated);
 
-            $statusCode = isset($validated['block_id']) ? 200 : 201;
-            $message = isset($validated['block_id']) ? 'Money pool block updated successfully' : 'Money pool block created successfully';
+            if (! $block) {
+                return response()->notFound(__('money_pool_blocks.block_not_found'));
+            }
 
-            return (new MoneyPoolBlockResource($block))
-                ->response()
-                ->setStatusCode($statusCode);
+            return $this->getBlocks($block->money_pool_id);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to process money pool block',
-                'error' => $e->getMessage(),
-                'status' => 500,
-            ], 500);
+            return response()->internalServerError(__('messages.error'));
         }
     }
 
-    public function getBlock(int $moneyPoolId)
+    public function getBlocks(int $moneyPoolId)
     {
-        try {
-            $blocks = $this->moneyPoolBlockService->getBlocksByPoolId($moneyPoolId);
+        $blocks = $this->moneyPoolBlockService->getBlocksByPoolId($moneyPoolId);
 
-            return MoneyPoolBlockResource::collection($blocks);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve money pool blocks',
-                'error' => $e->getMessage(),
-                'status' => 500,
-            ], 500);
-        }
+        return MoneyPoolBlockResource::collection($blocks);
     }
 
-    public function deleteBlock(int $blockId)
+    public function deleteBlock(int $blockId): JsonResponse
     {
         try {
             $this->moneyPoolBlockService->deleteBlock($blockId);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Money pool block deleted successfully',
-                'data' => null,
-                'status' => 200,
-            ], 200);
+            return response()->noContent();
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete money pool block',
-                'error' => $e->getMessage(),
-                'status' => 500,
-            ], 500);
+            return response()->internalServerError(__('messages.error'));
         }
     }
 }

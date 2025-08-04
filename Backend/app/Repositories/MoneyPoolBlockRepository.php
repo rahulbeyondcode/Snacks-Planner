@@ -6,9 +6,27 @@ use App\Models\MoneyPoolBlock;
 
 class MoneyPoolBlockRepository implements MoneyPoolBlockRepositoryInterface
 {
-    public function create(array $data)
+    public function create(array $data): MoneyPoolBlock
     {
         return MoneyPoolBlock::create($data);
+    }
+
+    public function update(int $id, array $data): ?MoneyPoolBlock
+    {
+        $block = MoneyPoolBlock::find($id);
+
+        if (! $block) {
+            return null;
+        }
+
+        $block->update($data);
+
+        return $block->fresh();
+    }
+
+    public function find(int $id): ?MoneyPoolBlock
+    {
+        return MoneyPoolBlock::with(['creator', 'moneyPool'])->find($id);
     }
 
     public function findByPoolId(int $moneyPoolId)
@@ -24,26 +42,12 @@ class MoneyPoolBlockRepository implements MoneyPoolBlockRepositoryInterface
         return MoneyPoolBlock::where('money_pool_id', $moneyPoolId)->sum('amount');
     }
 
-    public function find(int $id)
-    {
-        return MoneyPoolBlock::with(['creator', 'moneyPool'])->find($id);
-    }
-
-    public function update(int $id, array $data)
-    {
-        $block = MoneyPoolBlock::find($id);
-        if ($block) {
-            $block->update($data);
-        }
-
-        return $block;
-    }
-
-    public function delete(int $blockId)
+    public function delete(int $blockId): bool
     {
         $block = MoneyPoolBlock::find($blockId);
+
         if (! $block) {
-            throw new \Exception('Money pool block not found');
+            throw new Exception('Money pool block not found');
         }
 
         return $block->delete();
