@@ -15,6 +15,13 @@ Route::prefix('v1')->group(function () {
 
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
+            // Payment Methods CRUD
+            Route::get('/payment-methods', [\App\Http\Controllers\PaymentMethodController::class, 'index']);
+            Route::post('/payment-methods', [\App\Http\Controllers\PaymentMethodController::class, 'store']);
+            Route::put('/payment-methods/{id}', [\App\Http\Controllers\PaymentMethodController::class, 'update']);
+            Route::delete('/payment-methods/{id}', [\App\Http\Controllers\PaymentMethodController::class, 'destroy']);
+
+
             // Working Days Management
             Route::get('/working-days', [\App\Http\Controllers\WorkingDayController::class, 'show']);
             Route::put('/working-days', [\App\Http\Controllers\WorkingDayController::class, 'update']);
@@ -53,6 +60,11 @@ Route::prefix('v1')->group(function () {
 
         // Contribution management (operation_manager and operation only)
         Route::middleware(['role:operation_manager,operation'])->group(function () {
+            // Categories CRUD
+            Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
+            Route::post('/categories', [\App\Http\Controllers\CategoryController::class, 'store']);
+            Route::put('/categories/{id}', [\App\Http\Controllers\CategoryController::class, 'update']);
+            Route::delete('/categories/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy']);
             // Contribution status update
             Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
             // Listing all contributions
