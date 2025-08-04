@@ -108,8 +108,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/reports/download', [\App\Http\Controllers\ReportController::class, 'download']);
         });
 
-        // Contribution management (operation_manager and operation only)
-        Route::middleware(['role:operation_manager,operation'])->group(function () {
+        // Contribution management (snack_manager and operation only)
+        Route::middleware(['role:snack_manager,operation'])->group(function () {
             // Categories CRUD
             Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
             Route::post('/categories', [\App\Http\Controllers\CategoryController::class, 'store']);
@@ -184,7 +184,6 @@ Route::prefix('v1')->group(function () {
         });
 
         // Shared features (all authenticated)
-        Route::get('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'index']);
         Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
         Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
         Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);
