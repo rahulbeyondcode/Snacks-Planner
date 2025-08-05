@@ -79,7 +79,7 @@ Route::prefix('v1')->group(function () {
             // Office Holidays (pill-style CRUD)
             Route::get('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'index']);
             Route::post('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'store']);
-            Route::patch('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'update']);
+            Route::put('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'update']);
             Route::delete('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'destroy']);
 
             // Money Pool Settings
@@ -179,6 +179,15 @@ Route::prefix('v1')->group(function () {
             // Snack rating endpoints
             Route::post('/snack-ratings', [\App\Http\Controllers\SnackRatingController::class, 'store']);
             Route::get('/snack-ratings', [\App\Http\Controllers\SnackRatingController::class, 'index']);
+        });
+
+        // Snack Manager routes
+        Route::middleware(['role:snack_manager'])->group(function () {
+            // No Snacks Day Management
+            Route::get('/no-snacks-days', [\App\Http\Controllers\NoSnacksDayController::class, 'index']);
+            Route::post('/no-snacks-days', [\App\Http\Controllers\NoSnacksDayController::class, 'store']);
+            Route::put('/no-snacks-days/{id}', [\App\Http\Controllers\NoSnacksDayController::class, 'update']);
+            Route::delete('/no-snacks-days/{id}', [\App\Http\Controllers\NoSnacksDayController::class, 'destroy']);
         });
 
         // Shared features (all authenticated)

@@ -10,6 +10,12 @@ class Role extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Role ID constants
+    public const ACCOUNT_MANAGER = 1;
+    public const SNACK_MANAGER = 2;
+    public const OPERATION = 3;
+    public const EMPLOYEE = 4;
+
     protected $primaryKey = 'role_id';
 
     protected $fillable = [
@@ -27,8 +33,8 @@ class Role extends Model
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id')
-                    ->withPivot('is_active')
-                    ->withTimestamps();
+            ->withPivot('is_active')
+            ->withTimestamps();
     }
 
     /**
@@ -45,11 +51,11 @@ class Role extends Model
     public function hasPermission($module, $action, $resource = null)
     {
         return $this->permissions()
-                    ->where('module', $module)
-                    ->where('action', $action)
-                    ->where('resource', $resource)
-                    ->wherePivot('is_active', true)
-                    ->exists();
+            ->where('module', $module)
+            ->where('action', $action)
+            ->where('resource', $resource)
+            ->wherePivot('is_active', true)
+            ->exists();
     }
 
     /**
@@ -58,9 +64,9 @@ class Role extends Model
     public function hasModulePermission($module)
     {
         return $this->permissions()
-                    ->where('module', $module)
-                    ->wherePivot('is_active', true)
-                    ->exists();
+            ->where('module', $module)
+            ->wherePivot('is_active', true)
+            ->exists();
     }
 
     /**
@@ -69,9 +75,9 @@ class Role extends Model
     public function getModulePermissions($module)
     {
         return $this->permissions()
-                    ->where('module', $module)
-                    ->wherePivot('is_active', true)
-                    ->get();
+            ->where('module', $module)
+            ->wherePivot('is_active', true)
+            ->get();
     }
 
     /**
@@ -83,7 +89,7 @@ class Role extends Model
         foreach ($permissionIds as $permissionId) {
             $permissions[$permissionId] = ['is_active' => true];
         }
-        
+
         return $this->permissions()->sync($permissions);
     }
 

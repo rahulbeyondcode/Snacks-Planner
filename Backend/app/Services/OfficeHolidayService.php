@@ -40,4 +40,31 @@ class OfficeHolidayService implements OfficeHolidayServiceInterface
     {
         return $this->officeHolidayRepository->findByDate($holidayDate) !== null;
     }
+
+    public function getOfficeHolidays()
+    {
+        return $this->officeHolidayRepository->getByType(\App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY);
+    }
+
+    public function getNoSnacksDaysForGroup(int $groupId, ?int $year = null, ?int $month = null)
+    {
+        if ($year && $month) {
+            return $this->officeHolidayRepository->getByTypeAndGroupForMonth(
+                \App\Models\OfficeHoliday::TYPE_NO_SNACKS_DAY,
+                $groupId,
+                $year,
+                $month
+            );
+        }
+
+        return $this->officeHolidayRepository->getByTypeAndGroup(
+            \App\Models\OfficeHoliday::TYPE_NO_SNACKS_DAY,
+            $groupId
+        );
+    }
+
+    public function isHolidaySetForTypeAndGroup(string $holidayDate, string $type, ?int $groupId = null)
+    {
+        return $this->officeHolidayRepository->findByDateTypeAndGroup($holidayDate, $type, $groupId) !== null;
+    }
 }
