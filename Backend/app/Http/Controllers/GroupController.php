@@ -6,6 +6,7 @@ use App\Services\GroupServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Group;
+use App\Models\GroupMember;
 use Illuminate\Validation\Rule;
 
 class GroupController extends Controller
@@ -83,12 +84,22 @@ class GroupController extends Controller
                 'snack_managers' => 'required|array',
             ]);
 
+            // Check if account manager's user_id is included in employees or snack_managers
+            $currentUserId = $user->user_id;
+            if (in_array($currentUserId, $validated['employees'])) {
+                return apiResponse(false, 'Account manager cannot be added as an employee.', null, 422);
+            }
+            
+            if (in_array($currentUserId, $validated['snack_managers'])) {
+                return apiResponse(false, 'Account manager cannot be added as a snack manager.', null, 422);
+            }
+
             // Collect all user IDs from employees and snack_managers
             $allUserIds = array_merge($validated['employees'], $validated['snack_managers']);
             $allUserIds = array_unique($allUserIds); // Remove duplicates
 
             // Check if any of these users already exist in another group
-            $existingUsers = \App\Models\GroupMember::whereIn('user_id', $allUserIds)
+            $existingUsers = GroupMember::whereIn('user_id', $allUserIds)
                 ->whereNull('deleted_at')
                 ->with(['user:user_id,name', 'group:group_id,name'])
                 ->get();
@@ -152,6 +163,16 @@ class GroupController extends Controller
                 'employees' => 'required|array',
                 'snack_managers' => 'required|array',
             ]);
+
+            // Check if account manager's user_id is included in employees or snack_managers
+            $currentUserId = $user->user_id;
+            if (in_array($currentUserId, $validated['employees'])) {
+                return apiResponse(false, 'Account manager cannot be added as an employee.', null, 422);
+            }
+            
+            if (in_array($currentUserId, $validated['snack_managers'])) {
+                return apiResponse(false, 'Account manager cannot be added as a snack manager.', null, 422);
+            }
 
             // Collect all user IDs from employees and snack_managers
             $allUserIds = array_merge($validated['employees'], $validated['snack_managers']);
