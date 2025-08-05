@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Group;
 use App\Models\GroupMember;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class GroupController extends Controller
 {
@@ -89,7 +90,7 @@ class GroupController extends Controller
             if (in_array($currentUserId, $validated['employees'])) {
                 return apiResponse(false, 'Account manager cannot be added as an employee.', null, 422);
             }
-            
+
             if (in_array($currentUserId, $validated['snack_managers'])) {
                 return apiResponse(false, 'Account manager cannot be added as a snack manager.', null, 422);
             }
@@ -140,7 +141,7 @@ class GroupController extends Controller
             $newGroup = $this->groupService->createGroup($validated);
 
             return apiResponse(true, __('messages.success'), $newGroup, 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return apiResponse(false, 'Validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
             \Log::error('Error creating group: ' . $e->getMessage());
@@ -169,7 +170,7 @@ class GroupController extends Controller
             if (in_array($currentUserId, $validated['employees'])) {
                 return apiResponse(false, 'Account manager cannot be added as an employee.', null, 422);
             }
-            
+
             if (in_array($currentUserId, $validated['snack_managers'])) {
                 return apiResponse(false, 'Account manager cannot be added as a snack manager.', null, 422);
             }
@@ -179,7 +180,7 @@ class GroupController extends Controller
             $allUserIds = array_unique($allUserIds); // Remove duplicates
 
             // Check if any of these users already exist in another group (excluding current group)
-            $existingUsers = \App\Models\GroupMember::whereIn('user_id', $allUserIds)
+            $existingUsers = GroupMember::whereIn('user_id', $allUserIds)
                 ->where('group_id', '!=', $id) // Exclude current group being updated
                 ->whereNull('deleted_at')
                 ->with(['user:user_id,name', 'group:group_id,name'])
@@ -224,7 +225,7 @@ class GroupController extends Controller
             }
 
             return apiResponse(true, __('messages.success'), $updatedGroup, 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return apiResponse(false, 'Validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
             \Log::error('Error updating group: ' . $e->getMessage());
