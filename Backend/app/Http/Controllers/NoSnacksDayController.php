@@ -21,6 +21,23 @@ class NoSnacksDayController extends Controller
     }
 
     /**
+     * Helper method to get active no snacks days for user's group
+     */
+    private function getActiveNoSnacksDaysList($groupId)
+    {
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
+
+        $noSnacksDays = $this->officeHolidayService->getNoSnacksDaysForGroup(
+            $groupId,
+            $currentYear,
+            $currentMonth
+        );
+
+        return OfficeHolidayResource::collection($noSnacksDays);
+    }
+
+    /**
      * List no snacks days for the snack manager's group
      */
     public function index(Request $request)
@@ -78,7 +95,11 @@ class NoSnacksDayController extends Controller
 
         $noSnacksDay = $this->officeHolidayService->createHoliday($data);
 
-        return new OfficeHolidayResource($noSnacksDay);
+        return response()->json([
+            'message' => 'No snacks day created successfully',
+            'data' => new OfficeHolidayResource($noSnacksDay),
+            'active_no_snacks_days' => $this->getActiveNoSnacksDaysList($groupMember->group_id)
+        ], 201);
     }
 
     /**
@@ -120,7 +141,11 @@ class NoSnacksDayController extends Controller
             return response()->json(['message' => 'No snacks day not found'], 404);
         }
 
-        return new OfficeHolidayResource($updated);
+        return response()->json([
+            'message' => 'No snacks day updated successfully',
+            'data' => new OfficeHolidayResource($updated),
+            'active_no_snacks_days' => $this->getActiveNoSnacksDaysList($groupMember->group_id)
+        ]);
     }
 
     /**
@@ -155,6 +180,9 @@ class NoSnacksDayController extends Controller
             return response()->json(['message' => 'No snacks day not found'], 404);
         }
 
-        return response()->json(['message' => 'No snacks day deleted successfully']);
+        return response()->json([
+            'message' => 'No snacks day deleted successfully',
+            'active_no_snacks_days' => $this->getActiveNoSnacksDaysList($groupMember->group_id)
+        ]);
     }
 }
