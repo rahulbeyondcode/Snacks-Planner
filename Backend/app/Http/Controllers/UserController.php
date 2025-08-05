@@ -52,7 +52,7 @@ class UserController extends Controller
         }
         $userData = $this->userService->getUser($id);
         if (!$userData) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'User not found or access denied'], 404);
         }
         return response()->json($userData);
     }
@@ -88,7 +88,7 @@ class UserController extends Controller
         }
         $updatedUser = $this->userService->updateUser($id, $validated);
         if (!$updatedUser) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'User not found or access denied'], 404);
         }
         $users = $this->userService->listUsers([]);
         return response()->json([
@@ -106,7 +106,7 @@ class UserController extends Controller
         }
         $deleted = $this->userService->deleteUser($id);
         if (!$deleted) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'User not found or access denied'], 404);
         }
         $users = $this->userService->listUsers([]);
         return response()->json([
@@ -125,7 +125,7 @@ class UserController extends Controller
         $validated = $request->validated();
         $updatedUser = $this->userService->assignRole($id, $validated['role_id']);
         if (!$updatedUser) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'User not found or access denied'], 404);
         }
         return response()->json($updatedUser);
     }
