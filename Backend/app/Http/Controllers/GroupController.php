@@ -78,7 +78,7 @@ class GroupController extends Controller
             ],
             'description' => 'nullable|string|max:255',
             'employees' => 'required|array',
-            'operation_managers' => 'required|array',
+            'snack_managers' => 'required|array',
         ]);
 
         $newGroup = $this->groupService->createGroup($validated);
@@ -97,7 +97,7 @@ class GroupController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
             'employees' => 'required|array',
-            'operation_managers' => 'required|array',
+            'snack_managers' => 'required|array',
         ]);
         $updatedGroup = $this->groupService->updateGroup($id, $validated);
         if (!$updatedGroup) {

@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('roles', function (Blueprint $table) {
             $table->id('role_id');
-            $table->enum('name', ['account_manager', 'operation_manager', 'operation', 'employee']);
+            $table->enum('name', ['account_manager', 'snack_manager', 'operation', 'employee']);
             $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();

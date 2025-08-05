@@ -77,7 +77,7 @@ class PermissionSeeder extends Seeder
                         ->toArray();
                     break;
 
-                case 'operation_manager':
+                case 'snack_manager':
                     // Access to most modules with snack_manager resource
                     $permissionIds = $permissions
                         ->where('module', '!=', 'permissions')

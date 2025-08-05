@@ -24,7 +24,7 @@ class RoleSeeder extends Seeder
             ],
             [
                 'role_id' => 2,
-                'name' => 'operation_manager',
+                'name' => 'snack_manager',
                 'description' => 'Operation Manager',
                 'created_at' => $now,
                 'updated_at' => $now,

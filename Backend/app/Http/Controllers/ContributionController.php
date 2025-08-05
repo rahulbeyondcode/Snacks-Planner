@@ -16,7 +16,7 @@ class ContributionController extends Controller
     public function bulkUpdateStatus(Request $request)
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role->name, ['operation_manager', 'operation'])) {
+        if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         $data = $request->validate([
@@ -27,11 +27,11 @@ class ContributionController extends Controller
         return response()->json(['updated' => $count]);
     }
 
-    // Listing of all contributions with filters/pagination (operation_manager and operation only)
+    // Listing of all contributions with filters/pagination (snack_manager and operation only)
     public function index(Request $request)
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role->name, ['operation_manager', 'operation'])) {
+        if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         $filters = $request->only(['user_id', 'status', 'from', 'to', 'per_page']);
@@ -61,7 +61,7 @@ class ContributionController extends Controller
     public function updateStatus(UpdateContributionStatusRequest $request, $id)
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role->name, ['operation_manager', 'operation'])) {
+        if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         $validated = $request->validated();

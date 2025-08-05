@@ -102,8 +102,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/reports/download', [\App\Http\Controllers\ReportController::class, 'download']);
         });
 
-        // Contribution management (operation_manager and operation only)
-        Route::middleware(['role:operation_manager,operation'])->group(function () {
+        // Contribution management (snack_manager and operation only)
+        Route::middleware(['role:snack_manager,operation'])->group(function () {
             // Contribution status update
             Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
             // Listing all contributions
