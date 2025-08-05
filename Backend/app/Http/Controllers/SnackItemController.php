@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\SnackItem;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreSnackItemRequest;
+use App\Http\Requests\UpdateSnackItemRequest;
 
 class SnackItemController extends Controller
 {
     // List all snack items
     public function index()
     {
-        return response()->json(SnackItem::all());
+        return apiResponse(true, __('success'), SnackItem::all(), 201);
     }
 
     // Show a single snack item
@@ -18,27 +20,27 @@ class SnackItemController extends Controller
     {
         $item = SnackItem::find($id);
         if (!$item) {
-            return response()->json(['message' => 'Not found'], 404);
+            return apiResponse(true, __('success'), $item, 201);
         }
-        return response()->json($item);
+        return apiResponse(true, __('success'), $item, 201);
     }
 
     // Create a snack item (admin only)
-    public function store(\App\Http\Requests\StoreSnackItemRequest $request)
+    public function store(StoreSnackItemRequest $request)
     {
         $item = SnackItem::create($request->validated());
-        return response()->json($item, 201);
+        return apiResponse(true, __('success'), $item, 201);
     }
 
     // Update a snack item (admin only)
-    public function update(\App\Http\Requests\UpdateSnackItemRequest $request, $id)
+    public function update(UpdateSnackItemRequest $request, $id)
     {
         $item = SnackItem::find($id);
         if (!$item) {
-            return response()->json(['message' => 'Not found'], 404);
+            return apiResponse(true, __('not_found'),  404);
         }
         $item->update($request->validated());
-        return response()->json($item);
+        return apiResponse(true, __('update_msg'), $item, 201);
     }
 
     // Delete a snack item (admin only)
@@ -46,9 +48,9 @@ class SnackItemController extends Controller
     {
         $item = SnackItem::find($id);
         if (!$item) {
-            return response()->json(['message' => 'Not found'], 404);
+            return apiResponse(true, __('not_found'),  404);
         }
         $item->delete();
-        return response()->json(['message' => 'Deleted']);
+        return apiResponse(true, __('delete'),  201);
     }
 }

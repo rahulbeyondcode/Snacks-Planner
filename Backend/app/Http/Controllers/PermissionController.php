@@ -186,4 +186,64 @@ class PermissionController extends Controller
             throw $e;
         }
     }
+
+    /**
+     * Get all resources with their modules and actions
+     */
+    public function getResourceModules()
+    {
+        $resourceModules = [
+            'account_manager' => [
+                'groups' => ['create', 'read', 'update', 'delete', 'list'],
+                'shops' => ['create', 'read', 'update', 'delete', 'list'],
+                'snacks' => ['create', 'read', 'update', 'delete', 'list'],
+                'reports' => ['create', 'read', 'update', 'delete', 'list'],
+            ],
+            'snack_manager' => [
+                'snack_orders' => ['create', 'read', 'update', 'delete', 'list'],
+                'weekly_group' => ['create', 'read', 'update', 'delete', 'list'],
+                'money_pool' => ['create', 'read', 'update', 'delete', 'list'],
+                'contributions' => ['create', 'read', 'update', 'delete', 'list'],
+            ],
+            'operation' => [
+                'snack_orders' => ['create', 'read', 'update', 'delete', 'list'],
+                'contributions' => ['create', 'read', 'update', 'delete', 'list'],
+            ],
+            'employee' => [
+                // Add modules if needed
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Resource modules retrieved successfully',
+            'data' => [
+                'resource_modules' => $resourceModules,
+                'available_actions' => ['create', 'read', 'update', 'delete', 'list'],
+                'available_resources' => array_keys($resourceModules),
+            ],
+            'status' => 200
+        ], 200);
+    }
+
+    /**
+     * Get permissions grouped by resource and module
+     */
+    public function getPermissionsByResource()
+    {
+        $permissions = Permission::with('roles')->get();
+        
+        $groupedPermissions = $permissions->groupBy('resource')->map(function ($resourcePermissions) {
+            return $resourcePermissions->groupBy('module')->map(function ($modulePermissions) {
+                return $modulePermissions->pluck('action')->unique()->values()->toArray();
+            });
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permissions grouped by resource retrieved successfully',
+            'data' => $groupedPermissions,
+            'status' => 200
+        ], 200);
+    }
 } 

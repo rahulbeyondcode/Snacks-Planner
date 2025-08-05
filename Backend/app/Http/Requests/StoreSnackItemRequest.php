@@ -14,8 +14,7 @@ class StoreSnackItemRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:32',
+            'name' => 'required|string|max:255'
         ];
     }
 }

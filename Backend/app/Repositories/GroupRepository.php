@@ -6,6 +6,8 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
 use App\Models\Role;
+use Exception;
+use Illuminate\Support\Facades\DB;
 
 class GroupRepository implements GroupRepositoryInterface
 {
@@ -43,56 +45,63 @@ class GroupRepository implements GroupRepositoryInterface
 
     public function create(array $data)
     {
-        $group = new Group;
-        $group->name = $data['name'];
-        $group->description = $data['description'] ?? '';
-        $group->sort_order = $data['sort_order'] ?? 0;
-        $group->save();
+        try {
+            DB::beginTransaction();
+            $group = new Group;
+            $group->name = $data['name'];
+            $group->description = $data['description'] ?? '';
+            $group->sort_order = $data['sort_order'] ?? 0;
+            $group->save();
 
-        $groupMembers = [];
+            $groupMembers = [];
 
-        // Add employees as group members
-        $employeeIds = $data['employees'] ?? [];
-        if (!empty($employeeIds) && is_array($employeeIds)) {
-            foreach ($employeeIds as $employee_id) {
-                $groupMembers[] = [
-                    'user_id' => $employee_id,
-                    'role_id' => Role::EMPLOYEE,
-                    'group_id' => $group->group_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
+            // Add employees as group members
+            $employeeIds = $data['employees'] ?? [];
+            if (!empty($employeeIds) && is_array($employeeIds)) {
+                foreach ($employeeIds as $employee_id) {
+                    $groupMembers[] = [
+                        'user_id' => $employee_id,
+                        'role_id' => Role::EMPLOYEE,
+                        'group_id' => $group->group_id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
             }
-        }
 
-        // Add operation managers as group members
-        $operationManagerIds = $data['operation_managers'] ?? [];
-        if (!empty($operationManagerIds) && is_array($operationManagerIds)) {
-            foreach ($operationManagerIds as $operation_manager_id) {
-                $groupMembers[] = [
-                    'user_id' => $operation_manager_id,
-                    'role_id' => Role::OPERATION_MANAGER,
-                    'group_id' => $group->group_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
+            // Add operation managers as group members
+            $operationManagerIds = $data['operation_managers'] ?? [];
+            if (!empty($operationManagerIds) && is_array($operationManagerIds)) {
+                foreach ($operationManagerIds as $operation_manager_id) {
+                    $groupMembers[] = [
+                        'user_id' => $operation_manager_id,
+                        'role_id' => Role::OPERATION_MANAGER,
+                        'group_id' => $group->group_id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
             }
-        }
 
-        // Batch insert group members
-        if (!empty($groupMembers)) {
-            GroupMember::insert($groupMembers);
-        }
+            // Batch insert group members
+            if (!empty($groupMembers)) {
+                GroupMember::insert($groupMembers);
+            }
 
-        // Batch update roles for users
-        if (!empty($employeeIds)) {
-            User::whereIn('user_id', $employeeIds)->update(['role_id' => Role::EMPLOYEE]);
+            // Batch update roles for users
+            if (!empty($employeeIds)) {
+                User::whereIn('user_id', $employeeIds)->update(['role_id' => Role::EMPLOYEE]);
+            }
+            if (!empty($operationManagerIds)) {
+                User::whereIn('user_id', $operationManagerIds)->update(['role_id' => Role::OPERATION_MANAGER]);
+            }
+            DB::commit();
+            return $group;
+        } catch (Exception $e) {
+            dd("haii");
+            DB::rollBack();
+            throw $e;
         }
-        if (!empty($operationManagerIds)) {
-            User::whereIn('user_id', $operationManagerIds)->update(['role_id' => Role::OPERATION_MANAGER]);
-        }
-
-        return $group;
     }
 
 
