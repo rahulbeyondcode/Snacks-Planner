@@ -16,7 +16,7 @@ class MoneyPoolController extends Controller
         private readonly MoneyPoolBlockServiceInterface $moneyPoolBlockService
     ) {}
 
-    public function index(): MoneyPoolResource
+    public function index(): MoneyPoolResource|JsonResponse
     {
         $pool = $this->moneyPoolService->getCurrentMonthMoneyPool();
 
