@@ -70,12 +70,12 @@ class GroupRepository implements GroupRepositoryInterface
             }
 
             // Add operation managers as group members
-            $operationManagerIds = $data['operation_managers'] ?? [];
+            $operationManagerIds = $data['snack_managers'] ?? [];
             if (!empty($operationManagerIds) && is_array($operationManagerIds)) {
-                foreach ($operationManagerIds as $operation_manager_id) {
+                foreach ($operationManagerIds as $snack_manager_id) {
                     $groupMembers[] = [
-                        'user_id' => $operation_manager_id,
-                        'role_id' => Role::OPERATION_MANAGER,
+                        'user_id' => $snack_manager_id,
+                        'role_id' => Role::SNACK_MANAGER,
                         'group_id' => $group->group_id,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -93,12 +93,11 @@ class GroupRepository implements GroupRepositoryInterface
                 User::whereIn('user_id', $employeeIds)->update(['role_id' => Role::EMPLOYEE]);
             }
             if (!empty($operationManagerIds)) {
-                User::whereIn('user_id', $operationManagerIds)->update(['role_id' => Role::OPERATION_MANAGER]);
+                User::whereIn('user_id', $operationManagerIds)->update(['role_id' => Role::SNACK_MANAGER]);
             }
             DB::commit();
             return $group;
         } catch (Exception $e) {
-            dd("haii");
             DB::rollBack();
             throw $e;
         }
@@ -120,7 +119,7 @@ class GroupRepository implements GroupRepositoryInterface
         ]);
 
         $newEmployeeIds = $data['employees'] ?? [];
-        $newManagerIds = $data['operation_managers'] ?? [];
+        $newManagerIds = $data['snack_managers'] ?? [];
 
         // Get current group members
         $currentMembers = GroupMember::where('group_id', $group->group_id)->get();
@@ -137,7 +136,7 @@ class GroupRepository implements GroupRepositoryInterface
         }
 
         foreach ($newManagerIds as $uid) {
-            $newMap[$uid] = Role::OPERATION_MANAGER;
+            $newMap[$uid] = Role::SNACK_MANAGER;
         }
 
         // Compare current and new map
@@ -161,7 +160,7 @@ class GroupRepository implements GroupRepositoryInterface
             foreach ($newManagerIds as $manager_id) {
                 $newMembers[] = [
                     'user_id' => $manager_id,
-                    'role_id' => Role::OPERATION_MANAGER,
+                    'role_id' => Role::SNACK_MANAGER,
                     'group_id' => $group->group_id,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -175,7 +174,7 @@ class GroupRepository implements GroupRepositoryInterface
                 User::whereIn('user_id', $newEmployeeIds)->update(['role_id' => Role::EMPLOYEE]);
             }
             if (!empty($newManagerIds)) {
-                User::whereIn('user_id', $newManagerIds)->update(['role_id' => Role::OPERATION_MANAGER]);
+                User::whereIn('user_id', $newManagerIds)->update(['role_id' => Role::SNACK_MANAGER]);
             }
         }
 

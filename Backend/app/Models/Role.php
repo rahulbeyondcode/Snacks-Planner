@@ -19,8 +19,8 @@ class Role extends Model
     protected $primaryKey = 'role_id';
 
     public const ACCOUNT_MANAGER = 1;
-    public const OPERATION_MANAGER = 2;
-    public const SNACK_MANAGER = 3;
+    public const SNACK_MANAGER = 2;
+    public const OPERATION = 3;
     public const EMPLOYEE = 4;
 
     protected $fillable = [
