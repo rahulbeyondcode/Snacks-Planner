@@ -12,6 +12,22 @@ use Carbon\Carbon;
 
 class OfficeHolidayController extends Controller
 {
+    protected $officeHolidayService;
+
+    public function __construct(OfficeHolidayServiceInterface $officeHolidayService)
+    {
+        $this->officeHolidayService = $officeHolidayService;
+    }
+
+    /**
+     * Helper method to get active office holidays list
+     */
+    private function getActiveOfficeHolidaysList()
+    {
+        $holidays = $this->officeHolidayService->getOfficeHolidays();
+        return \App\Http\Resources\OfficeHolidayResource::collection($holidays);
+    }
+
     // Update an office holiday
     public function update(UpdateOfficeHolidayRequest $request, $id)
     {
@@ -28,7 +44,12 @@ class OfficeHolidayController extends Controller
         if (!$holiday) {
             return response()->json(['message' => 'Holiday not found'], 404);
         }
-        return new \App\Http\Resources\OfficeHolidayResource($holiday);
+
+        return response()->json([
+            'message' => 'Holiday updated successfully',
+            'data' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+            'active_holidays' => $this->getActiveOfficeHolidaysList()
+        ]);
     }
 
     // Delete an office holiday
@@ -42,12 +63,22 @@ class OfficeHolidayController extends Controller
         if (!$deleted) {
             return response()->json(['message' => 'Holiday not found'], 404);
         }
-        return response()->json(['message' => 'Holiday deleted successfully']);
+
+        return response()->json([
+            'message' => 'Holiday deleted successfully',
+            'active_holidays' => $this->getActiveOfficeHolidaysList()
+        ]);
     }
-    // List all office holidays
+    // List all office holidays (account_manager only sees office holidays)
     public function index()
     {
-        $holidays = $this->officeHolidayService->getAllHolidays();
+        $user = Auth::user();
+        if ($user && $user->role->name === 'account_manager') {
+            $holidays = $this->officeHolidayService->getOfficeHolidays();
+        } else {
+            // For shared access, still return all holidays for backward compatibility
+            $holidays = $this->officeHolidayService->getAllHolidays();
+        }
         return \App\Http\Resources\OfficeHolidayResource::collection($holidays);
     }
 
@@ -64,14 +95,15 @@ class OfficeHolidayController extends Controller
             $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
         }
         $data['user_id'] = $user->user_id;
+        $data['type'] = \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY; // Set type for office holidays
+        $data['group_id'] = null; // Office holidays are not group-specific
         $holiday = $this->officeHolidayService->createHoliday($data);
-        return new \App\Http\Resources\OfficeHolidayResource($holiday);
-    }
-    protected $officeHolidayService;
 
-    public function __construct(OfficeHolidayServiceInterface $officeHolidayService)
-    {
-        $this->officeHolidayService = $officeHolidayService;
+        return response()->json([
+            'message' => 'Holiday created successfully',
+            'data' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+            'active_holidays' => $this->getActiveOfficeHolidaysList()
+        ], 201);
     }
 
     // Only account_manager can set a holiday
@@ -92,8 +124,14 @@ class OfficeHolidayController extends Controller
             'user_id' => $user->user_id,
             'holiday_date' => $validated['holiday_date'],
             'description' => $validated['description'] ?? null,
+            'type' => \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY,
+            'group_id' => null,
         ]);
 
-        return (new \App\Http\Resources\OfficeHolidayResource($holiday))->response()->setStatusCode(201);
+        return response()->json([
+            'message' => 'Holiday set successfully',
+            'data' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+            'active_holidays' => $this->getActiveOfficeHolidaysList()
+        ], 201);
     }
 }

@@ -24,9 +24,12 @@ class StoreOfficeHolidayRequest extends FormRequest
         $validator->after(function ($validator) {
             if ($this->has('holiday_date')) {
                 $date = \Carbon\Carbon::createFromFormat('d-M-Y', $this->holiday_date)->format('Y-m-d');
-                $exists = \App\Models\OfficeHoliday::where('holiday_date', $date)->exists();
+                $exists = \App\Models\OfficeHoliday::where('holiday_date', $date)
+                    ->where('type', \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY)
+                    ->whereNull('group_id')
+                    ->exists();
                 if ($exists) {
-                    $validator->errors()->add('holiday_date', 'This holiday date already exists.');
+                    $validator->errors()->add('holiday_date', 'This office holiday date already exists.');
                 }
             }
         });
