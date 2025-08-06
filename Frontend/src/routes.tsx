@@ -1,16 +1,19 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import LoginPage from "features/auth";
 import Dashboard from "features/dashboard";
+import EmployeeDirectory from "features/employee-directory";
 import MoneyPool from "features/money-pool";
 import Notifications from "features/notifications";
 import RoleManagement from "features/role-management";
 import UserContribution from "features/user-contribution";
-import EmployeeDirectory from "features/employee-directory";
 import Layout from "shared/components/layout";
 
 export default function AppRoutes() {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
+
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
@@ -21,6 +24,8 @@ export default function AppRoutes() {
         <Route path="manage" element={<UserContribution />} />
         <Route path="notifications" element={<Notifications />} />
       </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import type { AuthState, User } from "features/auth/types/auth-types";
+import type { AuthState, User } from "features/auth/helpers/auth-types";
 import type { UserRole } from "shared/helpers/types";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -15,7 +15,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setUser: (user: User) => set({ user, isAuthenticated: true }),
 
-  logout: () => set({ user: null, isAuthenticated: false }),
+  logout: () => set({ user: undefined, isAuthenticated: false }),
 
   hasAnyOfTheseRoles: (roles: UserRole[]) => {
     const { user } = get();
