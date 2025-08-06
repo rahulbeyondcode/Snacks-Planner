@@ -31,107 +31,212 @@ class OfficeHolidayController extends Controller
     // Update an office holiday
     public function update(UpdateOfficeHolidayRequest $request, $id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-        $data = $request->validated();
-        // Convert 'holiday_date' from d-M-Y (UI/API) to Y-m-d (DB)
-        if (isset($data['holiday_date'])) {
-            $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
-        }
-        $holiday = $this->officeHolidayService->updateHoliday($id, $data);
-        if (!$holiday) {
-            return response()->json(['message' => 'Holiday not found'], 404);
-        }
+        try {
+            $user = Auth::user();
+            if (!$user || $user->role->name !== 'account_manager') {
+                return apiResponse(
+                    false,
+                    'Access denied. Only account managers can update office holidays.',
+                    [],
+                    403
+                );
+            }
 
-        return response()->json([
-            'message' => 'Holiday updated successfully',
-            'data' => new \App\Http\Resources\OfficeHolidayResource($holiday),
-            'active_holidays' => $this->getActiveOfficeHolidaysList()
-        ]);
+            $data = $request->validated();
+            // Convert 'holiday_date' from d-M-Y (UI/API) to Y-m-d (DB)
+            if (isset($data['holiday_date'])) {
+                $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
+            }
+
+            $holiday = $this->officeHolidayService->updateHoliday($id, $data);
+            if (!$holiday) {
+                return apiResponse(
+                    false,
+                    'Holiday not found',
+                    [],
+                    404
+                );
+            }
+
+            return apiResponse(
+                true,
+                'Holiday updated successfully',
+                [
+                    'holiday' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+                    'active_holidays' => $this->getActiveOfficeHolidaysList()
+                ],
+                200
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to update holiday: ' . $e->getMessage(),
+                [],
+                500
+            );
+        }
     }
 
     // Delete an office holiday
     public function destroy($id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-        $deleted = $this->officeHolidayService->deleteHoliday($id);
-        if (!$deleted) {
-            return response()->json(['message' => 'Holiday not found'], 404);
-        }
+        try {
+            $user = Auth::user();
+            if (!$user || $user->role->name !== 'account_manager') {
+                return apiResponse(
+                    false,
+                    'Access denied. Only account managers can delete office holidays.',
+                    [],
+                    403
+                );
+            }
 
-        return response()->json([
-            'message' => 'Holiday deleted successfully',
-            'active_holidays' => $this->getActiveOfficeHolidaysList()
-        ]);
+            $deleted = $this->officeHolidayService->deleteHoliday($id);
+            if (!$deleted) {
+                return apiResponse(
+                    false,
+                    'Holiday not found',
+                    [],
+                    404
+                );
+            }
+
+            return apiResponse(
+                true,
+                'Holiday deleted successfully',
+                $this->getActiveOfficeHolidaysList(),
+                200
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to delete holiday: ' . $e->getMessage(),
+                [],
+                500
+            );
+        }
     }
     // List all office holidays (account_manager only sees office holidays)
     public function index()
     {
-        $user = Auth::user();
-        if ($user && $user->role->name === 'account_manager') {
-            $holidays = $this->officeHolidayService->getOfficeHolidays();
-        } else {
-            // For shared access, still return all holidays for backward compatibility
-            $holidays = $this->officeHolidayService->getAllHolidays();
+        try {
+            $user = Auth::user();
+            if ($user && $user->role->name === 'account_manager') {
+                $holidays = $this->officeHolidayService->getOfficeHolidays();
+            } else {
+                // For shared access, still return all holidays for backward compatibility
+                $holidays = $this->officeHolidayService->getAllHolidays();
+            }
+
+            return apiResponse(
+                true,
+                'Office holidays retrieved successfully',
+                \App\Http\Resources\OfficeHolidayResource::collection($holidays),
+                200
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to retrieve office holidays: ' . $e->getMessage(),
+                [],
+                500
+            );
         }
-        return \App\Http\Resources\OfficeHolidayResource::collection($holidays);
     }
 
     // Add a new office holiday (pill-style add)
     public function store(StoreOfficeHolidayRequest $request)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-        $data = $request->validated();
-        // Convert 'holiday_date' from d-M-Y (UI/API) to Y-m-d (DB)
-        if (isset($data['holiday_date'])) {
-            $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
-        }
-        $data['user_id'] = $user->user_id;
-        $data['type'] = \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY; // Set type for office holidays
-        $data['group_id'] = null; // Office holidays are not group-specific
-        $holiday = $this->officeHolidayService->createHoliday($data);
+        try {
+            $user = Auth::user();
+            if (!$user || $user->role->name !== 'account_manager') {
+                return apiResponse(
+                    false,
+                    'Access denied. Only account managers can create office holidays.',
+                    [],
+                    403
+                );
+            }
 
-        return response()->json([
-            'message' => 'Holiday created successfully',
-            'data' => new \App\Http\Resources\OfficeHolidayResource($holiday),
-            'active_holidays' => $this->getActiveOfficeHolidaysList()
-        ], 201);
+            $data = $request->validated();
+            // Convert 'holiday_date' from d-M-Y (UI/API) to Y-m-d (DB)
+            if (isset($data['holiday_date'])) {
+                $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
+            }
+
+            $data['user_id'] = $user->user_id;
+            $data['type'] = \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY; // Set type for office holidays
+            $data['group_id'] = null; // Office holidays are not group-specific
+            $holiday = $this->officeHolidayService->createHoliday($data);
+
+            return apiResponse(
+                true,
+                'Holiday created successfully',
+                [
+                    'holiday' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+                    'active_holidays' => $this->getActiveOfficeHolidaysList()
+                ],
+                201
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to create holiday: ' . $e->getMessage(),
+                [],
+                500
+            );
+        }
     }
 
     // Only account_manager can set a holiday
     public function setHoliday(SetOfficeHolidayRequest $request)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json(['message' => 'Forbidden'], 403);
+        try {
+            $user = Auth::user();
+            if (!$user || $user->role->name !== 'account_manager') {
+                return apiResponse(
+                    false,
+                    'Access denied. Only account managers can set office holidays.',
+                    [],
+                    403
+                );
+            }
+
+            $validated = $request->validated();
+
+            if ($this->officeHolidayService->isHolidaySet($validated['holiday_date'])) {
+                return apiResponse(
+                    false,
+                    'Holiday already set for this date',
+                    [],
+                    422
+                );
+            }
+
+            $holiday = $this->officeHolidayService->setHoliday([
+                'user_id' => $user->user_id,
+                'holiday_date' => $validated['holiday_date'],
+                'description' => $validated['description'] ?? null,
+                'type' => \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY,
+                'group_id' => null,
+            ]);
+
+            return apiResponse(
+                true,
+                'Holiday set successfully',
+                [
+                    'holiday' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+                    'active_holidays' => $this->getActiveOfficeHolidaysList()
+                ],
+                201
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to set holiday: ' . $e->getMessage(),
+                [],
+                500
+            );
         }
-
-        $validated = $request->validated();
-
-        if ($this->officeHolidayService->isHolidaySet($validated['holiday_date'])) {
-            return response()->json(['message' => 'Holiday already set for this date'], 422);
-        }
-
-        $holiday = $this->officeHolidayService->setHoliday([
-            'user_id' => $user->user_id,
-            'holiday_date' => $validated['holiday_date'],
-            'description' => $validated['description'] ?? null,
-            'type' => \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY,
-            'group_id' => null,
-        ]);
-
-        return response()->json([
-            'message' => 'Holiday set successfully',
-            'data' => new \App\Http\Resources\OfficeHolidayResource($holiday),
-            'active_holidays' => $this->getActiveOfficeHolidaysList()
-        ], 201);
     }
 }
