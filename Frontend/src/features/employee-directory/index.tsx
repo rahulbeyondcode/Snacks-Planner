@@ -1,5 +1,5 @@
+import { Edit, Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
-import { HiPencil, HiPlus, HiTrash } from "react-icons/hi";
 
 import AddEditEmployeeModal from "features/employee-directory/components/add-edit-employee-modal";
 import DataTable, {
@@ -49,13 +49,13 @@ const EmployeeDirectory: React.FC = () => {
   // Table action configuration
   const actions: TableAction<Employee>[] = [
     {
-      icon: <HiPencil />,
+      icon: <Edit />,
       onClick: (employee: Employee) => handleEdit(employee.id),
       className: "hover:text-blue-500",
       title: "Edit Employee",
     },
     {
-      icon: <HiTrash />,
+      icon: <Trash2 />,
       onClick: (employee: Employee) => handleDelete(employee.id),
       className: "hover:text-red-500",
       title: "Delete Employee",
@@ -97,7 +97,7 @@ const EmployeeDirectory: React.FC = () => {
             setIsModalOpen(true);
           }}
         >
-          <HiPlus /> Add Employee
+          <Plus /> Add Employee
         </button>
       </div>
 

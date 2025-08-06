@@ -1,27 +1,27 @@
 import { useAuthStore } from "features/auth/store";
 import {
-  HiOutlineBell,
-  HiOutlineCog,
-  HiOutlineCurrencyDollar,
-  HiOutlineLogout,
-  HiOutlineUserGroup,
-  HiOutlineViewGrid,
-  HiUserAdd,
-} from "react-icons/hi";
+  Bell,
+  DollarSign,
+  Grid3X3,
+  LogOut,
+  Settings,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const navItems = [
-  { label: "Dashboard", path: "/dashboard", icon: HiOutlineViewGrid },
-  { label: "User Contribution", path: "/user-contribution", icon: HiUserAdd },
-  { label: "Money Pool", path: "/money-pool", icon: HiOutlineCurrencyDollar },
+  { label: "Dashboard", path: "/dashboard", icon: Grid3X3 },
+  { label: "User Contribution", path: "/user-contribution", icon: UserPlus },
+  { label: "Money Pool", path: "/money-pool", icon: DollarSign },
   {
     label: "Employee Directory",
     path: "/employee-directory",
-    icon: HiOutlineUserGroup,
+    icon: Users,
   },
-  { label: "Assign Roles", path: "/assign-roles", icon: HiOutlineUserGroup },
-  { label: "Manage", path: "/manage", icon: HiOutlineCog },
-  { label: "Notifications", path: "/notifications", icon: HiOutlineBell },
+  { label: "Assign Roles", path: "/assign-roles", icon: Users },
+  { label: "Manage", path: "/manage", icon: Settings },
+  { label: "Notifications", path: "/notifications", icon: Bell },
 ];
 
 const Sidebar = () => {
@@ -81,7 +81,7 @@ const Sidebar = () => {
           className="cursor-pointer flex items-center gap-3 px-5 py-3 focus:outline-none w-full rounded-3xl text-blue-100 hover:bg-red-400/20 hover:text-white transition-colors"
         >
           <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500 text-white">
-            <HiOutlineLogout size={20} />
+            <LogOut size={20} />
           </span>
           <span className="tracking-tight font-sans text-base">Logout</span>
         </button>
