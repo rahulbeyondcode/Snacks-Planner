@@ -25,7 +25,8 @@ class Kernel extends HttpKernel
             // Add web middleware here
         ],
         'api' => [
-            // Add api middleware here
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
@@ -36,6 +37,6 @@ class Kernel extends HttpKernel
      */
     protected $routeMiddleware = [
         'role' => \App\Http\Middleware\RoleMiddleware::class,
-        'permission' => \App\Http\Middleware\CheckPermission::class
+        'permission' => \App\Http\Middleware\CheckPermission::class,
     ];
 }
