@@ -141,7 +141,7 @@ class UserController extends Controller
             $validated = $request->validated();
             $validated['password'] = bcrypt($validated['password']);
             $validated['role_id'] = 4; // Always assign Employee role
-            $validated['preference'] = $validated['preference'] ?? 'non-veg'; // Default to 'non-veg' if not provided
+            $validated['preference'] = $validated['preference'] ?? 'all_snacks'; // Default to 'all_snacks' if not provided
             $created = $this->userService->createUser($validated);
             $users = $this->userService->listUsers([]);
 
