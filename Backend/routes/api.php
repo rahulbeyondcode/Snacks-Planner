@@ -190,6 +190,10 @@ Route::prefix('v1')->group(function () {
             Route::delete('/no-snacks-days/{id}', [\App\Http\Controllers\NoSnacksDayController::class, 'destroy']);
         });
 
+        // Snack Preference Management (all roles except account_manager)
+        Route::get('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'index']);
+        Route::put('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'update']);
+
         // Shared features (all authenticated)
         Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
         Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);

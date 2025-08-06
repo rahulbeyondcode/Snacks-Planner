@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->unsignedBigInteger('role_id');
             $table->string('email')->unique();
-            $table->enum('preference', ['veg', 'non-veg'])->nullable();
+            $table->enum('preference', ['all_snacks', 'veg_only', 'veg_but_egg', 'no_beef', 'no_chicken', 'no_snacks'])->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable();
             $table->rememberToken();
