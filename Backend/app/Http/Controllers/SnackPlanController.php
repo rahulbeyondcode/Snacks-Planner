@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SnackPlanDetail;
 use App\Services\SnackPlanServiceInterface;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreSnackPlanRequest;
+use App\Http\Requests\UpdateSnackPlanRequest;
+use App\Http\Resources\SnackPlanResource;
 
 class SnackPlanController extends Controller
 {
@@ -19,7 +22,7 @@ class SnackPlanController extends Controller
         $url = url('/storage/' . $path);
 
         // Optionally update the SnackPlanDetail record
-        $detail = \App\Models\SnackPlanDetail::find($detailId);
+        $detail = SnackPlanDetail::find($detailId);
         if ($detail) {
             $detail->upload_receipt = $url;
             $detail->save();
@@ -44,15 +47,9 @@ class SnackPlanController extends Controller
     }
 
     public function store(StoreSnackPlanRequest $request)
-    {
-        $validated = $request->validated();
-        $planData = [
-            'snack_date' => $validated['snack_date'],
-            'user_id' => $validated['user_id'],
-            'total_amount' => $validated['total_amount'],
-        ];
-        $snackItems = $validated['snack_items'];
-
+    {    
+        $snackItems = $request->snack_items;
+        $planData = $request->all();
         // Handle file uploads for each snack item
         foreach ($snackItems as $i => $item) {
             if (isset($item['upload_receipt']) && $request->hasFile("snack_items.$i.upload_receipt")) {
@@ -65,7 +62,7 @@ class SnackPlanController extends Controller
         }
 
         $snackPlan = $this->snackPlanService->planFullSnackDay($planData, $snackItems);
-        return (new \App\Http\Resources\SnackPlanResource($snackPlan))->response()->setStatusCode(201);
+        return (new SnackPlanResource($snackPlan))->response()->setStatusCode(201);
     }
 
     public function show($id)
