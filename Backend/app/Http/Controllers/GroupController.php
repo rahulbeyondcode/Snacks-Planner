@@ -300,7 +300,7 @@ class GroupController extends Controller
 
     public function setSortOrder(Request $request)
     {
-        $$sortOrders = $request->input('sort_orders');
+        $sortOrders = $request->input('sort_orders');
 
         if (!is_array($sortOrders)) {
             return response()->json(['message' => 'Invalid input format. Expected an array.'], 400);

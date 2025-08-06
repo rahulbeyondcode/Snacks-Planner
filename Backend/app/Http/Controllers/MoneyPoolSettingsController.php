@@ -26,7 +26,6 @@ class MoneyPoolSettingsController extends Controller
                 ->setStatusCode(201);
         } catch (\Exception $e) {
             return response()->internalServerError(__('messages.error'));
-
         }
     }
 

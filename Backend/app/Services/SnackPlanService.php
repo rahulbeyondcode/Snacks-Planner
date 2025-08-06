@@ -46,6 +46,7 @@ class SnackPlanService implements SnackPlanServiceInterface
 
     public function planFullSnackDay(array $planData, array $snackItems)
     {
+        dd($snackItems);
         // Create the main snack plan
         $snackPlan = $this->snackPlanRepository->create($planData);
         $planId = $snackPlan->snack_plan_id;

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSnackPlanRequest extends FormRequest
 {
@@ -14,8 +15,8 @@ class StoreSnackPlanRequest extends FormRequest
     public function rules()
     {
         return [
-            'snack_date' => 'required|date',
-            'user_id' => 'required|integer|exists:users,user_id',
+            'snack_date' => 'required',
+            'user_id' => 'required|integer',
             'total_amount' => 'required|numeric',
             'snack_items' => 'required|array|min:1',
             'snack_items.*.snack_item_id' => 'required|integer|exists:snack_items,snack_item_id',
