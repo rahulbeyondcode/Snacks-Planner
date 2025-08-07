@@ -20,6 +20,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($validated)) {
             $user = Auth::user();
+            session()->regenerate();
 
             // Load user's role and permissions
             $user->load('role.permissions');
