@@ -23,7 +23,6 @@ class MoneyPoolBlock extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'block_date' => 'date',
     ];
 
     public function moneyPool(): BelongsTo

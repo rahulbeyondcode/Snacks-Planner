@@ -24,4 +24,22 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
     {
         return MoneyPool::with(['creator', 'settings', 'blocks'])->find($id);
     }
+
+    public function update(int $id, array $data): ?MoneyPool
+    {
+        $moneyPool = MoneyPool::find($id);
+
+        if (! $moneyPool) {
+            return null;
+        }
+
+        $moneyPool->update($data);
+
+        return $moneyPool->fresh();
+    }
+
+    public function getTotalAvailableAmount(int $moneyPoolId, float $totalBlocked): float
+    {
+        return MoneyPool::where('money_pool_id', $moneyPoolId)->first()->total_pool_amount - $totalBlocked;
+    }
 }

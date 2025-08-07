@@ -8,7 +8,5 @@ interface MoneyPoolBlockServiceInterface
 
     public function getBlocksByPoolId(int $moneyPoolId);
 
-    public function getBlock(int $id);
-
     public function deleteBlock(int $blockId);
 }

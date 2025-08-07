@@ -33,7 +33,9 @@ class MoneyPoolController extends Controller
             $validated = $request->validated();
             $block = $this->moneyPoolBlockService->blockMoneyPool($validated);
 
-            if (! $block) {
+            if ($block instanceof JsonResponse && $block->getStatusCode() == 422) {
+                return response()->unprocessableEntity($block->getData()->message);
+            } elseif (! $block) {
                 return response()->notFound(__('money_pool_blocks.block_not_found'));
             }
 
@@ -53,7 +55,9 @@ class MoneyPoolController extends Controller
     public function deleteBlock(int $blockId): JsonResponse
     {
         try {
-            $this->moneyPoolBlockService->deleteBlock($blockId);
+            if (! $this->moneyPoolBlockService->deleteBlock($blockId)) {
+                return response()->notFound(__('money_pool_blocks.block_not_found'));
+            }
 
             return response()->noContent();
         } catch (\Exception $e) {
