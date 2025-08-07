@@ -62,6 +62,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
+        Route::post('/change-password', [\App\Http\Controllers\UserController::class, 'changePassword']);
 
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
