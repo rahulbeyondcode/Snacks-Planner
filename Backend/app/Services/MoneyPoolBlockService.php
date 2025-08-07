@@ -19,6 +19,12 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
         return DB::transaction(function () use ($data) {
             $isUpdate = isset($data['block_id']);
 
+            $amountDetails = $this->getAmountDetails($data, $isUpdate);
+
+            if ($amountDetails['total_available'] < $data['amount']) {
+                return response()->unprocessableEntity(__('money_pool_blocks.block_not_enough_amount'));
+            }
+
             if ($isUpdate) {
                 $block = $this->moneyPoolBlockRepository->update($data['block_id'], $data);
             } else {
@@ -41,32 +47,31 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
         return $this->moneyPoolBlockRepository->findByPoolId($moneyPoolId);
     }
 
-    public function getBlock(int $id)
-    {
-        $block = $this->moneyPoolBlockRepository->find($id);
-
-        if (! $block) {
-            throw new Exception('Money pool block not found');
-        }
-
-        return $block;
-    }
-
     public function deleteBlock(int $blockId): bool
     {
         return $this->moneyPoolBlockRepository->delete($blockId);
     }
 
+    private function getAmountDetails(array $data, bool $isUpdate)
+    {
+        $totalBlocked = $isUpdate ? $this->moneyPoolBlockRepository->getTotalBlockedAmountWithoutCurrentBlock($data['money_pool_id'], $data['block_id'])
+                                  : $this->moneyPoolBlockRepository->getTotalBlockedAmount($data['money_pool_id']);
+        $totalAvailable = $this->moneyPoolRepository->getTotalAvailableAmount($data['money_pool_id'], $totalBlocked);
+
+        return [
+            'total_blocked' => $totalBlocked,
+            'total_available' => $totalAvailable,
+        ];
+    }
+
     private function updateMoneyPoolBlockedAmount(int $moneyPoolId): void
     {
         $totalBlocked = $this->moneyPoolBlockRepository->getTotalBlockedAmount($moneyPoolId);
-        $moneyPool = $this->moneyPoolRepository->find($moneyPoolId);
+        $totalAvailable = $this->moneyPoolRepository->getTotalAvailableAmount($moneyPoolId, $totalBlocked);
 
-        if ($moneyPool) {
-            $moneyPool->update([
-                'blocked_amount' => $totalBlocked,
-                'total_available_amount' => $moneyPool->total_pool_amount - $totalBlocked,
-            ]);
-        }
+        $this->moneyPoolRepository->update($moneyPoolId, [
+            'blocked_amount' => $totalBlocked,
+            'total_available_amount' => $totalAvailable,
+        ]);
     }
 }

@@ -16,4 +16,5 @@ return [
     'block_date_after_or_equal' => 'The block date must be within the current month.',
     'block_date_before_or_equal' => 'The block date must be within the current month.',
     'block_not_found' => 'Money pool block not found.',
+    'block_not_enough_amount' => 'You do not have enough amount to block.',
 ];
