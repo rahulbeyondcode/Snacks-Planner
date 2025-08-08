@@ -140,16 +140,9 @@ class SnackItemController extends Controller
             if (!$item) {
                 return apiResponse(false, __('not_found'), null, 404);
             }            
-            // Delete related records first to maintain referential integrity
-        
-            $item->snackPlanDetails()->delete();
-            
-            // Delete associated shop mappings
-            $item->shopMappings()->delete();
-            
-            // Finally delete the snack item itself
-            $item->delete();
-            
+           
+            $item->shopMappings()->delete();            
+            $item->delete();            
             DB::commit();
             
             return apiResponse(true, __('delete'), null, 200);
