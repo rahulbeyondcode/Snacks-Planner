@@ -8,6 +8,7 @@ interface SnackPlanDetailRepositoryInterface
 {
     public function create(array $data);
     public function findByPlanId(int $snackPlanId);
+    public function deleteByPlanId(int $snackPlanId);
 }
 
 class SnackPlanDetailRepository implements SnackPlanDetailRepositoryInterface
@@ -20,5 +21,10 @@ class SnackPlanDetailRepository implements SnackPlanDetailRepositoryInterface
     public function findByPlanId(int $snackPlanId)
     {
         return SnackPlanDetail::where('snack_plan_id', $snackPlanId)->get();
+    }
+
+    public function deleteByPlanId(int $snackPlanId)
+    {
+        return SnackPlanDetail::where('snack_plan_id', $snackPlanId)->delete();
     }
 }
