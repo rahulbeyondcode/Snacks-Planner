@@ -9,7 +9,6 @@ use App\Http\Requests\UpdateUserProfileRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\AssignUserRoleRequest;
 use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\ChangePasswordRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -41,40 +40,6 @@ class UserController extends Controller
             return apiResponse(
                 false,
                 'Failed to update profile: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
-    }
-
-    // Change user password
-    public function changePassword(ChangePasswordRequest $request)
-    {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return apiResponse(
-                    false,
-                    'Authentication required to change password',
-                    [],
-                    401
-                );
-            }
-
-            // Update password with hashed version
-            User::where('user_id', $user->user_id)
-                ->update(['password' => Hash::make($request->validated()['new_password'])]);
-
-            return apiResponse(
-                true,
-                'Password changed successfully',
-                [],
-                200
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to change password: ' . $e->getMessage(),
                 [],
                 500
             );

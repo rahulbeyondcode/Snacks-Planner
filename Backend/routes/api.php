@@ -64,7 +64,6 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
-        Route::post('/change-password', [\App\Http\Controllers\UserController::class, 'changePassword']);
 
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
@@ -194,7 +193,7 @@ Route::prefix('v1')->group(function () {
 
         // The following routes are only for operations_manager and operation
         Route::middleware(['role:snack_manager,operation,account_manager'])->group(function () {
-         // Snack Preference Management (all roles except account_manager)
+            // Snack Preference Management (all roles except account_manager)
             Route::get('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'index']);
             Route::put('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'update']);
             Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
