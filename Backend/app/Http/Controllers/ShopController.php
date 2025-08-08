@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Shop;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreShopRequest;
+use App\Http\Requests\UpdateShopRequest;
 
 class ShopController extends Controller
 {
     // List all shops
     public function index()
     {
-        return response()->json(Shop::all());
+        $shops = Shop::all();
+        return apiResponse(true, __('messages.success'), $shops, 200);
     }
 
     // Show a single shop
@@ -18,27 +21,27 @@ class ShopController extends Controller
     {
         $shop = Shop::find($id);
         if (!$shop) {
-            return response()->json(['message' => 'Not found'], 404);
+            return apiResponse(false, __('messages.not_found'), null, 404);
         }
-        return response()->json($shop);
+        return apiResponse(true, __('messages.success'), $shop, 200);
     }
 
     // Create a shop (admin only)
-    public function store(\App\Http\Requests\StoreShopRequest $request)
+    public function store(StoreShopRequest $request)
     {
         $shop = Shop::create($request->validated());
-        return response()->json($shop, 201);
+        return apiResponse(true, __('messages.success'), $shop, 201);
     }
 
     // Update a shop (admin only)
-    public function update(\App\Http\Requests\UpdateShopRequest $request, $id)
+    public function update(UpdateShopRequest $request, $id)
     {
         $shop = Shop::find($id);
         if (!$shop) {
-            return response()->json(['message' => 'Not found'], 404);
+            return apiResponse(false, __('messages.not_found'), null, 404);
         }
         $shop->update($request->validated());
-        return response()->json($shop);
+        return apiResponse(true, __('messages.success'), $shop, 200);
     }
 
     // Delete a shop (admin only)
@@ -46,9 +49,9 @@ class ShopController extends Controller
     {
         $shop = Shop::find($id);
         if (!$shop) {
-            return response()->json(['message' => 'Not found'], 404);
+            return apiResponse(false, __('messages.not_found'), null, 404);
         }
         $shop->delete();
-        return response()->json(['message' => 'Deleted']);
+        return apiResponse(true, __('messages.success'), null, 200);
     }
 }

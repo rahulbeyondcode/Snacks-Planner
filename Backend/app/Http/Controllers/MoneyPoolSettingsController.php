@@ -24,7 +24,6 @@ class MoneyPoolSettingsController extends Controller
             return new MoneyPoolSettingsResource($settings);
         } catch (\Exception $e) {
             return response()->internalServerError(__('messages.error'));
-
         }
     }
 

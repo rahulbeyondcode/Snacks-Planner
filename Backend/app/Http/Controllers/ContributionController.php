@@ -15,54 +15,101 @@ class ContributionController extends Controller
      */
     public function bulkUpdateStatus(Request $request)
     {
-        $user = Auth::user();
-        if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        try {
+            $user = Auth::user();
+            if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
+                return apiResponse(
+                    false,
+                    'Access denied. Only snack managers and operations can bulk update contribution status.',
+                    [],
+                    403
+                );
+            }
+
+            $data = $request->validate([
+                'contributors' => 'required|array|min:1',
+                'contributors.*' => 'required|integer|exists:users,user_id',
+            ]);
+
+            $count = $this->contributionService->bulkUpdateStatus($data['contributors'], $user->user_id);
+
+            // Fetch all contributions for the current month
+            $filters = [
+                'per_page' => 1000 // or a sufficiently large number to get all
+            ];
+            $contributions = $this->contributionService->listAllContributions($filters);
+            $resource = \App\Http\Resources\ContributionResource::collection($contributions);
+            $response = $resource->response()->getData(true);
+
+            $result = [];
+            if (isset($response['data'])) $result['contributions'] = $response['data'];
+            if (isset($response['meta'])) {
+                unset($response['meta']['links']);
+                $result['meta'] = $response['meta'];
+            }
+            $result['updated_count'] = $count;
+
+            return apiResponse(
+                true,
+                "Successfully updated status for {$count} contributions",
+                $result,
+                200
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to bulk update contribution status: ' . $e->getMessage(),
+                [],
+                500
+            );
         }
-        $data = $request->validate([
-            'contributors' => 'required|array|min:1',
-            'contributors.*' => 'required|integer|exists:users,user_id',
-        ]);
-        $count = $this->contributionService->bulkUpdateStatus($data['contributors'], $user->user_id);
-        // Fetch all contributions for the current month
-        $filters = [
-            'per_page' => 1000 // or a sufficiently large number to get all
-        ];
-        $contributions = $this->contributionService->listAllContributions($filters);
-        $resource = \App\Http\Resources\ContributionResource::collection($contributions);
-        $response = $resource->response()->getData(true);
-        $result = [];
-        if (isset($response['data'])) $result['data'] = $response['data'];
-        if (isset($response['meta'])) {
-            unset($response['meta']['links']);
-            $result['meta'] = $response['meta'];
-        }
-        $result['updated'] = $count;
-        return response()->json($result);
     }
 
     // Listing of all contributions with filters/pagination (snack_manager and operation only)
     public function index(Request $request)
     {
-        $user = Auth::user();
-        if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        try {
+            $user = Auth::user();
+            if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
+                return apiResponse(
+                    false,
+                    'Access denied. Only snack managers and operations can view contributions.',
+                    [],
+                    403
+                );
+            }
+
+            $filters = $request->only(['user_id', 'status', 'from', 'to', 'per_page']);
+            // Add support for employee name search (case-insensitive)
+            if ($request->filled('search')) {
+                $filters['search'] = $request->input('search');
+            }
+
+            $contributions = $this->contributionService->listAllContributions($filters);
+            $resource = \App\Http\Resources\ContributionResource::collection($contributions);
+            $response = $resource->response()->getData(true);
+
+            $result = [];
+            if (isset($response['data'])) $result['contributions'] = $response['data'];
+            if (isset($response['meta'])) {
+                unset($response['meta']['links']);
+                $result['meta'] = $response['meta'];
+            }
+
+            return apiResponse(
+                true,
+                'Contributions retrieved successfully',
+                $result,
+                200
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to retrieve contributions: ' . $e->getMessage(),
+                [],
+                500
+            );
         }
-        $filters = $request->only(['user_id', 'status', 'from', 'to', 'per_page']);
-        // Add support for employee name search (case-insensitive)
-        if ($request->filled('search')) {
-            $filters['search'] = $request->input('search');
-        }
-        $contributions = $this->contributionService->listAllContributions($filters);
-        $resource = \App\Http\Resources\ContributionResource::collection($contributions);
-        $response = $resource->response()->getData(true);
-        $result = [];
-        if (isset($response['data'])) $result['data'] = $response['data'];
-        if (isset($response['meta'])) {
-            unset($response['meta']['links']);
-            $result['meta'] = $response['meta'];
-        }
-        return response()->json($result);
     }
     protected $contributionService;
 
@@ -74,26 +121,74 @@ class ContributionController extends Controller
     // Only account_manager can mark paid/unpaid
     public function updateStatus(UpdateContributionStatusRequest $request, $id)
     {
-        $user = Auth::user();
-        if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        try {
+            $user = Auth::user();
+            if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
+                return apiResponse(
+                    false,
+                    'Access denied. Only snack managers and operations can update contribution status.',
+                    [],
+                    403
+                );
+            }
+
+            $validated = $request->validated();
+            $contribution = $this->contributionService->updateContribution($id, ['status' => $validated['status']]);
+
+            if (!$contribution) {
+                return apiResponse(
+                    false,
+                    'Contribution not found',
+                    [],
+                    404
+                );
+            }
+
+            return apiResponse(
+                true,
+                'Contribution status updated successfully',
+                new \App\Http\Resources\ContributionResource($contribution),
+                200
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to update contribution status: ' . $e->getMessage(),
+                [],
+                500
+            );
         }
-        $validated = $request->validated();
-        $contribution = $this->contributionService->updateContribution($id, ['status' => $validated['status']]);
-        if (!$contribution) {
-            return response()->json(['message' => 'Contribution not found'], 404);
-        }
-        return new \App\Http\Resources\ContributionResource($contribution);
     }
 
     // User can view their own contribution history
     public function myContributions()
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return apiResponse(
+                    false,
+                    'Authentication required to view contributions',
+                    [],
+                    401
+                );
+            }
+
+            $contributions = $this->contributionService->getUserContributions($user->user_id);
+
+            return apiResponse(
+                true,
+                'Your contributions retrieved successfully',
+                \App\Http\Resources\ContributionResource::collection($contributions),
+                200
+            );
+        } catch (\Exception $e) {
+            return apiResponse(
+                false,
+                'Failed to retrieve your contributions: ' . $e->getMessage(),
+                [],
+                500
+            );
         }
-        $contributions = $this->contributionService->getUserContributions($user->user_id);
-        return \App\Http\Resources\ContributionResource::collection($contributions);
     }
 }

@@ -1,6 +1,6 @@
 import React from "react";
 
-import type { EmployeeContribution } from "features/user-contribution/type";
+import type { EmployeeContribution } from "features/user-contribution/helpers/user-contribution-type";
 
 type EmployeeContributionRowProps = {
   employee: EmployeeContribution;

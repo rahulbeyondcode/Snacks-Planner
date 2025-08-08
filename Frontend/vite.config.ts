@@ -17,6 +17,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ["@heroicons/react/24/outline"],
+    include: ["lucide-react"],
   },
 });

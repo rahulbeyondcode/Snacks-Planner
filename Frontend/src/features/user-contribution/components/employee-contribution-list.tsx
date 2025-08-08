@@ -1,7 +1,7 @@
 import React from "react";
 
 import EmployeeContributionRow from "features/user-contribution/components/employee-contribution-row";
-import type { EmployeeContribution } from "features/user-contribution/type";
+import type { EmployeeContribution } from "features/user-contribution/helpers/user-contribution-type";
 
 type EmployeeContributionListProps = {
   employees: EmployeeContribution[];

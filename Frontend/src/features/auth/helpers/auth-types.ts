@@ -1,3 +1,6 @@
+import * as yup from "yup";
+
+import type { loginSchema } from "features/auth/helpers/form-config";
 import type { UserRole } from "shared/helpers/types";
 
 export type User = {
@@ -14,3 +17,6 @@ export type AuthState = {
   logout: () => void;
   hasAnyOfTheseRoles: (roles: UserRole[]) => boolean;
 };
+
+// Login form type
+export type LoginFormData = yup.InferType<typeof loginSchema>;
