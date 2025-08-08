@@ -47,9 +47,14 @@ class MoneyPoolBlockRepository implements MoneyPoolBlockRepositoryInterface
         $block = MoneyPoolBlock::find($blockId);
 
         if (! $block) {
-            throw new Exception('Money pool block not found');
+            return false;
         }
 
         return $block->delete();
+    }
+
+    public function getTotalBlockedAmountWithoutCurrentBlock(int $moneyPoolId, int $blockId): float
+    {
+        return MoneyPoolBlock::where('money_pool_id', $moneyPoolId)->where('block_id', '!=', $blockId)->sum('amount');
     }
 }

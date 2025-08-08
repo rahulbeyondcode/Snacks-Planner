@@ -1,11 +1,17 @@
+import { Edit, Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
-import { HiPlus } from "react-icons/hi";
 
-import AddEmployeeModal from "features/employee-directory/components/add-employee-modal";
-import EditEmployeeModal from "features/employee-directory/components/edit-employee-modal";
-import EmployeeTable, {
-  type Employee,
-} from "features/employee-directory/components/employee-table";
+import AddEditEmployeeModal from "features/employee-directory/components/add-edit-employee-modal";
+import DataTable, {
+  type TableAction,
+  type TableColumn,
+} from "shared/components/data-table";
+
+export type Employee = {
+  id: number;
+  name: string;
+  email: string;
+};
 
 const initialEmployees = [
   { id: 1, name: "Ajai Mathew", email: "ajai@quintet.dev" },
@@ -17,11 +23,44 @@ const initialEmployees = [
 
 const EmployeeDirectory: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
-  const [showModal, setShowModal] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null
   );
+
+  // Table column configuration
+  const columns: TableColumn<Employee>[] = [
+    {
+      key: "serialNumber",
+      title: "Sl No",
+      render: (_value, _item, index) => index + 1,
+    },
+    {
+      key: "name",
+      title: "Name",
+    },
+    {
+      key: "email",
+      title: "Email",
+    },
+  ];
+
+  // Table action configuration
+  const actions: TableAction<Employee>[] = [
+    {
+      icon: <Edit />,
+      onClick: (employee: Employee) => handleEdit(employee.id),
+      className: "hover:text-blue-500",
+      title: "Edit Employee",
+    },
+    {
+      icon: <Trash2 />,
+      onClick: (employee: Employee) => handleDelete(employee.id),
+      className: "hover:text-red-500",
+      title: "Delete Employee",
+    },
+  ];
 
   const handleAdd = (name: string, email: string) => {
     setEmployees([...employees, { id: employees.length + 1, name, email }]);
@@ -30,7 +69,8 @@ const EmployeeDirectory: React.FC = () => {
   const handleEdit = (id: number) => {
     const emp = employees.find((e) => e.id === id) || null;
     setSelectedEmployee(emp);
-    setEditModalOpen(true);
+    setModalMode("edit");
+    setIsModalOpen(true);
   };
 
   const handleEditSave = (id: number, name: string, email: string) => {
@@ -51,25 +91,24 @@ const EmployeeDirectory: React.FC = () => {
         </h2>
         <button
           className="flex items-center py-2 px-4 rounded bg-blue-200 border border-blue-400 text-blue-900 font-semibold hover:bg-blue-300 cursor-pointer"
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setModalMode("add");
+            setSelectedEmployee(null);
+            setIsModalOpen(true);
+          }}
         >
-          <HiPlus /> Add Employee
+          <Plus /> Add Employee
         </button>
       </div>
-      <EmployeeTable
-        employees={employees}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-      <AddEmployeeModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onAdd={handleAdd}
-      />
-      <EditEmployeeModal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+
+      <DataTable data={employees} columns={columns} actions={actions} />
+
+      <AddEditEmployeeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         employee={selectedEmployee}
+        mode={modalMode}
+        onAdd={handleAdd}
         onSave={handleEditSave}
       />
     </div>

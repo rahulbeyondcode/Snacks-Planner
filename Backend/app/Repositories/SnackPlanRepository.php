@@ -10,6 +10,11 @@ interface SnackPlanRepositoryInterface
 {
     public function create(array $data);
     public function find(int $id);
+    public function list(array $filters = []);
+    public function update(int $id, array $data);
+    public function delete(int $id);
+    public function getMonthlyExpense(string $month);
+    public function getSnackSummary(string $month);
 }
 
 class SnackPlanRepository implements SnackPlanRepositoryInterface
@@ -70,12 +75,12 @@ class SnackPlanRepository implements SnackPlanRepositoryInterface
     public function getSnackSummary(string $month)
     {
         // Example: group by snack_item_id and sum quantity for the month
-        return \DB::table('snack_plan_details')
+        return DB::table('snack_plan_details')
             ->join('snack_plans', 'snack_plan_details.snack_plan_id', '=', 'snack_plans.snack_plan_id')
             ->join('snack_items', 'snack_plan_details.snack_item_id', '=', 'snack_items.snack_item_id')
             ->whereRaw('DATE_FORMAT(snack_plans.snack_date, "%Y-%m") = ?', [$month])
             ->groupBy('snack_plan_details.snack_item_id', 'snack_items.name')
-            ->select('snack_items.name as snack', \DB::raw('SUM(snack_plan_details.quantity) as total_consumed'))
+            ->select('snack_items.name as snack', DB::raw('SUM(snack_plan_details.quantity) as total_consumed'))
             ->get()
             ->toArray();
     }

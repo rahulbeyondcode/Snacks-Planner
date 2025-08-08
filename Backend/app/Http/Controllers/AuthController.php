@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -22,7 +20,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($validated)) {
             $user = Auth::user();
-            $token = $user->createToken('auth-token')->plainTextToken;
+            session()->regenerate();
 
             // Load user's role and permissions
             $user->load('role.permissions');
@@ -42,9 +40,8 @@ class AuthController extends Controller
                         ],
                         'permissions' => $user->getPermissionsByModule(),
                     ],
-                    'token' => $token,
                 ],
-                'status' => 200
+                'status' => 200,
             ], 200);
         }
 
@@ -52,7 +49,7 @@ class AuthController extends Controller
             'success' => false,
             'message' => 'Invalid credentials',
             'data' => null,
-            'status' => 401
+            'status' => 401,
         ], 401);
     }
 
@@ -61,14 +58,13 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        Auth::guard('web')->logout();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Logout successful',
-            'data' => null,
-            'status' => 200
-        ], 200);
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return response()->noContent();
     }
 
     /**
@@ -95,7 +91,7 @@ class AuthController extends Controller
                     'permissions' => $user->getPermissionsByModule(),
                 ],
             ],
-            'status' => 200
+            'status' => 200,
         ], 200);
     }
-} 
+}

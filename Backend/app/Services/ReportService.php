@@ -51,11 +51,14 @@ class ReportService implements ReportServiceInterface
             return null;
         }
 
+        // Format data for export based on format type
         if ($format === 'xls') {
-            $content = $this->exportXLS($data, $title);
+            $formattedData = $this->formatDataForExcel($data, $type);
+            $content = $this->exportXLS($formattedData, $title);
         } else {
             $content = $this->exportPDF($data, $title);
         }
+
         return [
             'filename' => $filename,
             'content' => $content,
@@ -80,10 +83,74 @@ class ReportService implements ReportServiceInterface
         return $this->contributionRepository->getTotalContributions();
     }
 
+    protected function formatDataForExcel($data, $type)
+    {
+        switch ($type) {
+            case 'monthly_expense':
+                // Add header row
+                $formattedData = [
+                    ['Date', 'Total Amount']
+                ];
+                // Add data rows
+                foreach ($data as $row) {
+                    $formattedData[] = [
+                        $row['snack_date'],
+                        $row['total_amount']
+                    ];
+                }
+                return $formattedData;
+
+            case 'snack_summary':
+                // Add header row
+                $formattedData = [
+                    ['Snack Item', 'Total Consumed']
+                ];
+                // Add data rows
+                foreach ($data as $row) {
+                    $formattedData[] = [
+                        $row['snack'],
+                        $row['total_consumed']
+                    ];
+                }
+                return $formattedData;
+
+            case 'total_contributions':
+                // Add header row
+                $formattedData = [
+                    ['User ID', 'User Name', 'Total Records', 'Paid Contributions', 'Unpaid Records']
+                ];
+                // Add data rows
+                if (isset($data['by_user']) && is_array($data['by_user'])) {
+                    foreach ($data['by_user'] as $row) {
+                        $formattedData[] = [
+                            $row['user_id'],
+                            $row['user_name'] ?? 'Unknown',
+                            $row['total_records'],
+                            $row['paid_contributions'],
+                            $row['unpaid_records']
+                        ];
+                    }
+                }
+                // Add summary rows
+                $formattedData[] = ['', '', '', '', '']; // Empty row
+                $formattedData[] = ['Summary', '', '', '', ''];
+                $formattedData[] = ['Total Paid Contributions', '', '', $data['total_paid'] ?? 0, ''];
+                $formattedData[] = ['Total Unpaid Records', '', '', '', $data['total_unpaid'] ?? 0];
+                $formattedData[] = ['Total All Records', '', $data['total_all'] ?? 0, '', ''];
+                return $formattedData;
+
+            default:
+                return $data;
+        }
+    }
+
     protected function exportXLS($data, $title)
     {
-        // Use a package like Maatwebsite/Laravel-Excel (Excel::raw) for XLS export
-        // Here, return dummy XLS content for illustration
+        // Ensure data is properly formatted as array of arrays
+        if (!is_array($data) || empty($data)) {
+            throw new \Exception('Invalid data format for Excel export');
+        }
+
         return Excel::raw(new \App\Exports\GenericExport($data, $title), \Maatwebsite\Excel\Excel::XLSX);
     }
 

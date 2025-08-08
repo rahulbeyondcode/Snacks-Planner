@@ -4,7 +4,7 @@ import EmployeeContributionList from "features/user-contribution/components/empl
 import FilterBar from "features/user-contribution/components/filter-bar";
 import Button from "shared/components/save-button";
 
-import type { EmployeeContribution } from "features/user-contribution/type";
+import type { EmployeeContribution } from "features/user-contribution/helpers/user-contribution-type";
 
 const initialEmployees: EmployeeContribution[] = [
   { id: 1, name: "Ajai Mathew", paid: false },

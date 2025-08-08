@@ -21,9 +21,7 @@ class MoneyPoolSettingsController extends Controller
             $validated = $request->validated();
             $settings = $this->moneyPoolSettingsService->saveSettings($validated);
 
-            return (new MoneyPoolSettingsResource($settings))
-                ->response()
-                ->setStatusCode(201);
+            return new MoneyPoolSettingsResource($settings);
         } catch (\Exception $e) {
             return response()->internalServerError(__('messages.error'));
         }

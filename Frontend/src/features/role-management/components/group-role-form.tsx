@@ -1,4 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import { ArchiveX } from "lucide-react";
 import React from "react";
 import {
   Controller,
@@ -6,14 +7,16 @@ import {
   useFieldArray,
   useForm,
 } from "react-hook-form";
-import { HiOutlineArchiveBoxXMark } from "react-icons/hi2";
 import { v4 as uuidv4 } from "uuid";
 
 import { MultiSelect } from "shared/components/form-components/multi-select";
 import Button from "shared/components/save-button";
 
 import { schema } from "features/role-management/components/form-config";
-import type { Employee, Group } from "features/role-management/types";
+import type {
+  Employee,
+  Group,
+} from "features/role-management/helpers/role-management-types";
 
 // Mock employee data (replace with API integration later)
 const initialEmployees: Employee[] = [
@@ -131,7 +134,7 @@ const GroupRoleForm: React.FC = () => {
                         remove(index);
                       }}
                     >
-                      <HiOutlineArchiveBoxXMark />
+                      <ArchiveX />
                     </Button>
                   </div>
                 </div>

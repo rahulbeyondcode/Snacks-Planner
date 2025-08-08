@@ -1,6 +1,9 @@
 import { create } from "zustand";
 
-import type { BlockedFundType, MoneyPoolType } from "features/money-pool/types";
+import type {
+  BlockedFundType,
+  MoneyPoolType,
+} from "features/money-pool/helpers/money-pool-types";
 
 type MoneyPoolState = {
   pool: MoneyPoolType;
