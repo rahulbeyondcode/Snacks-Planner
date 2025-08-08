@@ -11,7 +11,7 @@ interface SnackPlanServiceInterface
     public function getSnackPlan(int $id);
     public function planFullSnackDay(array $planData, array $snackItems);
     public function listSnackPlans(array $filters = []);
-    public function updateSnackPlan(int $id, array $data);
+    public function updateSnackPlan(int $id, array $planData, array $snackItems = []);
     public function deleteSnackPlan(int $id);
 }
 
@@ -46,7 +46,6 @@ class SnackPlanService implements SnackPlanServiceInterface
 
     public function planFullSnackDay(array $planData, array $snackItems)
     {
-        dd($snackItems);
         // Create the main snack plan
         $snackPlan = $this->snackPlanRepository->create($planData);
         $planId = $snackPlan->snack_plan_id;
@@ -64,9 +63,33 @@ class SnackPlanService implements SnackPlanServiceInterface
         return $this->snackPlanRepository->list($filters);
     }
 
-    public function updateSnackPlan(int $id, array $data)
+    public function updateSnackPlan(int $id, array $planData, array $snackItems = [])
     {
-        return $this->snackPlanRepository->update($id, $data);
+        // Update the main snack plan
+        $snackPlan = $this->snackPlanRepository->update($id, $planData);
+        
+        if (!$snackPlan) {
+            return false;
+        }
+        
+        // If snack items are provided, update them
+        if (!empty($snackItems)) {
+            // Delete existing snack plan details
+            $this->snackPlanDetailRepository->deleteByPlanId($id);
+            
+            // Create new snack plan details
+            $details = [];
+            foreach ($snackItems as $item) {
+                $item['snack_plan_id'] = $id;
+                $details[] = $this->snackPlanDetailRepository->create($item);
+            }
+            $snackPlan->details = $details;
+        } else {
+            // Load existing details if no new items provided
+            $snackPlan->details = $this->snackPlanDetailRepository->findByPlanId($id);
+        }
+        
+        return $snackPlan;
     }
 
     public function deleteSnackPlan(int $id)

@@ -15,14 +15,13 @@ class StoreSnackPlanRequest extends FormRequest
     public function rules()
     {
         return [
-            'snack_date' => 'required',
-            'user_id' => 'required|integer',
+            'snack_date' => 'required',            
             'total_amount' => 'required|numeric',
             'snack_items' => 'required|array|min:1',
             'snack_items.*.snack_item_id' => 'required|integer|exists:snack_items,snack_item_id',
             'snack_items.*.shop_id' => 'required|integer|exists:shops,shop_id',
             'snack_items.*.quantity' => 'required|integer|min:1',
-            'snack_items.*.category' => 'required|in:veg,non-veg,chicken-only',
+            'snack_items.*.category_id' => 'required|integer',
             'snack_items.*.price_per_item' => 'required|numeric',
             'snack_items.*.total_price' => 'required|numeric',
             'snack_items.*.payment_mode' => 'required|in:cash,card,upi,wallet',

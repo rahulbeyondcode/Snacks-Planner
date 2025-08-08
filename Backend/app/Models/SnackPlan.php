@@ -18,6 +18,11 @@ class SnackPlan extends Model
         'created_at',
     ];
 
+    protected $casts = [
+        'snack_date' => 'date',
+        'total_amount' => 'decimal:2',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'user_id');

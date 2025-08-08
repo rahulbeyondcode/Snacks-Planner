@@ -190,15 +190,16 @@ Route::prefix('v1')->group(function () {
             Route::delete('/no-snacks-days/{id}', [\App\Http\Controllers\NoSnacksDayController::class, 'destroy']);
         });
 
-        // Shared features (all authenticated)
-        Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
-        Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
-        Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);
-        // Snack plan detail access
-        Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
-        Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
+      
         // The following routes are only for operations_manager and operation
-        Route::middleware(['role:snack_manager,operation'])->group(function () {
+        Route::middleware(['role:snack_manager,operation,account_manager'])->group(function () {
+            Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
+            Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
+            Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);
+            Route::get('/get-snacks', [\App\Http\Controllers\SnackPlanController::class, 'getSnacks']);
+            // Snack plan detail access
+            Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
+            Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
             Route::put('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'update']);
             Route::delete('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'destroy']);
             Route::patch('/snack-plan-details/{id}/receipt', [\App\Http\Controllers\SnackPlanController::class, 'uploadReceipt']);
