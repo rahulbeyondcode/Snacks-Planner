@@ -27,6 +27,12 @@ class SnackPlanDetail extends Model
         'created_at',
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
     public function snackPlan()
     {
         return $this->belongsTo(SnackPlan::class, 'snack_plan_id', 'snack_plan_id');

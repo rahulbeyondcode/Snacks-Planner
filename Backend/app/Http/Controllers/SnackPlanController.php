@@ -31,15 +31,15 @@ class SnackPlanController extends Controller
             $detail->save();
         }
 
-        return response()->json(['url' => $url, 'detail' => $detail], 201);
+        return apiResponse(true, __('success'), ['url' => $url, 'detail' => $detail], 201);
     }
 
     // List all snack plans (with optional filters)
     public function index(Request $request)
     {
-        $filters = $request->only(['user_id', 'date_from', 'date_to']);
+        $filters = $request->only(['snack_plan_id', 'snack_date', 'user_id', 'total_amount']);
         $plans = $this->snackPlanService->listSnackPlans($filters);
-        return response()->json($plans);
+        return apiResponse(true, __('success'), $plans, 200);
     }
 
     protected $snackPlanService;
@@ -107,9 +107,9 @@ class SnackPlanController extends Controller
     {
         $snackPlan = $this->snackPlanService->getSnackPlan($id);
         if (!$snackPlan) {
-            return response()->json(['message' => 'Snack Plan not found'], 404);
+            return apiResponse(false, __('not_found'), null, 404);
         }
-        return response()->json($snackPlan);
+        return apiResponse(true, __('success'), $snackPlan, 200);
     }
 
     // Update a snack plan
@@ -186,11 +186,15 @@ class SnackPlanController extends Controller
     // Delete a snack plan
     public function destroy($id)
     {
-        $deleted = $this->snackPlanService->deleteSnackPlan($id);
-        if (!$deleted) {
-            return response()->json(['message' => 'Snack Plan not found'], 404);
+        try {
+            $deleted = $this->snackPlanService->deleteSnackPlan($id);
+            if (!$deleted) {
+                return apiResponse(false, __('not_found'), null, 404);
+            }
+            return apiResponse(true, __('delete'), null, 200);
+        } catch (\Exception $e) {
+            return apiResponse(false, 'Failed to delete snack plan: ' . $e->getMessage(), null, 500);
         }
-        return response()->json(['message' => 'Snack Plan deleted successfully']);
     }
 
     // Get all snacks with their shop mappings

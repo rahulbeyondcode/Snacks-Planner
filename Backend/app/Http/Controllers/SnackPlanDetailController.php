@@ -11,20 +11,50 @@ class SnackPlanDetailController extends Controller
     public function index(Request $request)
     {
         $planId = $request->query('snack_plan_id');
-        $query = SnackPlanDetail::query();
+        $query = SnackPlanDetail::select([
+            'snack_plan_detail_id',
+            'snack_plan_id',
+            'snack_item_id',
+            'shop_id',
+            'quantity',
+            'category',
+            'price_per_item',
+            'total_price',
+            'payment_mode',
+            'discount',
+            'delivery_charge',
+            'upload_receipt'
+        ]);
+        
         if ($planId) {
             $query->where('snack_plan_id', $planId);
         }
-        return response()->json($query->get());
+        
+        $details = $query->get();
+        return apiResponse(true, __('success'), $details, 200);
     }
 
     // Show a specific snack plan detail
     public function show($id)
     {
-        $detail = SnackPlanDetail::find($id);
+        $detail = SnackPlanDetail::select([
+            'snack_plan_detail_id',
+            'snack_plan_id',
+            'snack_item_id',
+            'shop_id',
+            'quantity',
+            'category',
+            'price_per_item',
+            'total_price',
+            'payment_mode',
+            'discount',
+            'delivery_charge',
+            'upload_receipt'
+        ])->find($id);
+        
         if (!$detail) {
-            return response()->json(['message' => 'Not found'], 404);
+            return apiResponse(false, __('not_found'), null, 404);
         }
-        return response()->json($detail);
+        return apiResponse(true, __('success'), $detail, 200);
     }
 }

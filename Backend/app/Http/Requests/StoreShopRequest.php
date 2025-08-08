@@ -22,7 +22,7 @@ class StoreShopRequest extends FormRequest
                 Rule::unique('shops', 'name')->whereNull('deleted_at'),
             ],
             'address' => 'required|string|max:255',
-            'contact' => 'nullable|string|max:64',
+            'contact_number' => 'nullable|numeric|digits_between:10,12',
         ];
     }    
 
@@ -36,8 +36,8 @@ class StoreShopRequest extends FormRequest
             'address.required' => 'The shop address is required.',
             'address.string' => 'The shop address must be a string.',
             'address.max' => 'The shop address may not be greater than 255 characters.',
-            'contact.string' => 'The shop contact must be a string.',
-            'contact.max' => 'The shop contact may not be greater than 64 characters.',
+            'contact_number.numeric' => 'The contact number must be numeric.',
+            'contact_number.digits_between' => 'The contact number must be between 10 and 12 digits.',
         ];
     }
 }

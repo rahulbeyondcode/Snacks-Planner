@@ -61,7 +61,14 @@ class SnackPlanService implements SnackPlanServiceInterface
 
     public function listSnackPlans(array $filters = [])
     {
-        return $this->snackPlanRepository->list($filters);
+        $plans = $this->snackPlanRepository->list($filters);
+        
+        // Load details for each plan
+        foreach ($plans as $plan) {
+            $plan->details = $this->snackPlanDetailRepository->findByPlanId($plan->snack_plan_id);
+        }
+        
+        return $plans;
     }
 
     public function updateSnackPlan(int $id, array $planData, array $snackItems = [])

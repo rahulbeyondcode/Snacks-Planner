@@ -14,17 +14,30 @@ class SnackItemController extends Controller
     // List all snack items
     public function index()
     {
-        return apiResponse(true, __('success'), SnackItem::all(), 201);
+        $snackItems = SnackItem::select([
+            'snack_item_id',
+            'name', 
+            'description',
+            'price'
+        ])->get();
+        
+        return apiResponse(true, __('success'), $snackItems, 201);
     }
 
     // Show a single snack item
     public function show($id)
     {
-        $item = SnackItem::find($id);
+        $item = SnackItem::select([
+            'snack_item_id',
+            'name', 
+            'description',
+            'price'
+        ])->find($id);
+        
         if (!$item) {
-            return apiResponse(true, __('success'), $item, 201);
+            return apiResponse(false, __('not_found'), null, 404);
         }
-        return apiResponse(true, __('success'), $item, 201);
+        return apiResponse(true, __('success'), $item, 200);
     }
 
     // Create a snack item (admin only)
