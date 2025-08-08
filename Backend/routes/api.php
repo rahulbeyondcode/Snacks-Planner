@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     // Authentication routes
     Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
-    Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile'])->middleware('auth:sanctum');
 
     // Permission management routes (admin only)
     Route::middleware(['auth:sanctum', 'permission:permissions,list,account_manager'])->prefix('permissions')->group(function () {
@@ -24,6 +22,10 @@ Route::prefix('v1')->group(function () {
 
     // Protected routes with permission middleware
     Route::middleware(['auth:sanctum'])->group(function () {
+
+        Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
+        Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile']);
+        Route::patch('/reset-password', [App\Http\Controllers\AuthController::class, 'resetPassword']);
 
         // Group management with permissions
         Route::middleware(['permission:groups,list,account_manager'])->prefix('groups')->group(function () {
@@ -70,7 +72,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/payment-methods', [\App\Http\Controllers\PaymentMethodController::class, 'store']);
             Route::put('/payment-methods/{id}', [\App\Http\Controllers\PaymentMethodController::class, 'update']);
             Route::delete('/payment-methods/{id}', [\App\Http\Controllers\PaymentMethodController::class, 'destroy']);
-
 
             // Working Days Management
             Route::get('/working-days', [\App\Http\Controllers\WorkingDayController::class, 'show']);
