@@ -132,11 +132,31 @@ class SnackItemController extends Controller
     // Delete a snack item (admin only)
     public function destroy($id)
     {
-        $item = SnackItem::find($id);
-        if (!$item) {
-            return apiResponse(true, __('not_found'),  404);
+        try {
+            DB::beginTransaction();
+            
+            $item = SnackItem::find($id);
+
+            if (!$item) {
+                return apiResponse(false, __('not_found'), null, 404);
+            }            
+            // Delete related records first to maintain referential integrity
+        
+            $item->snackPlanDetails()->delete();
+            
+            // Delete associated shop mappings
+            $item->shopMappings()->delete();
+            
+            // Finally delete the snack item itself
+            $item->delete();
+            
+            DB::commit();
+            
+            return apiResponse(true, __('delete'), null, 200);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            return apiResponse(false, 'Failed to delete snack item: ' . $e->getMessage(), null, 500);
         }
-        $item->delete();
-        return apiResponse(true, __('delete'),  201);
     }
 }

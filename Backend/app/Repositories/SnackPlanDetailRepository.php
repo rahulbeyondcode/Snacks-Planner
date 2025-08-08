@@ -24,7 +24,7 @@ class SnackPlanDetailRepository implements SnackPlanDetailRepositoryInterface
     }
 
     public function deleteByPlanId(int $snackPlanId)
-    {
+    {        
         return SnackPlanDetail::where('snack_plan_id', $snackPlanId)->delete();
     }
 }
