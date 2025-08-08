@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -93,5 +95,19 @@ class AuthController extends Controller
             ],
             'status' => 200,
         ], 200);
+    }
+
+    /**
+     * User reset password
+     */
+    public function resetPassword(ResetPasswordRequest $request)
+    {
+        $validated = $request->validated();
+
+        $user = $request->user();
+        $user->password = Hash::make($validated['new_password']);
+        $user->save();
+
+        return response()->message(__('messages.update_msg'));
     }
 }
