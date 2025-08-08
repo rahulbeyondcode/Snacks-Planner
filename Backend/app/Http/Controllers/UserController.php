@@ -11,6 +11,8 @@ use App\Http\Requests\AssignUserRoleRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Exceptions\UnauthorizedActionException;
+use App\Exceptions\UserNotFoundException;
 
 class UserController extends Controller
 {
@@ -90,31 +92,27 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            $user = Auth::user();
-            if (!$user || $user->role->name !== 'account_manager') {
-                return apiResponse(
-                    false,
-                    'Access denied. Only account managers can view user details.',
-                    [],
-                    403
-                );
-            }
-
             $userData = $this->userService->getUser($id);
-            if (!$userData) {
-                return apiResponse(
-                    false,
-                    'User not found or access denied',
-                    [],
-                    404
-                );
-            }
 
             return apiResponse(
                 true,
                 'User details retrieved successfully',
                 $userData,
                 200
+            );
+        } catch (UserNotFoundException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                404
+            );
+        } catch (UnauthorizedActionException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                403
             );
         } catch (\Exception $e) {
             return apiResponse(
@@ -130,20 +128,11 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         try {
-            $user = Auth::user();
-            if (!$user || $user->role->name !== 'account_manager') {
-                return apiResponse(
-                    false,
-                    'Access denied. Only account managers can create users.',
-                    [],
-                    403
-                );
-            }
-
             $validated = $request->validated();
             $validated['password'] = bcrypt($validated['password']);
             $validated['role_id'] = 4; // Always assign Employee role
             $validated['preference'] = $validated['preference'] ?? 'all_snacks'; // Default to 'all_snacks' if not provided
+
             $created = $this->userService->createUser($validated);
             $users = $this->userService->listUsers([]);
 
@@ -155,6 +144,13 @@ class UserController extends Controller
                     'users' => $users
                 ],
                 201
+            );
+        } catch (UnauthorizedActionException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                403
             );
         } catch (\Exception $e) {
             return apiResponse(
@@ -170,32 +166,14 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, $id)
     {
         try {
-            $user = Auth::user();
-            if (!$user || $user->role->name !== 'account_manager') {
-                return apiResponse(
-                    false,
-                    'Access denied. Only account managers can update users.',
-                    [],
-                    403
-                );
-            }
-
             $validated = $request->validated();
             if (isset($validated['password'])) {
                 $validated['password'] = bcrypt($validated['password']);
             }
 
             $updatedUser = $this->userService->updateUser($id, $validated);
-            if (!$updatedUser) {
-                return apiResponse(
-                    false,
-                    'User not found or access denied',
-                    [],
-                    404
-                );
-            }
-
             $users = $this->userService->listUsers([]);
+
             return apiResponse(
                 true,
                 'User updated successfully',
@@ -204,6 +182,20 @@ class UserController extends Controller
                     'users' => $users
                 ],
                 200
+            );
+        } catch (UserNotFoundException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                404
+            );
+        } catch (UnauthorizedActionException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                403
             );
         } catch (\Exception $e) {
             return apiResponse(
@@ -219,32 +211,28 @@ class UserController extends Controller
     public function destroy($id)
     {
         try {
-            $user = Auth::user();
-            if (!$user || $user->role->name !== 'account_manager') {
-                return apiResponse(
-                    false,
-                    'Access denied. Only account managers can delete users.',
-                    [],
-                    403
-                );
-            }
-
             $deleted = $this->userService->deleteUser($id);
-            if (!$deleted) {
-                return apiResponse(
-                    false,
-                    'User not found or access denied',
-                    [],
-                    404
-                );
-            }
-
             $users = $this->userService->listUsers([]);
+
             return apiResponse(
                 true,
                 'User deleted successfully',
                 $users,
                 200
+            );
+        } catch (UserNotFoundException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                404
+            );
+        } catch (UnauthorizedActionException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                403
             );
         } catch (\Exception $e) {
             return apiResponse(
@@ -260,33 +248,28 @@ class UserController extends Controller
     public function assignRole(AssignUserRoleRequest $request, $id)
     {
         try {
-            $user = Auth::user();
-            if (!$user || $user->role->name !== 'account_manager') {
-                return apiResponse(
-                    false,
-                    'Access denied. Only account managers can assign roles.',
-                    [],
-                    403
-                );
-            }
-
             $validated = $request->validated();
             $updatedUser = $this->userService->assignRole($id, $validated['role_id']);
-
-            if (!$updatedUser) {
-                return apiResponse(
-                    false,
-                    'User not found or access denied',
-                    [],
-                    404
-                );
-            }
 
             return apiResponse(
                 true,
                 'Role assigned successfully',
                 $updatedUser,
                 200
+            );
+        } catch (UserNotFoundException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                404
+            );
+        } catch (UnauthorizedActionException $e) {
+            return apiResponse(
+                false,
+                $e->getMessage(),
+                [],
+                403
             );
         } catch (\Exception $e) {
             return apiResponse(
