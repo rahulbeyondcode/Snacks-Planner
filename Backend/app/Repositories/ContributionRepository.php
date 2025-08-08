@@ -161,13 +161,34 @@ class ContributionRepository implements ContributionRepositoryInterface
 
     public function getTotalContributions()
     {
-        // Example: sum by user and overall
+        // Get total count of paid contributions (actual contributions)
+        $totalPaid = Contribution::where('status', 'paid')->count();
+
+        // Get total count of unpaid contributions (non-contributions)
+        $totalUnpaid = Contribution::where('status', 'unpaid')->count();
+
+        // Get total count of all records
+        $totalAll = Contribution::count();
+
+        // Get contributions by user with user names and status breakdown
+        $byUser = Contribution::select(
+            'contributions.user_id',
+            'users.name as user_name',
+            DB::raw('COUNT(*) as total_records'),
+            DB::raw('SUM(CASE WHEN contributions.status = "paid" THEN 1 ELSE 0 END) as paid_contributions'),
+            DB::raw('SUM(CASE WHEN contributions.status = "unpaid" THEN 1 ELSE 0 END) as unpaid_records')
+        )
+            ->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->groupBy('contributions.user_id', 'users.name')
+            ->orderBy('users.name')
+            ->get()
+            ->toArray();
+
         return [
-            'total' => Contribution::count(),
-            'by_user' => Contribution::select('user_id', \DB::raw('COUNT(*) as total_contributions'))
-                ->groupBy('user_id')
-                ->get()
-                ->toArray(),
+            'total_paid' => $totalPaid,
+            'total_unpaid' => $totalUnpaid,
+            'total_all' => $totalAll,
+            'by_user' => $byUser,
         ];
     }
 }
