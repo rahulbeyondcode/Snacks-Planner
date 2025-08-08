@@ -25,11 +25,11 @@ class ProfitLossService implements ProfitLossServiceInterface
     public function getProfitLossSummary(array $filters = [])
     {
         $month = $filters['month'] ?? null;
-        // Contributions
+        // Contributions - use total_paid for actual contributions
         $totalContributionsRaw = $this->contributionRepo->getTotalContributions();
-        $totalContributions = is_array($totalContributionsRaw) && isset($totalContributionsRaw['total']) && is_numeric($totalContributionsRaw['total'])
-            ? (float)$totalContributionsRaw['total']
-            : (is_numeric($totalContributionsRaw) ? (float)$totalContributionsRaw : 0);
+        $totalContributions = is_array($totalContributionsRaw) && isset($totalContributionsRaw['total_paid']) && is_numeric($totalContributionsRaw['total_paid'])
+            ? (float)$totalContributionsRaw['total_paid']
+            : 0;
         // Expenses
         $expensesRaw = $month
             ? $this->snackPlanRepo->getMonthlyExpense($month)
