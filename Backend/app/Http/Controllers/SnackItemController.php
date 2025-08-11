@@ -7,37 +7,59 @@ use App\Models\SnackShopMapping;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreSnackItemRequest;
 use App\Http\Requests\UpdateSnackItemRequest;
+use App\Http\Resources\SnackItemResource;
 use Illuminate\Support\Facades\DB;
 
 class SnackItemController extends Controller
 {
-    // List all snack items
+    
+    // Get all snacks with their shop mappings
     public function index()
     {
-        $snackItems = SnackItem::select([
-            'snack_item_id',
-            'name', 
-            'description',
-            'price'
-        ])->get();
-        
-        return apiResponse(true, __('success'), $snackItems, 201);
-    }
+        try {
+            // Get all snack items with their shop mappings
+            $snacks = SnackItem::with(['shopMappings.shop'])
+                ->whereHas('shopMappings')
+                ->get()
+                ->flatMap(function($snack) {
+                    // Create an entry for each shop mapping
+                    return $snack->shopMappings->map(function($mapping) use ($snack) {
+                        return [
+                            'snack_item_id' => $snack->snack_item_id,
+                            'snack_name' => $snack->name . ' - ' . $mapping->shop->name,
+                            'description' => $snack->description,
+                            'shop_id' => $mapping->shop_id,
+                            'shop_name' => $mapping->shop->name,
+                            'snack_price' => $mapping->snack_price,
+                            'is_available' => $mapping->is_available,
+                        ];
+                    });
+                });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Snacks retrieved successfully',
+                'data' => $snacks
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->internalServerError(__('Failed to retrieve snacks'));
+        }
+    }    
 
     // Show a single snack item
     public function show($id)
     {
         $item = SnackItem::select([
             'snack_item_id',
-            'name', 
-            'description',
-            'price'
+            'name',
+            'description'            
         ])->find($id);
-        
+
         if (!$item) {
-            return apiResponse(false, __('not_found'), null, 404);
+            return response()->internalServerError(__('Snack Item not found'));                     
         }
-        return apiResponse(true, __('success'), $item, 200);
+        return new SnackItemResource($item);
     }
 
     // Create a snack item (admin only)
@@ -45,17 +67,17 @@ class SnackItemController extends Controller
     {
         try {
             DB::beginTransaction();
-            
+
             $validated = $request->validated();
-            
+
             // Create the snack item
             $snackData = [
                 'name' => $validated['name'],
-                'description' => $validated['description'] ?? null               
+                'description' => $validated['description'] ?? null
             ];
-            
+
             $item = SnackItem::create($snackData);
-            
+
             // Create the shop mapping
             SnackShopMapping::create([
                 'snack_item_id' => $item->snack_item_id,
@@ -63,17 +85,18 @@ class SnackItemController extends Controller
                 'snack_price' => $validated['snack_price'],
                 'is_available' => $validated['is_available'] ?? true,
             ]);
-            
+
             DB::commit();
-            
+
             // Load the item with shop mapping for response
             $item->load('shopMappings.shop');
-            
-            return apiResponse(true, __('success'), $item, 201);
-            
+
+            return (new SnackItemResource($item))->response()->setStatusCode(201);
+
+           
         } catch (\Exception $e) {
             DB::rollback();
-            return apiResponse(false, 'Failed to create snack item: ' . $e->getMessage(), null, 500);
+            return response()->internalServerError(__('Failed to create snack item'));            
         }
     }
 
@@ -82,14 +105,14 @@ class SnackItemController extends Controller
     {
         try {
             DB::beginTransaction();
-            
+
             $item = SnackItem::find($id);
             if (!$item) {
-                return apiResponse(false, __('not_found'), null, 404);
+                return response()->internalServerError(__('Snack Item not found'));                
             }
-            
+
             $validated = $request->validated();
-            
+
             // Update the snack item
             $snackData = [];
             if (isset($validated['name'])) {
@@ -98,11 +121,11 @@ class SnackItemController extends Controller
             if (isset($validated['description'])) {
                 $snackData['description'] = $validated['description'];
             }
-         
+
             if (!empty($snackData)) {
                 $item->update($snackData);
             }
-            
+
             // Update or create shop mapping if shop_id is provided
             if (isset($validated['shop_id'])) {
                 $mappingData = [
@@ -111,12 +134,12 @@ class SnackItemController extends Controller
                     'snack_price' => $validated['snack_price'],
                     'is_available' => $validated['is_available'] ?? true,
                 ];
-                
+
                 // Check if mapping already exists for this shop
                 $existingMapping = SnackShopMapping::where('snack_item_id', $item->snack_item_id)
-                                                  ->where('shop_id', $validated['shop_id'])
-                                                  ->first();
-                
+                    ->where('shop_id', $validated['shop_id'])
+                    ->first();
+
                 if ($existingMapping) {
                     // Update existing mapping
                     $existingMapping->update([
@@ -128,17 +151,16 @@ class SnackItemController extends Controller
                     SnackShopMapping::create($mappingData);
                 }
             }
-            
+
             DB::commit();
-            
+
             // Load the item with shop mappings for response
             $item->load('shopMappings.shop');
-            
-            return apiResponse(true, __('update_msg'), $item, 200);
-            
+
+            return (new SnackItemResource($item))->response()->setStatusCode(200);
         } catch (\Exception $e) {
-            DB::rollback();
-            return apiResponse(false, 'Failed to update snack item: ' . $e->getMessage(), null, 500);
+            DB::rollback();            
+            return response()->internalServerError(__('Failed to update snack item'));            
         }
     }
 
@@ -147,22 +169,21 @@ class SnackItemController extends Controller
     {
         try {
             DB::beginTransaction();
-            
+
             $item = SnackItem::find($id);
 
             if (!$item) {
-                return apiResponse(false, __('not_found'), null, 404);
-            }            
-           
-            $item->shopMappings()->delete();            
-            $item->delete();            
+                return response()->internalServerError(__('Snack Item not found'));               
+            }
+
+            $item->shopMappings()->delete();
+            $item->delete();
             DB::commit();
-            
+
             return apiResponse(true, __('delete'), null, 200);
-            
         } catch (\Exception $e) {
             DB::rollback();
-            return apiResponse(false, 'Failed to delete snack item: ' . $e->getMessage(), null, 500);
+            return response()->internalServerError(__('Failed to delete snack item'));
         }
     }
 }

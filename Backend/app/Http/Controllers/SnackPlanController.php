@@ -38,7 +38,7 @@ class SnackPlanController extends Controller
     public function index(Request $request)
     {
         $filters = $request->only(['snack_plan_id', 'snack_date', 'user_id', 'total_amount']);
-        $plans = $this->snackPlanService->listSnackPlans($filters);
+        $plans = $this->snackPlanService->listSnackPlans($filters);        
         return apiResponse(true, __('success'), $plans, 200);
     }
 
@@ -107,7 +107,7 @@ class SnackPlanController extends Controller
     {
         $snackPlan = $this->snackPlanService->getSnackPlan($id);
         if (!$snackPlan) {
-            return apiResponse(false, __('not_found'), null, 404);
+            return response()->internalServerError(__('messages.error'));            
         }
         return apiResponse(true, __('success'), $snackPlan, 200);
     }
@@ -126,11 +126,7 @@ class SnackPlanController extends Controller
                     $snackDate = Carbon::createFromFormat('d-m-Y', trim($validated['snack_date']))->format('Y-m-d');
                     $planData['snack_date'] = $snackDate;                 
                 } catch (\Exception $e) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invalid date format. Please use DD-MM-YYYY format.',
-                        'error' => $e->getMessage()
-                    ], 400);
+                    return response()->internalServerError(__('Invalid date format. Please use DD-MM-YYYY format'));                   
                 }
             }        
             
@@ -141,10 +137,7 @@ class SnackPlanController extends Controller
             // Check if user is authenticated for update
             $user = Auth::user();
             if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not authenticated',
-                ], 401);
+                return response()->internalServerError(__('User not authenticated'));
             }
             $planData['user_id'] = $user->user_id;
             
@@ -163,10 +156,7 @@ class SnackPlanController extends Controller
 
             $updated = $this->snackPlanService->updateSnackPlan($id, $planData, $snackItems);
             if (!$updated) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Snack Plan not found'
-                ], 404);
+                return response()->internalServerError(__('Snack Plan not found'));               
             }
             
             return response()->json([
@@ -176,10 +166,7 @@ class SnackPlanController extends Controller
             ], 200);
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update snack plan: ' . $e->getMessage(),
-            ], 500);
+            return response()->internalServerError(__('Failed to update snack plan'));           
         }
     }
 
@@ -189,50 +176,12 @@ class SnackPlanController extends Controller
         try {
             $deleted = $this->snackPlanService->deleteSnackPlan($id);
             if (!$deleted) {
-                return apiResponse(false, __('not_found'), null, 404);
+                return response()->internalServerError(__('Snack Plan not found'));
             }
-            return apiResponse(true, __('delete'), null, 200);
+            return response()->noContent();
         } catch (\Exception $e) {
-            return apiResponse(false, 'Failed to delete snack plan: ' . $e->getMessage(), null, 500);
+            return response()->internalServerError(__('Failed to delete snack plan'));
         }
-    }
-
-    // Get all snacks with their shop mappings
-    public function getSnacks()
-    {
-        try {
-            // Get all snack items with their shop mappings
-            $snacks = SnackItem::with(['shopMappings.shop'])
-                ->whereHas('shopMappings')
-                ->get()
-                ->flatMap(function($snack) {
-                    // Create an entry for each shop mapping
-                    return $snack->shopMappings->map(function($mapping) use ($snack) {
-                        return [
-                            'snack_item_id' => $snack->snack_item_id,
-                            'snack_name' => $snack->name . ' - ' . $mapping->shop->name,
-                            'description' => $snack->description,
-                            'shop_id' => $mapping->shop_id,
-                            'shop_name' => $mapping->shop->name,
-                            'snack_price' => $mapping->snack_price,
-                            'is_available' => $mapping->is_available,
-                        ];
-                    });
-                });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Snacks retrieved successfully',
-                'data' => $snacks
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve snacks: ' . $e->getMessage(),
-                'data' => null
-            ], 500);
-        }
-    }
+    }  
 
 }
