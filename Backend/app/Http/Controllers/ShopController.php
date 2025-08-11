@@ -6,6 +6,7 @@ use App\Models\Shop;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreShopRequest;
 use App\Http\Requests\UpdateShopRequest;
+use App\Http\Resources\ShopResource;
 
 class ShopController extends Controller
 {
@@ -18,7 +19,7 @@ class ShopController extends Controller
             'address',
             'contact_number'
         ])->get();
-        return apiResponse(true, __('messages.success'), $shops, 200);
+        return ShopResource::collection($shops);
     }
 
     // Show a single shop
@@ -30,18 +31,18 @@ class ShopController extends Controller
             'address',
             'contact_number'
         ])->find($id);
-        
+
         if (!$shop) {
-            return apiResponse(false, __('messages.not_found'), null, 404);
+            return response()->notFound(__('Shop not found'));
         }
-        return apiResponse(true, __('messages.success'), $shop, 200);
+        return new ShopResource($shop);
     }
 
     // Create a shop (admin only)
     public function store(StoreShopRequest $request)
     {
         $shop = Shop::create($request->validated());
-        return apiResponse(true, __('messages.success'), $shop, 201);
+        return (new ShopResource($shop))->response()->setStatusCode(201);
     }
 
     // Update a shop (admin only)
@@ -49,10 +50,10 @@ class ShopController extends Controller
     {
         $shop = Shop::find($id);
         if (!$shop) {
-            return apiResponse(false, __('messages.not_found'), null, 404);
+            return response()->notFound(__('Shop not found'));
         }
         $shop->update($request->validated());
-        return apiResponse(true, __('messages.success'), $shop, 200);
+        return (new ShopResource($shop))->response()->setStatusCode(200);
     }
 
     // Delete a shop (admin only)
@@ -60,9 +61,9 @@ class ShopController extends Controller
     {
         $shop = Shop::find($id);
         if (!$shop) {
-            return apiResponse(false, __('messages.not_found'), null, 404);
+            return response()->notFound(__('Shop not found'));
         }
         $shop->delete();
-        return apiResponse(true, __('messages.success'), null, 200);
+        return response()->noContent();
     }
 }
