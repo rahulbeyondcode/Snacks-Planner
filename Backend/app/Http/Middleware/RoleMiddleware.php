@@ -18,7 +18,7 @@ class RoleMiddleware
      * @return mixed
      */
     public function handle(Request $request, Closure $next, ...$roles)
-    {
+    {        
         Log::info('RoleMiddleware loaded!', ['user' => $request->user()]);
         // ...rest of your code
         $user = $request->user();

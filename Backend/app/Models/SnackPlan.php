@@ -18,6 +18,17 @@ class SnackPlan extends Model
         'created_at',
     ];
 
+    protected $casts = [
+        'snack_date' => 'date',
+        'total_amount' => 'decimal:2',
+    ];
+
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'user_id');

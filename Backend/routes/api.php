@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     // Authentication routes
     Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
-    Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile'])->middleware('auth:sanctum');
 
     // Permission management routes (admin only)
     Route::middleware(['auth:sanctum', 'permission:permissions,list,account_manager'])->prefix('permissions')->group(function () {
@@ -24,6 +22,10 @@ Route::prefix('v1')->group(function () {
 
     // Protected routes with permission middleware
     Route::middleware(['auth:sanctum'])->group(function () {
+
+        Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
+        Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile']);
+        Route::patch('/reset-password', [App\Http\Controllers\AuthController::class, 'resetPassword']);
 
         // Group management with permissions
         Route::middleware(['permission:groups,list,account_manager'])->prefix('groups')->group(function () {
@@ -70,7 +72,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/payment-methods', [\App\Http\Controllers\PaymentMethodController::class, 'store']);
             Route::put('/payment-methods/{id}', [\App\Http\Controllers\PaymentMethodController::class, 'update']);
             Route::delete('/payment-methods/{id}', [\App\Http\Controllers\PaymentMethodController::class, 'destroy']);
-
 
             // Working Days Management
             Route::get('/working-days', [\App\Http\Controllers\WorkingDayController::class, 'show']);
@@ -131,6 +132,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'store']);
             Route::put('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'update']);
             Route::delete('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'destroy']);
+            Route::get('/get-snacks', [\App\Http\Controllers\SnackItemController::class, 'getSnacks']);
 
             // Shop CRUD
             Route::get('/shops', [\App\Http\Controllers\ShopController::class, 'index']);
@@ -190,19 +192,17 @@ Route::prefix('v1')->group(function () {
             Route::delete('/no-snacks-days/{id}', [\App\Http\Controllers\NoSnacksDayController::class, 'destroy']);
         });
 
-        // Snack Preference Management (all roles except account_manager)
-        Route::get('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'index']);
-        Route::put('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'update']);
-
-        // Shared features (all authenticated)
-        Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
-        Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
-        Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);
-        // Snack plan detail access
-        Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
-        Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
         // The following routes are only for operations_manager and operation
-        Route::middleware(['role:snack_manager,operation'])->group(function () {
+        Route::middleware(['role:snack_manager,operation,account_manager'])->group(function () {
+            // Snack Preference Management (all roles except account_manager)
+            Route::get('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'index']);
+            Route::put('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'update']);
+            Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
+            Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
+            Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);            
+            // Snack plan detail access
+            Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
+            Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
             Route::put('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'update']);
             Route::delete('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'destroy']);
             Route::patch('/snack-plan-details/{id}/receipt', [\App\Http\Controllers\SnackPlanController::class, 'uploadReceipt']);

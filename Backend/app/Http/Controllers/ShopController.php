@@ -12,14 +12,25 @@ class ShopController extends Controller
     // List all shops
     public function index()
     {
-        $shops = Shop::all();
+        $shops = Shop::select([
+            'shop_id',
+            'name',
+            'address',
+            'contact_number'
+        ])->get();
         return apiResponse(true, __('messages.success'), $shops, 200);
     }
 
     // Show a single shop
     public function show($id)
     {
-        $shop = Shop::find($id);
+        $shop = Shop::select([
+            'shop_id',
+            'name',
+            'address',
+            'contact_number'
+        ])->find($id);
+        
         if (!$shop) {
             return apiResponse(false, __('messages.not_found'), null, 404);
         }
