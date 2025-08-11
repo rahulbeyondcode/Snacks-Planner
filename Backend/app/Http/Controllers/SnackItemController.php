@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class SnackItemController extends Controller
 {
-    
+
     // Get all snacks with their shop mappings
     public function index()
     {
@@ -21,9 +21,9 @@ class SnackItemController extends Controller
             $snacks = SnackItem::with(['shopMappings.shop'])
                 ->whereHas('shopMappings')
                 ->get()
-                ->flatMap(function($snack) {
+                ->flatMap(function ($snack) {
                     // Create an entry for each shop mapping
-                    return $snack->shopMappings->map(function($mapping) use ($snack) {
+                    return $snack->shopMappings->map(function ($mapping) use ($snack) {
                         return [
                             'snack_item_id' => $snack->snack_item_id,
                             'snack_name' => $snack->name . ' - ' . $mapping->shop->name,
@@ -41,11 +41,10 @@ class SnackItemController extends Controller
                 'message' => 'Snacks retrieved successfully',
                 'data' => $snacks
             ], 200);
-
         } catch (\Exception $e) {
             return response()->internalServerError(__('Failed to retrieve snacks'));
         }
-    }    
+    }
 
     // Show a single snack item
     public function show($id)
@@ -53,11 +52,11 @@ class SnackItemController extends Controller
         $item = SnackItem::select([
             'snack_item_id',
             'name',
-            'description'            
+            'description'
         ])->find($id);
 
         if (!$item) {
-            return response()->internalServerError(__('Snack Item not found'));                     
+            return response()->notFound(__('Snack Item not found'));
         }
         return new SnackItemResource($item);
     }
@@ -92,11 +91,9 @@ class SnackItemController extends Controller
             $item->load('shopMappings.shop');
 
             return (new SnackItemResource($item))->response()->setStatusCode(201);
-
-           
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->internalServerError(__('Failed to create snack item'));            
+            return response()->internalServerError(__('Failed to create snack item'));
         }
     }
 
@@ -108,7 +105,7 @@ class SnackItemController extends Controller
 
             $item = SnackItem::find($id);
             if (!$item) {
-                return response()->internalServerError(__('Snack Item not found'));                
+                return response()->notFound(__('Snack Item not found'));
             }
 
             $validated = $request->validated();
@@ -159,8 +156,8 @@ class SnackItemController extends Controller
 
             return (new SnackItemResource($item))->response()->setStatusCode(200);
         } catch (\Exception $e) {
-            DB::rollback();            
-            return response()->internalServerError(__('Failed to update snack item'));            
+            DB::rollback();
+            return response()->internalServerError(__('Failed to update snack item'));
         }
     }
 
@@ -173,7 +170,7 @@ class SnackItemController extends Controller
             $item = SnackItem::find($id);
 
             if (!$item) {
-                return response()->internalServerError(__('Snack Item not found'));               
+                return response()->notFound(__('Snack Item not found'));
             }
 
             $item->shopMappings()->delete();

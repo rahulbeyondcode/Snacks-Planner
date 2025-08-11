@@ -44,7 +44,7 @@ class GroupRepository implements GroupRepositoryInterface
     }
 
     public function create(array $data)
-    {
+    {        
         try {
             DB::beginTransaction();
             $group = new Group;
