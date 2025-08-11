@@ -22,6 +22,10 @@ export type NoSnackDayFormDataType = {
   date: Date | null;
 };
 
+export type PaymentModeFormDataType = {
+  name: string;
+};
+
 type IdType = {
   id: string;
 };
@@ -31,6 +35,7 @@ export type ShopType = ShopFormDataType & IdType;
 export type SnackType = {
   id: string;
   name: string;
+  shop: string; // Shop name for display
   category: string; // This is for backwards compatibility with existing data
   pricePerPiece: string; // This is for backwards compatibility with existing data
 };
@@ -38,3 +43,5 @@ export type SnackType = {
 export type CategoryType = CategoryFormDataType & IdType;
 
 export type NoSnackDayType = NoSnackDayFormDataType & IdType;
+
+export type PaymentModeType = PaymentModeFormDataType & IdType;

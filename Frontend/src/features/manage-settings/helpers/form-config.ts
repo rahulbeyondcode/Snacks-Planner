@@ -54,3 +54,12 @@ export const noSnackDayFormDefaultValues = {
   holidayName: "",
   date: new Date(),
 };
+
+// Payment Mode Form Configuration
+export const paymentModeSchema = yup.object({
+  name: yup.string().required("Payment mode name is required"),
+});
+
+export const paymentModeFormDefaultValues = {
+  name: "",
+};

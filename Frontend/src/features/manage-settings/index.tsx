@@ -1,9 +1,12 @@
 import { useState } from "react";
 
 import ManageCategories from "features/manage-settings/components/manage-categories";
+import ManageHolidays from "features/manage-settings/components/manage-holidays";
 import ManageNoSnackDays from "features/manage-settings/components/manage-no-snack-days";
+import ManagePaymentModes from "features/manage-settings/components/manage-payment-modes";
 import CategoryModal from "features/manage-settings/components/modals/category-modal";
 import NoSnackDayModal from "features/manage-settings/components/modals/no-snack-day-modal";
+import PaymentModeModal from "features/manage-settings/components/modals/payment-mode-modal";
 import ShopModal from "features/manage-settings/components/modals/shop-modal";
 import SnackModal from "features/manage-settings/components/modals/snack-modal";
 import ShopList from "features/manage-settings/components/shop-list";
@@ -14,6 +17,8 @@ import type {
   CategoryType,
   NoSnackDayFormDataType,
   NoSnackDayType,
+  PaymentModeFormDataType,
+  PaymentModeType,
   ShopFormDataType,
   ShopType,
   SnackFormDataType,
@@ -80,8 +85,19 @@ const ManageSettings = () => {
   ]);
 
   const [noSnackDays, setNoSnackDays] = useState<NoSnackDayType[]>([
-    { id: "1", holidayName: "Nowroz Live", date: "2025-08-16" },
-    { id: "2", holidayName: "Full office work from Home", date: "2025-08-29" },
+    { id: "1", holidayName: "Nowroz Live", date: new Date("2025-08-16") },
+    {
+      id: "2",
+      holidayName: "Full office work from Home",
+      date: new Date("2025-08-29"),
+    },
+  ]);
+
+  const [paymentModes, setPaymentModes] = useState<PaymentModeType[]>([
+    { id: "1", name: "Kiran's Credit Card" },
+    { id: "2", name: "Anto's Credit Card" },
+    { id: "3", name: "Ciril's Credit Card" },
+    { id: "4", name: "Bank transfer" },
   ]);
 
   // Modal states
@@ -89,6 +105,7 @@ const ManageSettings = () => {
   const [snackModalOpen, setSnackModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [noSnackDayModalOpen, setNoSnackDayModalOpen] = useState(false);
+  const [paymentModeModalOpen, setPaymentModeModalOpen] = useState(false);
 
   const [editingShop, setEditingShop] = useState<ShopType | null>(null);
   const [editingSnack, setEditingSnack] = useState<SnackType | null>(null);
@@ -97,6 +114,8 @@ const ManageSettings = () => {
   );
   const [editingNoSnackDay, setEditingNoSnackDay] =
     useState<NoSnackDayType | null>(null);
+  const [editingPaymentMode, setEditingPaymentMode] =
+    useState<PaymentModeType | null>(null);
 
   // Shop handlers
   const handleAddShop = () => {
@@ -145,18 +164,31 @@ const ManageSettings = () => {
   };
 
   const handleSaveSnack = (data: SnackFormDataType) => {
+    const category = categories.find((c) => c.id === data.categoryId);
+
     if (editingSnack) {
       // Edit existing snack
       setSnacks(
         snacks.map((snack) =>
-          snack.id === editingSnack.id ? { ...snack, ...data } : snack
+          snack.id === editingSnack.id
+            ? {
+                ...snack,
+                name: data.name,
+                category: category?.name || "",
+                pricePerPiece: data.price.toString(),
+                shop: snack.shop, // Keep existing shop
+              }
+            : snack
         )
       );
     } else {
       // Add new snack
       const newSnack: SnackType = {
         id: Date.now().toString(),
-        ...data,
+        name: data.name,
+        category: category?.name || "",
+        pricePerPiece: data.price.toString(),
+        shop: "", // Default empty shop
       };
       setSnacks([...snacks, newSnack]);
     }
@@ -246,9 +278,52 @@ const ManageSettings = () => {
     }
   };
 
+  // Payment Mode handlers
+  const handleAddPaymentMode = () => {
+    setEditingPaymentMode(null);
+    setPaymentModeModalOpen(true);
+  };
+
+  const handleEditPaymentMode = (id: string) => {
+    const paymentMode = paymentModes.find((pm) => pm.id === id);
+    if (paymentMode) {
+      setEditingPaymentMode(paymentMode);
+      setPaymentModeModalOpen(true);
+    }
+  };
+
+  const handleSavePaymentMode = (data: PaymentModeFormDataType) => {
+    if (editingPaymentMode) {
+      // Edit existing payment mode
+      setPaymentModes(
+        paymentModes.map((paymentMode) =>
+          paymentMode.id === editingPaymentMode.id
+            ? { ...paymentMode, ...data }
+            : paymentMode
+        )
+      );
+    } else {
+      // Add new payment mode
+      const newPaymentMode: PaymentModeType = {
+        id: Date.now().toString(),
+        ...data,
+      };
+      setPaymentModes([...paymentModes, newPaymentMode]);
+    }
+  };
+
+  const handleDeletePaymentMode = (id: string) => {
+    if (confirm("Are you sure you want to delete this payment mode?")) {
+      setPaymentModes(paymentModes.filter((pm) => pm.id !== id));
+    }
+  };
+
   return (
     <>
       <div className="p-6 space-y-8">
+        {/* Holidays Section */}
+        <ManageHolidays />
+
         {/* No Snack Days Section */}
         <ManageNoSnackDays
           noSnackDays={noSnackDays}
@@ -271,6 +346,14 @@ const ManageSettings = () => {
           onAddSnack={handleAddSnack}
           onEditSnack={handleEditSnack}
           onDeleteSnack={handleDeleteSnack}
+        />
+
+        {/* Payment Modes Section */}
+        <ManagePaymentModes
+          paymentModes={paymentModes}
+          onAddPaymentMode={handleAddPaymentMode}
+          onEditPaymentMode={handleEditPaymentMode}
+          onDeletePaymentMode={handleDeletePaymentMode}
         />
 
         {/* Categories Section */}
@@ -302,7 +385,6 @@ const ManageSettings = () => {
         onClose={() => setSnackModalOpen(false)}
         onSave={handleSaveSnack}
         editData={editingSnack}
-        shops={shops}
         categories={categories}
       />
 
@@ -311,6 +393,13 @@ const ManageSettings = () => {
         onClose={() => setCategoryModalOpen(false)}
         onSave={handleSaveCategory}
         editData={editingCategory}
+      />
+
+      <PaymentModeModal
+        isOpen={paymentModeModalOpen}
+        onClose={() => setPaymentModeModalOpen(false)}
+        onSave={handleSavePaymentMode}
+        editData={editingPaymentMode}
       />
     </>
   );
