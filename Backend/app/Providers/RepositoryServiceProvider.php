@@ -24,6 +24,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\MoneyPoolBlockRepositoryInterface::class, \App\Repositories\MoneyPoolBlockRepository::class);
         $this->app->bind(\App\Repositories\MoneyPoolSettingsRepositoryInterface::class, \App\Repositories\MoneyPoolSettingsRepository::class);
         $this->app->bind(\App\Repositories\OfficeHolidayRepositoryInterface::class, \App\Repositories\OfficeHolidayRepository::class);
+        $this->app->bind(\App\Repositories\SubGroupRepositoryInterface::class, \App\Repositories\SubGroupRepository::class);
         // Service bindings
         $this->app->bind(\App\Services\SnackPlanServiceInterface::class, \App\Services\SnackPlanService::class);
         $this->app->bind(\App\Services\UserServiceInterface::class, \App\Services\UserService::class);
@@ -36,6 +37,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Services\OfficeHolidayServiceInterface::class, \App\Services\OfficeHolidayService::class);
         $this->app->bind(\App\Services\ProfitLossServiceInterface::class, \App\Services\ProfitLossService::class);
         $this->app->bind(\App\Services\ReportServiceInterface::class, \App\Services\ReportService::class);
+        $this->app->bind(\App\Services\SubGroupServiceInterface::class, \App\Services\SubGroupService::class);
 
         $this->app->bind(SnackPlanRepositoryInterface::class, SnackPlanRepository::class);
         $this->app->bind(SnackPlanServiceInterface::class, SnackPlanService::class);

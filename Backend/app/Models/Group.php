@@ -20,7 +20,6 @@ class Group extends Model
         'created_at',
         'updated_at',
     ];
-    
 
     public function groupMembers()
     {
@@ -35,6 +34,11 @@ class Group extends Model
     public function groupSnackSupplyDays()
     {
         return $this->hasMany(GroupSnackSupplyDay::class, 'group_id', 'group_id');
+    }
+
+    public function subGroups()
+    {
+        return $this->hasMany(SubGroup::class, 'group_id', 'group_id');
     }
 
     public function setSortOrder($sortOrders)

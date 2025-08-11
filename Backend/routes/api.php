@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MoneyPoolController;
 use App\Http\Controllers\MoneyPoolSettingsController;
+use App\Http\Controllers\SubGroupController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -160,6 +161,17 @@ Route::prefix('v1')->group(function () {
             // Money Pool Blocks
             Route::post('/money-pool-blocks', [MoneyPoolController::class, 'block']);
             Route::delete('/money-pool-blocks/{blockId}', [MoneyPoolController::class, 'deleteBlock']);
+
+            // Sub Group management with permissions
+            Route::get('/', [SubGroupController::class, 'index']);
+            Route::get('/{id}', [SubGroupController::class, 'show']);
+            Route::post('/', [SubGroupController::class, 'store'])->middleware('permission:groups,create,account_manager');
+            Route::put('/{id}', [SubGroupController::class, 'update'])->middleware('permission:groups,update,account_manager');
+            Route::delete('/{id}', [SubGroupController::class, 'destroy'])->middleware('permission:groups,delete,account_manager');
+            Route::get('/{id}/members', [SubGroupController::class, 'members']);
+            Route::post('/{id}/members', [SubGroupController::class, 'addMembers'])->middleware('permission:groups,update,account_manager');
+            Route::delete('/{id}/members', [SubGroupController::class, 'removeMembers'])->middleware('permission:groups,update,account_manager');
+            Route::get('/group/{groupId}', [SubGroupController::class, 'getByGroup']);
         });
 
         // Operations Staff routes
@@ -194,7 +206,7 @@ Route::prefix('v1')->group(function () {
 
         // The following routes are only for operations_manager and operation
         Route::middleware(['role:snack_manager,operation,account_manager'])->group(function () {
-         // Snack Preference Management (all roles except account_manager)
+            // Snack Preference Management (all roles except account_manager)
             Route::get('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'index']);
             Route::put('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'update']);
             Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
