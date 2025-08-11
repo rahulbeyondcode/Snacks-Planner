@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\SnackPlanRepositoryInterface;
 use App\Repositories\SnackPlanDetailRepositoryInterface;
+use Illuminate\Support\Facades\DB;
 
 interface SnackPlanServiceInterface
 {
@@ -60,13 +61,20 @@ class SnackPlanService implements SnackPlanServiceInterface
 
     public function listSnackPlans(array $filters = [])
     {
-        return $this->snackPlanRepository->list($filters);
+        $plans = $this->snackPlanRepository->list($filters);
+        
+        // Load details for each plan
+        foreach ($plans as $plan) {
+            $plan->details = $this->snackPlanDetailRepository->findByPlanId($plan->snack_plan_id);
+        }
+        
+        return $plans;
     }
 
     public function updateSnackPlan(int $id, array $planData, array $snackItems = [])
     {
         // Update the main snack plan
-        $snackPlan = $this->snackPlanRepository->update($id, $planData);
+        $snackPlan = $this->snackPlanRepository->update($id, $planData);       
         
         if (!$snackPlan) {
             return false;
@@ -74,6 +82,7 @@ class SnackPlanService implements SnackPlanServiceInterface
         
         // If snack items are provided, update them
         if (!empty($snackItems)) {
+            $snackPlan->details = $this->snackPlanDetailRepository->findByPlanId($id);
             // Delete existing snack plan details
             $this->snackPlanDetailRepository->deleteByPlanId($id);
             
@@ -86,7 +95,7 @@ class SnackPlanService implements SnackPlanServiceInterface
             $snackPlan->details = $details;
         } else {
             // Load existing details if no new items provided
-            $snackPlan->details = $this->snackPlanDetailRepository->findByPlanId($id);
+            $snackPlan->details = $this->snackPlanDetailRepository->findByPlanId($id);            
         }
         
         return $snackPlan;
@@ -94,6 +103,21 @@ class SnackPlanService implements SnackPlanServiceInterface
 
     public function deleteSnackPlan(int $id)
     {
-        return $this->snackPlanRepository->delete($id);
+        try {
+            // Start a database transaction
+            DB::beginTransaction();           
+           
+            $this->snackPlanDetailRepository->deleteByPlanId($id);            
+          
+            $result = $this->snackPlanRepository->delete($id);
+            
+            DB::commit();
+            
+            return $result;
+            
+        } catch (\Exception $e) {           
+            DB::rollback();
+            throw new \Exception('Failed to delete snack plan: ' . $e->getMessage());
+        }
     }
 }

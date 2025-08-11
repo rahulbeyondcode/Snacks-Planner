@@ -21,6 +21,12 @@ class Shop extends Model
         'deleted_at',
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
     public function snackPlanDetails()
     {
         return $this->hasMany(SnackPlanDetail::class, 'shop_id', 'shop_id');
