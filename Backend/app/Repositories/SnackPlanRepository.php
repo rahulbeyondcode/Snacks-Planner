@@ -21,7 +21,13 @@ class SnackPlanRepository implements SnackPlanRepositoryInterface
 {
     public function list(array $filters = [])
     {
-        $query = SnackPlan::query();
+        $query = SnackPlan::select([
+            'snack_plan_id',
+            'snack_date',
+            'user_id',
+            'total_amount'
+        ]);
+        
         if (!empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
         }
@@ -59,7 +65,12 @@ class SnackPlanRepository implements SnackPlanRepositoryInterface
 
     public function find(int $id)
     {
-        return SnackPlan::find($id);
+        return SnackPlan::select([
+            'snack_plan_id',
+            'snack_date',
+            'user_id',
+            'total_amount'
+        ])->find($id);
     }
 
     public function getMonthlyExpense(string $month)
