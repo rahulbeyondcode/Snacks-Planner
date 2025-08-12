@@ -55,14 +55,14 @@ class GroupController extends Controller
     public function store(StoreGroupRequest $request)
     {
         $user = Auth::user();
-        
+
         if (!$user || $user->role->name !== 'account_manager') {
             return response()->internalServerError(__('Forbidden'));
-        }       
+        }
 
         try {
             $validated = $request->validated();
-           
+
             // Check if account manager's user_id is included in employees or snack_managers
             $currentUserId = $user->user_id;
             if (in_array($currentUserId, $validated['employees'])) {
@@ -277,7 +277,7 @@ class GroupController extends Controller
 
         if (!is_array($sortOrders)) {
             return response()->internalServerError(__('Invalid input format. Expected an array.'));
-        }        
+        }
 
         $groupIds = array_keys($sortOrders);
 
