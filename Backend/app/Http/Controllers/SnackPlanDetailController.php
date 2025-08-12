@@ -25,11 +25,11 @@ class SnackPlanDetailController extends Controller
             'delivery_charge',
             'upload_receipt'
         ]);
-        
+
         if ($planId) {
             $query->where('snack_plan_id', $planId);
         }
-        
+
         $details = $query->get();
         return apiResponse(true, __('success'), $details, 200);
     }
@@ -51,7 +51,7 @@ class SnackPlanDetailController extends Controller
             'delivery_charge',
             'upload_receipt'
         ])->find($id);
-        
+
         if (!$detail) {
             return apiResponse(false, __('not_found'), null, 404);
         }

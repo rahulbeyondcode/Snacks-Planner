@@ -15,21 +15,18 @@ class SnackItemSeeder extends Seeder
             [
                 'name' => 'Potato Chips',
                 'description' => 'Classic salted chips',
-                'price' => 50.00,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Chocolate Bar',
                 'description' => 'Milk chocolate bar',
-                'price' => 30.00,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Fruit Juice',
                 'description' => 'Mixed fruit juice',
-                'price' => 20.00,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
