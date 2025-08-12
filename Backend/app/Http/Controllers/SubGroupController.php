@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSubGroupRequest;
 use App\Http\Requests\UpdateSubGroupRequest;
+use App\Http\Resources\SubGroupResource;
 use App\Services\SubGroupServiceInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class SubGroupController extends Controller
 {
@@ -22,18 +22,16 @@ class SubGroupController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
         try {
-            $filters = $request->only(['search', 'group_id', 'status']);
-            $subGroups = $this->subGroupService->listSubGroups($filters);
+            $subGroups = $this->subGroupService->listSubGroups();
 
-            return apiResponse(true, __('messages.success'), $subGroups, 200);
+            if (! $subGroups) {
+                return response()->notFound(__('sub_group.sub_group_not_found'));
+            }
+
+            return SubGroupResource::collection($subGroups);
         } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
+            return response()->internalServerError(__('messages.error'));
         }
     }
 
@@ -42,20 +40,16 @@ class SubGroupController extends Controller
      */
     public function show($id)
     {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
         try {
             $subGroup = $this->subGroupService->getSubGroup($id);
+
             if (! $subGroup) {
-                return apiResponse(false, 'Sub group not found', null, 404);
+                return response()->notFound(__('sub_group.sub_group_not_found'));
             }
 
-            return apiResponse(true, __('messages.success'), $subGroup, 200);
+            return new SubGroupResource($subGroup);
         } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
+            return response()->internalServerError(__('messages.error'));
         }
     }
 
@@ -64,18 +58,20 @@ class SubGroupController extends Controller
      */
     public function store(StoreSubGroupRequest $request)
     {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
         try {
             $validated = $request->validated();
+
             $subGroup = $this->subGroupService->createSubGroup($validated);
 
-            return apiResponse(true, __('messages.create_msg'), $subGroup, 201);
+            if ($subGroup instanceof JsonResponse && $subGroup->getStatusCode() == 422) {
+                return response()->unprocessableEntity($subGroup->getData()->message);
+            } elseif (! $subGroup) {
+                return response()->notFound(__('sub_group.group_not_found'));
+            }
+
+            return new SubGroupResource($subGroup);
         } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
+            return response()->internalServerError(__('messages.error'));
         }
     }
 
@@ -84,22 +80,19 @@ class SubGroupController extends Controller
      */
     public function update(UpdateSubGroupRequest $request, $id)
     {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
         try {
             $validated = $request->validated();
             $subGroup = $this->subGroupService->updateSubGroup($id, $validated);
 
-            if (! $subGroup) {
-                return apiResponse(false, 'Sub group not found', null, 404);
+            if ($subGroup instanceof JsonResponse && $subGroup->getStatusCode() == 422) {
+                return response()->unprocessableEntity($subGroup->getData()->message);
+            } elseif (! $subGroup) {
+                return response()->notFound(__('sub_group.group_not_found'));
             }
 
-            return apiResponse(true, __('messages.update_msg'), $subGroup, 200);
+            return new SubGroupResource($subGroup);
         } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
+            return response()->internalServerError(__('messages.error'));
         }
     }
 
@@ -108,106 +101,15 @@ class SubGroupController extends Controller
      */
     public function destroy($id)
     {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
         try {
             $deleted = $this->subGroupService->deleteSubGroup($id);
             if (! $deleted) {
-                return apiResponse(false, 'Sub group not found', null, 404);
+                return response()->notFound(__('sub_group.sub_group_not_found'));
             }
 
-            return apiResponse(true, __('messages.delete_msg'), null, 200);
+            return response()->noContent();
         } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
-        }
-    }
-
-    /**
-     * List sub group members
-     */
-    public function members($id)
-    {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
-        try {
-            $members = $this->subGroupService->listMembers($id);
-
-            return apiResponse(true, __('messages.success'), $members, 200);
-        } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
-        }
-    }
-
-    /**
-     * Add members to sub group
-     */
-    public function addMembers(Request $request, $id)
-    {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
-        $validated = $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,user_id',
-        ]);
-
-        try {
-            $this->subGroupService->addMembers($id, $validated['user_ids']);
-
-            return apiResponse(true, 'Members added successfully', null, 200);
-        } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
-        }
-    }
-
-    /**
-     * Remove members from sub group
-     */
-    public function removeMembers(Request $request, $id)
-    {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
-        $validated = $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,user_id',
-        ]);
-
-        try {
-            $this->subGroupService->removeMembers($id, $validated['user_ids']);
-
-            return apiResponse(true, 'Members removed successfully', null, 200);
-        } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
-        }
-    }
-
-    /**
-     * Get sub groups by group
-     */
-    public function getByGroup($groupId)
-    {
-        $user = Auth::user();
-        if (! $user || ! in_array($user->role->name, ['account_manager', 'snack_manager'])) {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
-        try {
-            $subGroups = $this->subGroupService->getByGroup($groupId);
-
-            return apiResponse(true, __('messages.success'), $subGroups, 200);
-        } catch (\Exception $e) {
-            return apiResponse(false, $e->getMessage(), null, 500);
+            return response()->internalServerError(__('messages.error'));
         }
     }
 }

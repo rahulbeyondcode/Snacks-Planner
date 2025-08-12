@@ -15,7 +15,6 @@ class StoreSubGroupRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'group_id' => 'required|exists:groups,group_id',
             'name' => [
                 'required',
                 'string',

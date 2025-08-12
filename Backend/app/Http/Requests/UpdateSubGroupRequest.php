@@ -17,7 +17,6 @@ class UpdateSubGroupRequest extends FormRequest
         $subGroupId = $this->route('id');
 
         return [
-            'group_id' => 'sometimes|required|exists:groups,group_id',
             'name' => [
                 'sometimes',
                 'required',

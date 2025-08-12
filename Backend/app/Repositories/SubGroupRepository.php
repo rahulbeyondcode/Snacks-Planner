@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\Group;
 use App\Models\SubGroup;
 use App\Models\SubGroupMember;
 use Exception;
@@ -11,28 +12,33 @@ class SubGroupRepository implements SubGroupRepositoryInterface
 {
     public function all(array $filters = [])
     {
+        // Validate that the group exists
+        $group = Group::where('group_status', 'active')->first();
+        if (! $group) {
+            return null;
+        }
+
+        $currentMonth = now()->format('Y-m');
+
         $query = SubGroup::select('sub_group_id', 'group_id', 'name', 'start_date', 'end_date', 'status')
-            ->with(['group:id,name', 'subGroupMembers.user:id,name,email']);
+            ->with(['subGroupMembers'])
+            ->whereRaw('DATE_FORMAT(start_date, "%Y-%m") = ?', [$currentMonth])
+            ->orWhereRaw('DATE_FORMAT(end_date, "%Y-%m") = ?', [$currentMonth])
+            ->orWhere(function ($query) {
+                $query->where('start_date', '<=', now()->startOfMonth())
+                    ->where('end_date', '>=', now()->endOfMonth());
+            })
+            ->orderBy('start_date', 'asc')
+            ->where('group_id', $group->group_id)
+            ->get();
 
-        if (! empty($filters['search'])) {
-            $query->where('name', 'like', '%'.$filters['search'].'%');
-        }
-
-        if (! empty($filters['group_id'])) {
-            $query->where('group_id', $filters['group_id']);
-        }
-
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        return $query->orderBy('created_at', 'desc')->get();
+        return $query;
     }
 
     public function find(int $id)
     {
         return SubGroup::select('sub_group_id', 'group_id', 'name', 'start_date', 'end_date', 'status')
-            ->with(['group:id,name', 'subGroupMembers.user:id,name,email'])
+            ->with(['subGroupMembers'])
             ->find($id);
     }
 
@@ -56,10 +62,11 @@ class SubGroupRepository implements SubGroupRepositoryInterface
 
             DB::commit();
 
-            return $subGroup;
+            return $subGroup->load('subGroupMembers');
         } catch (Exception $e) {
             DB::rollback();
-            throw $e;
+
+            return null;
         }
     }
 
@@ -92,10 +99,11 @@ class SubGroupRepository implements SubGroupRepositoryInterface
 
             DB::commit();
 
-            return $subGroup;
+            return $subGroup->load('subGroupMembers');
         } catch (Exception $e) {
             DB::rollback();
-            throw $e;
+
+            return null;
         }
     }
 
@@ -104,23 +112,19 @@ class SubGroupRepository implements SubGroupRepositoryInterface
         try {
             DB::beginTransaction();
 
-            $subGroup = SubGroup::find($id);
-            if (! $subGroup) {
-                return false;
-            }
-
             // Remove all members first
             SubGroupMember::where('sub_group_id', $id)->delete();
 
             // Delete the sub group
-            $subGroup->delete();
+            SubGroup::where('sub_group_id', $id)->delete();
 
             DB::commit();
 
             return true;
         } catch (Exception $e) {
             DB::rollback();
-            throw $e;
+
+            return null;
         }
     }
 
@@ -141,27 +145,5 @@ class SubGroupRepository implements SubGroupRepositoryInterface
         }
 
         return true;
-    }
-
-    public function removeMembers(int $subGroupId, array $userIds)
-    {
-        return SubGroupMember::where('sub_group_id', $subGroupId)
-            ->whereIn('user_id', $userIds)
-            ->delete();
-    }
-
-    public function listMembers(int $subGroupId)
-    {
-        return SubGroupMember::where('sub_group_id', $subGroupId)
-            ->with('user:id,name,email')
-            ->get();
-    }
-
-    public function getByGroup(int $groupId)
-    {
-        return SubGroup::where('group_id', $groupId)
-            ->with(['subGroupMembers.user:id,name,email'])
-            ->orderBy('created_at', 'desc')
-            ->get();
     }
 }

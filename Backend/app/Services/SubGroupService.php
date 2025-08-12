@@ -3,9 +3,8 @@
 namespace App\Services;
 
 use App\Models\Group;
-use App\Models\User;
+use App\Models\GroupMember;
 use App\Repositories\SubGroupRepositoryInterface;
-use Exception;
 
 class SubGroupService implements SubGroupServiceInterface
 {
@@ -29,21 +28,21 @@ class SubGroupService implements SubGroupServiceInterface
     public function createSubGroup(array $data)
     {
         // Validate that the group exists
-        $group = Group::find($data['group_id']);
+        $group = Group::where('group_status', 'active')->first();
         if (! $group) {
-            throw new Exception('Group not found');
+            return null;
         }
 
         // Validate date range
         if ($data['start_date'] >= $data['end_date']) {
-            throw new Exception('End date must be after start date');
+            return response()->unprocessableEntity(__('sub_group.end_date_must_be_after_start_date'));
         }
 
         // Validate members exist if provided
         if (! empty($data['members'])) {
-            $existingUsers = User::whereIn('user_id', $data['members'])->count();
-            if ($existingUsers !== count($data['members'])) {
-                throw new Exception('Some users do not exist');
+            $existingMembers = GroupMember::whereIn('user_id', $data['members'])->count();
+            if ($existingMembers !== count($data['members'])) {
+                return response()->unprocessableEntity(__('sub_group.some_users_do_not_exist'));
             }
         }
 
@@ -54,29 +53,29 @@ class SubGroupService implements SubGroupServiceInterface
     {
         $subGroup = $this->subGroupRepository->find($id);
         if (! $subGroup) {
-            throw new Exception('Sub group not found');
+            return null;
         }
 
         // Validate that the group exists if being updated
         if (isset($data['group_id'])) {
             $group = Group::find($data['group_id']);
             if (! $group) {
-                throw new Exception('Group not found');
+                return null;
             }
         }
 
         // Validate date range if dates are being updated
         if (isset($data['start_date']) && isset($data['end_date'])) {
             if ($data['start_date'] >= $data['end_date']) {
-                throw new Exception('End date must be after start date');
+                return response()->unprocessableEntity(__('sub_group.end_date_must_be_after_start_date'));
             }
         }
 
         // Validate members exist if provided
-        if (isset($data['members']) && ! empty($data['members'])) {
-            $existingUsers = User::whereIn('user_id', $data['members'])->count();
-            if ($existingUsers !== count($data['members'])) {
-                throw new Exception('Some users do not exist');
+        if (! empty($data['members'])) {
+            $existingMembers = GroupMember::whereIn('user_id', $data['members'])->count();
+            if ($existingMembers !== count($data['members'])) {
+                return response()->unprocessableEntity(__('sub_group.some_users_do_not_exist'));
             }
         }
 
@@ -87,55 +86,9 @@ class SubGroupService implements SubGroupServiceInterface
     {
         $subGroup = $this->subGroupRepository->find($id);
         if (! $subGroup) {
-            throw new Exception('Sub group not found');
+            return null;
         }
 
         return $this->subGroupRepository->delete($id);
-    }
-
-    public function addMembers(int $subGroupId, array $userIds)
-    {
-        $subGroup = $this->subGroupRepository->find($subGroupId);
-        if (! $subGroup) {
-            throw new Exception('Sub group not found');
-        }
-
-        // Validate that users exist
-        $existingUsers = User::whereIn('user_id', $userIds)->count();
-        if ($existingUsers !== count($userIds)) {
-            throw new Exception('Some users do not exist');
-        }
-
-        return $this->subGroupRepository->addMembers($subGroupId, $userIds);
-    }
-
-    public function removeMembers(int $subGroupId, array $userIds)
-    {
-        $subGroup = $this->subGroupRepository->find($subGroupId);
-        if (! $subGroup) {
-            throw new Exception('Sub group not found');
-        }
-
-        return $this->subGroupRepository->removeMembers($subGroupId, $userIds);
-    }
-
-    public function listMembers(int $subGroupId)
-    {
-        $subGroup = $this->subGroupRepository->find($subGroupId);
-        if (! $subGroup) {
-            throw new Exception('Sub group not found');
-        }
-
-        return $this->subGroupRepository->listMembers($subGroupId);
-    }
-
-    public function getByGroup(int $groupId)
-    {
-        $group = Group::find($groupId);
-        if (! $group) {
-            throw new Exception('Group not found');
-        }
-
-        return $this->subGroupRepository->getByGroup($groupId);
     }
 }

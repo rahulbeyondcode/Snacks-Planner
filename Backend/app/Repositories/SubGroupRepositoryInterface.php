@@ -15,10 +15,4 @@ interface SubGroupRepositoryInterface
     public function delete(int $id);
 
     public function addMembers(int $subGroupId, array $userIds);
-
-    public function removeMembers(int $subGroupId, array $userIds);
-
-    public function listMembers(int $subGroupId);
-
-    public function getByGroup(int $groupId);
 }
