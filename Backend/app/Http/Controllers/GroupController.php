@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use App\Http\Resources\GroupResource;
 use App\Http\Requests\StoreGroupRequest;
 use App\Http\Requests\UpdateGroupRequest;
+use Illuminate\Support\Facades\DB;
 
 class GroupController extends Controller
 {
@@ -273,23 +274,53 @@ class GroupController extends Controller
 
     public function setSortOrder(Request $request)
     {
-        $sortOrders = $request->input('sort_orders');
-
-        if (!is_array($sortOrders)) {
-            return response()->internalServerError(__('Invalid input format. Expected an array.'));
+        // Add authorization check
+        $user = Auth::user();
+        if (!$user || $user->role->name !== 'account_manager') {
+            return response()->internalServerError(__('Forbidden'));
         }
 
-        $groupIds = array_keys($sortOrders);
+        $sortOrders = $request->input('sort_orders');
 
-        // Get only existing group_ids
-        $validGroupIds = Group::whereIn('group_id', $groupIds)->pluck('group_id')->toArray();
+        // Improved validation
+        if (!is_array($sortOrders) || empty($sortOrders)) {
+            return response()->internalServerError(__('Invalid input format. Expected a non-empty array.'));
+        }
 
+        // Validate sort order values are numeric
         foreach ($sortOrders as $groupId => $sortOrder) {
-            if (in_array($groupId, $validGroupIds)) {
-                Group::where('group_id', $groupId)->update(['sort_order' => $sortOrder]);
+            if (!is_numeric($sortOrder) || $sortOrder < 0) {
+                return response()->internalServerError(__('Invalid sort order value. Expected non-negative numbers.'));
             }
         }
 
-        return response()->noContent();
+        try {
+            // Use database transaction for data consistency
+            DB::transaction(function () use ($sortOrders) {
+                $groupIds = array_keys($sortOrders);
+                
+                // Get only existing group_ids
+                $existingGroupIds = Group::whereIn('group_id', $groupIds)
+                    ->pluck('group_id')
+                    ->toArray();
+
+                // Update each existing group individually (more efficient than upsert for updates only)
+                foreach ($sortOrders as $groupId => $sortOrder) {
+                    if (in_array($groupId, $existingGroupIds)) {
+                        Group::where('group_id', $groupId)
+                            ->update(['sort_order' => (int) $sortOrder]);
+                    }
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Group sort orders updated successfully',
+                'data' => $sortOrders
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error updating group sort orders: ' . $e->getMessage());
+            return response()->internalServerError(__('An error occurred while updating sort orders'));
+        }
     }
 }
