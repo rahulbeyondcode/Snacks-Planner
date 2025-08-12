@@ -232,7 +232,7 @@ class PermissionController extends Controller
     public function getPermissionsByResource()
     {
         $permissions = Permission::with('roles')->get();
-        
+
         $groupedPermissions = $permissions->groupBy('resource')->map(function ($resourcePermissions) {
             return $resourcePermissions->groupBy('module')->map(function ($modulePermissions) {
                 return $modulePermissions->pluck('action')->unique()->values()->toArray();
@@ -246,4 +246,4 @@ class PermissionController extends Controller
             'status' => 200
         ], 200);
     }
-} 
+}

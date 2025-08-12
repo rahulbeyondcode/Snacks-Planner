@@ -16,15 +16,15 @@ class CategoryController extends Controller
     }
 
     public function index()
-    {        
-      
-        try {   
-            $categories = $this->repo->all()->map(function($category) {
+    {
+
+        try {
+            $categories = $this->repo->all()->map(function ($category) {
                 return [
                     'id' => $category->id,
                     'name' => $category->name
                 ];
-            });            
+            });
             return apiResponse(
                 true,
                 'Categories retrieved successfully',
