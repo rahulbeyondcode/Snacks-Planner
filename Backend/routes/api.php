@@ -65,6 +65,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
 
+        // Lookup API - accessible to all authenticated users
+        Route::get('/lookup', [\App\Http\Controllers\LookupController::class, 'index']);
+
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
             // Payment Methods CRUD
@@ -199,7 +202,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'update']);
             Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
             Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
-            Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);            
+            Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);
             // Snack plan detail access
             Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
             Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);

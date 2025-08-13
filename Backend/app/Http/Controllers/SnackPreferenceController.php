@@ -72,37 +72,25 @@ class SnackPreferenceController extends Controller
      */
     public function index()
     {
-        try {
-            // Check access control
-            $accessCheck = $this->checkAccess();
-            if ($accessCheck) {
-                return apiResponse(
-                    $accessCheck['success'],
-                    $accessCheck['message'],
-                    $accessCheck['data'],
-                    $accessCheck['status']
-                );
-            }
-
-            $user = Auth::user();
-
-            return apiResponse(
-                true,
-                'Snack preference options retrieved successfully.',
-                [
-                    'options' => self::$snackOptions,
-                    'current_preference' => $user->preference
-                ],
-                200
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to retrieve snack preference options: ' . $e->getMessage(),
-                [],
-                500
-            );
+        // Check access control
+        $accessCheck = $this->checkAccess();
+        if ($accessCheck) {
+            return response()->json([
+                'success' => $accessCheck['success'],
+                'message' => $accessCheck['message'],
+                'data' => $accessCheck['data']
+            ], $accessCheck['status']);
         }
+
+        $user = Auth::user();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'options' => self::$snackOptions,
+                'current_preference' => $user->preference
+            ]
+        ]);
     }
 
     /**
@@ -111,45 +99,34 @@ class SnackPreferenceController extends Controller
      */
     public function update(UpdateSnackPreferenceRequest $request)
     {
-        try {
-            // Check access control
-            $accessCheck = $this->checkAccess();
-            if ($accessCheck) {
-                return apiResponse(
-                    $accessCheck['success'],
-                    $accessCheck['message'],
-                    $accessCheck['data'],
-                    $accessCheck['status']
-                );
-            }
-
-            $user = Auth::user();
-            $validated = $request->validated();
-
-            // Update user's preference
-            User::where('user_id', $user->user_id)
-                ->update(['preference' => $validated['preference']]);
-
-            // Get the label for the selected preference
-            $selectedOption = collect(self::$snackOptions)
-                ->firstWhere('value', $validated['preference']);
-
-            return apiResponse(
-                true,
-                'Snack preference updated successfully.',
-                [
-                    'preference' => $validated['preference'],
-                    'label' => $selectedOption['label'] ?? 'Unknown preference'
-                ],
-                200
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to update snack preference: ' . $e->getMessage(),
-                [],
-                500
-            );
+        // Check access control
+        $accessCheck = $this->checkAccess();
+        if ($accessCheck) {
+            return response()->json([
+                'success' => $accessCheck['success'],
+                'message' => $accessCheck['message'],
+                'data' => $accessCheck['data']
+            ], $accessCheck['status']);
         }
+
+        $user = Auth::user();
+        $validated = $request->validated();
+
+        // Update user's preference
+        User::where('user_id', $user->user_id)
+            ->update(['preference' => $validated['preference']]);
+
+        // Get the label for the selected preference
+        $selectedOption = collect(self::$snackOptions)
+            ->firstWhere('value', $validated['preference']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Snack preference updated successfully.',
+            'data' => [
+                'preference' => $validated['preference'],
+                'label' => $selectedOption['label'] ?? 'Unknown preference'
+            ]
+        ]);
     }
 }

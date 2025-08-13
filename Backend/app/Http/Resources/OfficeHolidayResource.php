@@ -15,8 +15,6 @@ class OfficeHolidayResource extends JsonResource
             'group_id' => $this->group_id,
             'holiday_date' => $this->holiday_date,
             'description' => $this->description,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
             'user' => $this->whenLoaded('user'),
             'group' => $this->whenLoaded('group'),
         ];
