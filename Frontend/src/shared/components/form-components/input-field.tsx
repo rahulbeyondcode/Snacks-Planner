@@ -39,7 +39,10 @@ const InputField: React.FC<InputFieldProps> = ({
   return (
     <div className={className}>
       {label && (
-        <label htmlFor={name} className="block text-sm font-medium mb-2">
+        <label
+          htmlFor={name}
+          className="block text-sm font-medium mb-2 text-black"
+        >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -60,7 +63,7 @@ const InputField: React.FC<InputFieldProps> = ({
             maxLength={maxLength}
             minLength={minLength}
             pattern={pattern}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-black/20 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:bg-yellow-50 disabled:cursor-not-allowed"
           />
         )}
       />

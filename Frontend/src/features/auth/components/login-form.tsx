@@ -28,27 +28,31 @@ export const LoginForm: React.FC = () => {
     <div className="w-full max-w-md mx-auto">
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
-          <InputField
-            name="email"
-            label="Email Address"
-            type="email"
-            placeholder="Enter your email"
-            required
-          />
+          <div className="space-y-2">
+            <InputField
+              name="email"
+              label="Email Address"
+              type="email"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
 
-          <InputField
-            name="password"
-            label="Password"
-            type="password"
-            placeholder="Enter your password"
-            required
-          />
+          <div className="space-y-2">
+            <InputField
+              name="password"
+              label="Password"
+              type="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
 
           <button
             type="submit"
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full flex items-center justify-center rounded-lg py-3 text-sm font-semibold text-yellow-50 bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition shadow-[4px_4px_0_0_#000]"
           >
-            Sign in
+            <span>Sign in</span>
           </button>
         </form>
       </FormProvider>

@@ -36,14 +36,14 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-between">
-      <div className="w-full flex flex-col items-center">
+    <div className="w-full h-full flex flex-col justify-between">
+      <div className="w-full">
         {/* Avatar and name */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-blue-200 flex items-center justify-center text-xl font-bold text-blue-900 mb-2 shadow-lg">
+          <div className="w-14 h-14 rounded-full bg-yellow-300 text-black border-2 border-black flex items-center justify-center text-xl font-extrabold mb-2 shadow-[4px_4px_0_0_#000]">
             {(userNameSplit?.[0]?.[0] || "") + (userNameSplit?.[1]?.[0] || "")}
           </div>
-          <div className="text-white text-base font-semibold tracking-wide">
+          <div className="text-black text-base font-semibold tracking-wide">
             {user?.name || ""}
           </div>
         </div>
@@ -56,16 +56,14 @@ const Sidebar = () => {
               <Link
                 key={item.label}
                 to={item.path}
-                className={`cursor-pointer flex items-center gap-3 px-5 py-3 focus:outline-none w-[95%] rounded-tr-3xl rounded-br-3xl
-                ${isActive ? "bg-indigo-400/30 text-white font-medium" : "text-blue-100 hover:bg-indigo-200/20 hover:text-white"}
-              `}
+                className={`group cursor-pointer flex items-center gap-3 px-4 py-3 focus:outline-none w-[95%] mx-auto rounded-xl border-2 transition-all ${isActive ? "bg-black text-yellow-50 border-black shadow-[4px_4px_0_0_#000]" : "bg-white text-black border-black hover:bg-yellow-100"}`}
               >
                 <span
-                  className={`flex items-center justify-center w-7 h-7 rounded-lg ${isActive ? "bg-indigo-300 text-indigo-900" : "bg-indigo-900 text-indigo-200 group-hover:bg-indigo-200 group-hover:text-indigo-900"}`}
+                  className={`flex items-center justify-center w-7 h-7 rounded-lg border ${isActive ? "bg-yellow-400 text-black border-black" : "bg-black text-yellow-50 border-black group-hover:bg-black group-hover:text-yellow-50"}`}
                 >
                   <Icon size={20} />
                 </span>
-                <span className="tracking-tight font-sans text-base">
+                <span className="font-sans text-sm sm:text-base">
                   {item.label}
                 </span>
               </Link>
@@ -76,14 +74,17 @@ const Sidebar = () => {
 
       {/* Logout button */}
       <div className="w-full px-2 pb-4">
+        <div className="w-[95%] mx-auto mb-2 border-dashed border-black/10" />
         <button
           onClick={handleLogout}
-          className="cursor-pointer flex items-center gap-3 px-5 py-3 focus:outline-none w-full rounded-3xl text-blue-100 hover:bg-red-400/20 hover:text-white transition-colors"
+          className="cursor-pointer flex items-center gap-2 px-3 py-2 focus:outline-none w-[95%] mx-auto rounded-lg border border-black/20 bg-transparent text-black hover:bg-yellow-100/60 transition"
         >
-          <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500 text-white">
-            <LogOut size={20} />
+          <span className="flex items-center justify-center w-6 h-6 rounded-md bg-yellow-300/60 text-black border border-black/20">
+            <LogOut size={16} />
           </span>
-          <span className="tracking-tight font-sans text-base">Logout</span>
+          <span className="font-sans text-sm sm:text-base font-medium">
+            Logout
+          </span>
         </button>
       </div>
     </div>

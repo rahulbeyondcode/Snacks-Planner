@@ -54,49 +54,70 @@ const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
     <FormProvider {...methods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white border rounded-xl p-4 mt-6"
+        className="bg-white border-2 border-black rounded-2xl p-5 sm:p-6 shadow-[6px_6px_0_0_#000]"
       >
-        <h4 className="font-bold mb-2">Add New Blocked Fund</h4>
-
-        <label className="block mb-1">Enter a name for this fund</label>
-        <input
-          type="text"
-          {...register("name", { required: "Name is required" })}
-          className="w-full border rounded px-3 py-2 mb-2"
-          placeholder="e.g. Onam Sadhya fund"
-        />
-        {errors.name && (
-          <p className="text-red-500 text-xs mb-2">
-            {errors.name.message as string}
-          </p>
-        )}
-
-        <MultiDatePicker
-          label="Choose a date to block funds"
-          name="date"
-          placeholder="Select a date"
-          multiDatePickMode={false}
-        />
-
-        <label className="block mb-1">
-          Enter the amount to block{" "}
-          <span className="text-red-500 text-xs">
-            (Maximum available Rs. {maxAmount.toLocaleString()})
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-extrabold text-black">
+            Add New Blocked Fund
+          </h4>
+          <span className="px-2 py-1 rounded-md bg-yellow-300 text-black border-2 border-black text-[10px] font-bold tracking-wide">
+            Max Rs. {maxAmount.toLocaleString()}
           </span>
-        </label>
-        <input
-          type="number"
-          {...register("amount")}
-          className="w-full border rounded px-3 py-2 mb-2"
-          placeholder="e.g. 12,000"
-        />
-        {errors.amount && (
-          <p className="text-red-500 text-xs mb-2">
-            {errors.amount.message as string}
-          </p>
-        )}
+        </div>
 
-        <Button type="submit">Save</Button>
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label className="block mb-1.5 text-sm font-semibold text-black">
+              Enter a name for this fund
+            </label>
+            <input
+              type="text"
+              {...register("name", { required: "Name is required" })}
+              className="w-full border-2 border-black rounded-lg px-3 py-2.5 bg-white shadow-[2px_2px_0_0_#000]"
+              placeholder="e.g. Onam Sadhya fund"
+            />
+            {errors.name && (
+              <p className="text-red-600 text-xs mt-1">
+                {errors.name.message as string}
+              </p>
+            )}
+          </div>
+
+          <div className="bg-yellow-50 border-2 border-black rounded-lg p-3 shadow-[2px_2px_0_0_#000]">
+            <MultiDatePicker
+              label="Choose a date to block funds"
+              name="date"
+              placeholder="Select a date"
+              multiDatePickMode={false}
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1.5 text-sm font-semibold text-black">
+              Enter the amount to block
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-2 rounded-lg border-2 border-black bg-yellow-200 text-black text-sm font-semibold select-none shadow-[2px_2px_0_0_#000]">
+                Rs
+              </span>
+              <input
+                type="number"
+                {...register("amount")}
+                className="w-full border-2 border-black rounded-lg px-3 py-2.5 bg-white shadow-[2px_2px_0_0_#000]"
+                placeholder="e.g. 12,000"
+              />
+            </div>
+            {errors.amount && (
+              <p className="text-red-600 text-xs mt-1">
+                {errors.amount.message as string}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-5 flex justify-end">
+          <Button type="submit">Save</Button>
+        </div>
       </form>
     </FormProvider>
   );
