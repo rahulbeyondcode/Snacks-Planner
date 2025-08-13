@@ -19,47 +19,26 @@ class WorkingDayController extends Controller
     // Get current working days
     public function show()
     {
-        try {
-            $current = $this->service->getCurrent();
-            $workingDays = $current ? $current->working_days : [];
+        $current = $this->service->getCurrent();
+        $workingDays = $current ? $current->working_days : [];
 
-            return apiResponse(
-                true,
-                'Working days retrieved successfully',
-                $workingDays,
-                200
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to retrieve working days: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $workingDays
+        ]);
     }
 
     // Update working days
     public function update(UpdateWorkingDaysRequest $request)
     {
-        try {
-            $userId = Auth::id();
-            $days = $request->input('working_days');
-            $updated = $this->service->update($days, $userId);
+        $userId = Auth::id();
+        $days = $request->input('working_days');
+        $updated = $this->service->update($days, $userId);
 
-            return apiResponse(
-                true,
-                'Working days updated successfully',
-                $updated->working_days,
-                200
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to update working days: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Working days updated successfully',
+            'data' => $updated->working_days
+        ]);
     }
 }

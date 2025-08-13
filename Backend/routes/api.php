@@ -66,6 +66,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
 
+        // Lookup API - accessible to all authenticated users
+        Route::get('/lookup', [\App\Http\Controllers\LookupController::class, 'index']);
+
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
             // Payment Methods CRUD
