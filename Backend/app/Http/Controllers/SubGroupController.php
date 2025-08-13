@@ -62,15 +62,20 @@ class SubGroupController extends Controller
             $validated = $request->validated();
 
             $subGroup = $this->subGroupService->createSubGroup($validated);
-
+            dd($subGroup instanceof JsonResponse);
             if ($subGroup instanceof JsonResponse && $subGroup->getStatusCode() == 422) {
                 return response()->unprocessableEntity($subGroup->getData()->message);
             } elseif (! $subGroup) {
                 return response()->notFound(__('sub_group.group_not_found'));
+            } else {
+
+                dd($subGroup);
             }
 
             return new SubGroupResource($subGroup);
         } catch (\Exception $e) {
+            dd($e);
+
             return response()->internalServerError(__('messages.error'));
         }
     }
