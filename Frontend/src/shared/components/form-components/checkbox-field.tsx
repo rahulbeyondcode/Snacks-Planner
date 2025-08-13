@@ -25,31 +25,33 @@ const CheckboxField: React.FC<CheckboxFieldProps> = ({
   } = useFormContext();
 
   return (
-    <div className={`flex items-center ${className}`}>
-      <Controller
-        control={control}
-        name={name}
-        render={({ field: { value = false, onChange, onBlur } }) => (
-          <input
-            id={name}
-            type="checkbox"
-            checked={value}
-            onChange={(e) => onChange(e.target.checked)}
-            onBlur={onBlur}
-            disabled={isDisabled}
-            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
-          />
+    <>
+      <label
+        htmlFor={name}
+        className={`flex items-center cursor-pointer select-none ${className}`}
+      >
+        <Controller
+          control={control}
+          name={name}
+          render={({ field: { value = false, onChange, onBlur } }) => (
+            <input
+              id={name}
+              type="checkbox"
+              checked={value}
+              onChange={(e) => onChange(e.target.checked)}
+              onBlur={onBlur}
+              disabled={isDisabled}
+              className="h-5 w-5 accent-yellow-400 border-2 border-black rounded-sm focus:ring-0 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          )}
+        />
+        {label && (
+          <span className="ml-2 text-sm font-extrabold text-black">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </span>
         )}
-      />
-      {label && (
-        <label
-          htmlFor={name}
-          className="ml-2 text-sm font-medium text-gray-900"
-        >
-          {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
-      )}
+      </label>
       {customError && (
         <small className="text-red-500 mt-1 block ml-6">{customError}</small>
       )}
@@ -60,7 +62,7 @@ const CheckboxField: React.FC<CheckboxFieldProps> = ({
           <small className="text-red-500 mt-1 block ml-6">{message}</small>
         )}
       />
-    </div>
+    </>
   );
 };
 

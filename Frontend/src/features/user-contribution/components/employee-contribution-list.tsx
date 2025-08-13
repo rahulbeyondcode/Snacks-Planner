@@ -13,7 +13,7 @@ const EmployeeContributionList: React.FC<EmployeeContributionListProps> = ({
   onTogglePaid,
 }) => {
   return (
-    <div className="flex flex-col gap-4 mb-8">
+    <div className="flex flex-col gap-3 sm:gap-4">
       {employees.map((emp) => (
         <EmployeeContributionRow
           key={emp.id}

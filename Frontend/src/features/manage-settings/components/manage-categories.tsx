@@ -38,7 +38,7 @@ const ManageCategories: React.FC<ManageCategoriesProps> = ({
     {
       icon: <EditIcon />,
       onClick: (item) => onEditCategory(item.id),
-      className: "hover:bg-blue-100 p-1 rounded",
+      className: "hover:bg-yellow-400",
       title: "Edit",
     },
     {
@@ -48,7 +48,7 @@ const ManageCategories: React.FC<ManageCategoriesProps> = ({
           onDeleteCategory(item.id);
         }
       },
-      className: "hover:bg-red-100 p-1 rounded",
+      className: "hover:bg-yellow-400",
       title: "Delete",
     },
   ];
@@ -56,13 +56,13 @@ const ManageCategories: React.FC<ManageCategoriesProps> = ({
   return (
     <div>
       {/* Title and Add Button */}
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-handwriting text-red-600">
+      <div className="flex justify-between items-center mb-3 sm:mb-4">
+        <h3 className="text-xl sm:text-2xl font-extrabold text-black">
           Manage Categories
         </h3>
         <button
           onClick={onAddCategory}
-          className="px-4 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 font-handwriting"
+          className="inline-flex items-center px-3 py-2 rounded-lg border-2 border-black bg-yellow-300 text-black font-extrabold text-sm shadow-[2px_2px_0_0_#000] hover:bg-yellow-400"
         >
           + Add
         </button>
@@ -73,9 +73,9 @@ const ManageCategories: React.FC<ManageCategoriesProps> = ({
         data={categories}
         columns={columns}
         actions={actions}
-        className="overflow-x-auto rounded-lg border border-red-200"
-        headerClassName="bg-red-100"
-        rowClassName="border-b last:border-b-0"
+        className="w-full overflow-x-auto bg-white rounded-2xl border-2 border-black shadow-[6px_6px_0_0_#000]"
+        headerClassName="bg-yellow-200 border-b-2 border-black"
+        rowClassName="border-b-2 border-black last:border-b-0 hover:bg-yellow-50"
       />
     </div>
   );

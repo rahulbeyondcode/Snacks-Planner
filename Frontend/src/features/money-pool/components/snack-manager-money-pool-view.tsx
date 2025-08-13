@@ -5,6 +5,11 @@ import { useMoneyPoolStore } from "features/money-pool/store/money-pool-store";
 
 const SnackManagerMoneyPoolView: React.FC = () => {
   const { pool, blockedFunds } = useMoneyPoolStore();
+  const totalBlockedAmount = blockedFunds.reduce(
+    (sum, fund) => Number(sum) + Number(fund.amount),
+    0
+  );
+  const availablePoolAmount = pool.finalPoolAmount - totalBlockedAmount;
 
   return (
     <div className="w-full mx-auto mt-6 px-2 sm:px-4">
@@ -18,61 +23,81 @@ const SnackManagerMoneyPoolView: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-yellow-200 rounded-xl border-2 border-black p-4 shadow-[6px_6px_0_0_#000] flex items-center justify-between">
-            <div className="text-black/70 text-sm">Final pool amount</div>
-            <div className="text-2xl sm:text-3xl font-extrabold">
-              {pool.finalPoolAmount.toLocaleString?.() ?? pool.finalPoolAmount}
+        {/* Pool amounts box (single) */}
+        <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]">
+          <div className="mb-2 font-extrabold text-black">Pool amounts</div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-black/70 text-sm">Available</span>
+              <span className="inline-flex items-center px-3 py-1 rounded-md bg-yellow-200 border-2 border-black font-extrabold text-lg sm:text-2xl">
+                Rs. {Number(availablePoolAmount).toLocaleString()}
+              </span>
             </div>
-          </div>
-          <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[6px_6px_0_0_#000] flex items-center justify-between">
-            <div className="text-black/70 text-sm">Available pool amount</div>
-            <div className="text-xl sm:text-2xl font-extrabold">
-              {(
-                pool.finalPoolAmount -
-                blockedFunds.reduce(
-                  (sum, fund) => Number(sum) + Number(fund.amount),
-                  0
-                )
-              ).toLocaleString()}
+            <div className="flex items-center justify-between">
+              <span className="text-black/70 text-sm">Final</span>
+              <span className="font-extrabold text-base sm:text-xl">
+                Rs. {Number(pool.finalPoolAmount).toLocaleString()}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* Box 1: Employee contributions */}
           <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]">
-            <div className="text-black/70 text-sm">
-              Amount collected per person
+            <div className="mb-2 font-extrabold text-black">
+              Employee contributions
             </div>
-            <div className="font-extrabold text-lg">
-              {pool.amountCollectedPerPerson}
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="text-black/70">Per person</div>
+              <div className="text-right font-extrabold">
+                Rs.{" "}
+                {Number(pool.amountCollectedPerPerson).toLocaleString?.() ??
+                  pool.amountCollectedPerPerson}
+              </div>
+              <div className="text-black/70">Total</div>
+              <div className="text-right font-extrabold">
+                Rs.{" "}
+                {Number(pool.totalCollectedFromEmployees).toLocaleString?.() ??
+                  pool.totalCollectedFromEmployees}
+              </div>
             </div>
           </div>
+
+          {/* Box 2: Company contribution */}
           <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]">
-            <div className="text-black/70 text-sm">
-              Total collected from employees
+            <div className="mb-2 font-extrabold text-black">
+              Company contribution
             </div>
-            <div className="font-extrabold text-lg">
-              {pool.totalCollectedFromEmployees}
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="text-black/70">Multiplier</div>
+              <div className="text-right font-extrabold">
+                {pool.companyContributionMultiplier}X
+              </div>
+              <div className="text-black/70">Total</div>
+              <div className="text-right font-extrabold">
+                Rs.{" "}
+                {Number(pool.companyContribution).toLocaleString?.() ??
+                  pool.companyContribution}
+              </div>
             </div>
           </div>
+
+          {/* Box 3: Employees */}
           <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]">
-            <div className="text-black/70 text-sm">
-              Company contribution multiplier
+            <div className="mb-2 font-extrabold text-black">Employees</div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="text-black/70">Paid</div>
+              <div className="text-right font-extrabold">
+                {pool.paidEmployees}
+              </div>
+              <div className="text-black/70">Unpaid</div>
+              <div className="text-right font-extrabold">
+                {typeof pool.totalEmployees === "number"
+                  ? Math.max(0, pool.totalEmployees - pool.paidEmployees)
+                  : "-"}
+              </div>
             </div>
-            <div className="font-extrabold text-lg">
-              {pool.companyContributionMultiplier}X
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]">
-            <div className="text-black/70 text-sm">Company contribution</div>
-            <div className="font-extrabold text-lg">
-              {pool.companyContribution}
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]">
-            <div className="text-black/70 text-sm">Paid employees</div>
-            <div className="font-extrabold text-lg">{pool.paidEmployees}</div>
           </div>
         </div>
 

@@ -64,9 +64,9 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 min-w-[300px]">
-        <h3 className="text-lg font-bold mb-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+      <div className="bg-white rounded-2xl border-2 border-black shadow-[6px_6px_0_0_#000] p-10 w-[92vw] max-w-2xl sm:max-w-3xl max-h-[90vh] overflow-auto">
+        <h3 className="text-lg font-extrabold text-black mb-4">
           {isEditMode ? "Edit Employee" : "Add Employee"}
         </h3>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -74,8 +74,8 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
             <input
               type="text"
               placeholder="Name"
-              className={`w-full border rounded px-3 py-2 ${
-                errors.name ? "border-red-500" : ""
+              className={`w-full rounded-md px-3 py-2 border-2 focus:outline-none focus:ring-0 ${
+                errors.name ? "border-red-500" : "border-black"
               }`}
               {...register("name", {
                 required: "Name is required",
@@ -93,8 +93,8 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
             <input
               type="email"
               placeholder="Email"
-              className={`w-full border rounded px-3 py-2 ${
-                errors.email ? "border-red-500" : ""
+              className={`w-full rounded-md px-3 py-2 border-2 focus:outline-none focus:ring-0 ${
+                errors.email ? "border-red-500" : "border-black"
               }`}
               {...register("email", {
                 required: "Email is required",
@@ -114,14 +114,13 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+              className="px-4 py-2 rounded-md border-2 border-black bg-white hover:bg-gray-100 shadow-[2px_2px_0_0_#000] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={!isValid}
-              className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-md border-2 border-black bg-yellow-300 text-black font-extrabold hover:bg-yellow-400 shadow-[2px_2px_0_0_#000] cursor-pointer"
             >
               {isEditMode ? "Save" : "Add"}
             </button>

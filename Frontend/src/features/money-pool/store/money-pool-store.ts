@@ -17,6 +17,7 @@ export const useMoneyPoolStore = create<MoneyPoolState>((set) => ({
     amountCollectedPerPerson: 200,
     companyContributionMultiplier: 2,
     paidEmployees: 70,
+    totalEmployees: 85,
     totalCollectedFromEmployees: 14000,
     companyContribution: 28000,
     finalPoolAmount: 42000,

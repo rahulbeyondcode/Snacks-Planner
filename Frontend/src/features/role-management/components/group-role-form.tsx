@@ -79,12 +79,14 @@ const GroupRoleForm: React.FC = () => {
   return (
     <FormProvider {...methods}>
       <form
-        className="max-w-2xl mx-auto mt-10 p-6 rounded-lg border border-black bg-white"
+        className="w-full max-w-6xl mt-4 sm:mt-6 px-0"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <h2 className="text-lg font-semibold mb-4">Manage groups</h2>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-black mb-4">
+          Manage groups
+        </h2>
         {/* Accordion Group List */}
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4 sm:space-y-5 mb-8">
           {fields.map((field, index: number) => {
             // Example: months for demo, in real use attach month to group data
             const months = ["This month", "August", "September", "October"];
@@ -95,11 +97,11 @@ const GroupRoleForm: React.FC = () => {
             return (
               <div
                 key={field.id}
-                className={`rounded-xl border shadow-sm transition-all duration-200 ${isCurrent ? "bg-green-100 border-green-400" : "bg-orange-100 border-orange-300"}`}
+                className={`bg-white rounded-2xl border-2 border-black shadow-[6px_6px_0_0_#000] transition-all duration-200`}
               >
                 {/* Accordion Summary Row */}
                 <div
-                  className="flex items-center justify-between px-6 py-4 cursor-pointer select-none"
+                  className="flex items-center justify-between px-4 sm:px-6 py-4 cursor-pointer select-none border-b-2 border-black"
                   onClick={() => setOpenIndex(isOpen ? null : index)}
                 >
                   <div className="flex items-center gap-4">
@@ -116,18 +118,18 @@ const GroupRoleForm: React.FC = () => {
                       <rect x="4" y="16" width="16" height="2" rx="1" />
                     </svg>
                     <div>
-                      <div
-                        className={`font-semibold text-lg ${isCurrent ? "text-green-800" : "text-orange-700"}`}
-                      >
+                      <div className="font-extrabold text-xl text-black">
                         {field.name || `Group ${index + 1}`}
                       </div>
-                      <div className="text-xs text-gray-500">{month}</div>
+                      <div className="text-[10px] font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded-md border-2 border-black bg-yellow-200 text-black mt-1 shadow-[2px_2px_0_0_#000]">
+                        {isCurrent ? "Current" : month}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Button
                       type="button"
-                      className="border border-red-500 text-red-500 p-2 rounded-3xl"
+                      className="bg-red-300 text-black border-2 border-black p-2 rounded-lg shadow-[2px_2px_0_0_#000] hover:bg-red-400"
                       shouldUseDefaultClass={false}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -140,16 +142,18 @@ const GroupRoleForm: React.FC = () => {
                 </div>
                 {/* Accordion Panel */}
                 {isOpen && (
-                  <div className="px-6 pb-4">
-                    <div className="mb-2 flex items-center">
-                      <label className="w-40">Enter group name</label>
+                  <div className="px-4 sm:px-6 pb-5">
+                    <div className="mb-4 flex items-center">
+                      <label className="w-40 text-sm font-semibold text-black/80">
+                        Enter group name
+                      </label>
                       <Controller
                         control={control}
                         name={`groups.${index}.name`}
                         render={({ field }: { field: any }) => (
                           <input
                             type="text"
-                            className="border rounded px-2 py-1 w-full ml-2"
+                            className="border-2 border-black rounded-lg px-3 py-2.5 w-full ml-2 focus:outline-none focus:ring-0 bg-white"
                             {...field}
                             placeholder={`Group ${index + 1}`}
                           />
@@ -157,12 +161,14 @@ const GroupRoleForm: React.FC = () => {
                       />
                     </div>
                     {errors.groups?.[index]?.name && (
-                      <div className="text-red-500 text-xs mb-2 ml-40">
+                      <div className="text-red-600 text-xs font-semibold mb-3 ml-40">
                         {errors.groups[index]?.name?.message || ""}
                       </div>
                     )}
-                    <div className="mb-2 flex items-center">
-                      <label className="w-40">Choose members</label>
+                    <div className="mb-4 flex items-center">
+                      <label className="w-40 text-sm font-semibold text-black/80">
+                        Choose members
+                      </label>
                       <MultiSelect
                         name={`groups.${index}.memberIds`}
                         placeholder="Select members..."
@@ -177,12 +183,14 @@ const GroupRoleForm: React.FC = () => {
                       />
                     </div>
                     {errors.groups?.[index]?.memberIds && (
-                      <div className="text-red-500 text-xs mb-2 ml-40">
+                      <div className="text-red-600 text-xs font-semibold mb-3 ml-40">
                         {errors.groups[index]?.memberIds?.message || ""}
                       </div>
                     )}
-                    <div className="mb-2 flex items-center">
-                      <label className="w-40">Choose snack manager</label>
+                    <div className="mb-4 flex items-center">
+                      <label className="w-40 text-sm font-semibold text-black/80">
+                        Choose snack manager
+                      </label>
                       <MultiSelect
                         name={`groups.${index}.snackManagerIds`}
                         placeholder="Select snack managers..."
@@ -196,7 +204,7 @@ const GroupRoleForm: React.FC = () => {
                       />
                     </div>
                     {errors.groups?.[index]?.snackManagerIds && (
-                      <div className="text-red-500 text-xs mb-2 ml-40">
+                      <div className="text-red-600 text-xs font-semibold mb-2 ml-40">
                         {errors.groups[index]?.snackManagerIds?.message || ""}
                       </div>
                     )}
@@ -207,7 +215,7 @@ const GroupRoleForm: React.FC = () => {
           })}
         </div>
         <button
-          className="w-full border border-black rounded-lg py-2 mt-2 bg-gray-100 hover:bg-gray-200"
+          className="w-full rounded-xl py-3 sm:py-3 mt-1 bg-yellow-300 text-black border-2 border-black font-extrabold shadow-[3px_3px_0_0_#000] hover:bg-yellow-400"
           onClick={handleAddGroup}
           type="button"
         >
@@ -217,7 +225,7 @@ const GroupRoleForm: React.FC = () => {
           <Button onClick={handleSubmit(onSubmit)}>Save</Button>
         </div>
         {errors.groups && typeof errors.groups.message === "string" && (
-          <div className="text-red-600 mt-2 text-center">
+          <div className="text-red-600 mt-2 text-center font-semibold">
             {errors.groups.message}
           </div>
         )}

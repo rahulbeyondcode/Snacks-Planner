@@ -41,9 +41,9 @@ const UserContributionManagement = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl border-2 border-orange-300 p-8 max-w-2xl w-full">
-        <h2 className="text-center text-orange-800 font-bold text-sm mb-6">
+    <div className="w-full mx-auto mt-8 md:mt-10 px-3 sm:px-6">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 md:p-8 max-w-5xl w-full mx-auto">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-black mb-6">
           Employee Contribution
         </h2>
         <FilterBar
@@ -56,7 +56,7 @@ const UserContributionManagement = () => {
           employees={filteredEmployees}
           onTogglePaid={handleTogglePaid}
         />
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-end mt-4">
           <Button onClick={handleSave}>Save</Button>
         </div>
       </div>

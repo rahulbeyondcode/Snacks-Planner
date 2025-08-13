@@ -84,13 +84,13 @@ const EmployeeDirectory: React.FC = () => {
   };
 
   return (
-    <div className="px-2 py-6 md:px-6 max-w-3xl mx-auto">
+    <div className="px-2 py-6 sm:px-4 md:px-6 max-w-7xl w-full mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-handwriting font-bold text-red-500">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-black">
           Employee Directory
         </h2>
         <button
-          className="flex items-center py-2 px-4 rounded bg-blue-200 border border-blue-400 text-blue-900 font-semibold hover:bg-blue-300 cursor-pointer"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-black bg-yellow-300 text-black font-extrabold shadow-[2px_2px_0_0_#000] hover:bg-yellow-400 cursor-pointer"
           onClick={() => {
             setModalMode("add");
             setSelectedEmployee(null);

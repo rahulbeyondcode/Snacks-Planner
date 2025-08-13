@@ -31,47 +31,47 @@ const ItemList: React.FC<ItemListProps> = ({
   return (
     <div className={`${className}`}>
       {/* Title and Add Button */}
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-handwriting text-red-600">{title}</h3>
+      <div className="flex justify-between items-center mb-3 sm:mb-4">
+        <h3 className="text-xl sm:text-2xl font-extrabold text-black">
+          {title}
+        </h3>
         <button
           onClick={onAdd}
-          className="px-4 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 font-handwriting"
+          className="inline-flex items-center px-3 py-2 rounded-lg border-2 border-black bg-yellow-300 text-black font-extrabold text-sm shadow-[2px_2px_0_0_#000] hover:bg-yellow-400"
         >
           + {addButtonText}
         </button>
       </div>
 
       {/* Items List */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex items-center justify-between bg-orange-200 rounded-lg px-4 py-3"
+            className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border-2 border-black shadow-[4px_4px_0_0_#000] hover:bg-yellow-50"
           >
             <div className="flex-1">
               <div>
-                <span className="font-handwriting text-gray-800">
-                  {item.name}
-                </span>
+                <span className="font-extrabold text-black">{item.name}</span>
                 {item.additionalInfo && (
-                  <span className="ml-2 text-sm text-gray-600 font-handwriting">
+                  <span className="ml-2 text-sm text-black/70">
                     ({item.additionalInfo})
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <button
                 onClick={() => onEdit(item)}
-                className="p-1 hover:bg-blue-300 rounded"
+                className="inline-flex items-center justify-center w-8 h-8 cursor-pointer rounded-md border-2 border-black bg-yellow-300 text-black font-extrabold shadow-[2px_2px_0_0_#000] hover:bg-yellow-400"
                 title="Edit"
               >
                 <EditIcon />
               </button>
               <button
                 onClick={() => onDelete(item.id)}
-                className="p-1 hover:bg-red-300 rounded"
+                className="inline-flex items-center justify-center w-8 h-8 cursor-pointer rounded-md border-2 border-black bg-yellow-300 text-black font-extrabold shadow-[2px_2px_0_0_#000] hover:bg-yellow-400"
                 title="Delete"
               >
                 <CrossIcon />

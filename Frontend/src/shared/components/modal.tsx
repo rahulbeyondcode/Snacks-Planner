@@ -47,15 +47,13 @@ const Modal: React.FC<ModalProps> = ({
       onClick={handleBackdropClick}
     >
       <div
-        className={`bg-white rounded-lg shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto ${className}`}
+        className={`bg-white rounded-2xl border-2 border-black shadow-[6px_6px_0_0_#000] max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto ${className}`}
       >
         {/* Header - Only show if title exists or modal is closable */}
         {(title || closable) && (
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center justify-between p-4 border-b-2 border-black">
             {title && (
-              <h2 className="text-lg font-handwriting text-gray-800">
-                {title}
-              </h2>
+              <h2 className="text-xl font-extrabold text-black">{title}</h2>
             )}
 
             {/* Spacer when no title but closable */}
@@ -64,8 +62,9 @@ const Modal: React.FC<ModalProps> = ({
             {closable && (
               <button
                 onClick={onClose}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="inline-flex items-center justify-center w-8 h-8 cursor-pointer rounded-md border-2 border-black bg-yellow-300 text-black font-extrabold shadow-[2px_2px_0_0_#000] hover:bg-yellow-400"
                 type="button"
+                aria-label="Close"
               >
                 <CrossIcon />
               </button>

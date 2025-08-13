@@ -320,7 +320,7 @@ const ManageSettings = () => {
 
   return (
     <>
-      <div className="p-6 space-y-8">
+      <div className="w-full mx-auto mt-6 px-2 sm:px-4 space-y-8 sm:space-y-10">
         {/* Holidays Section */}
         <ManageHolidays />
 
