@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\OfficeHolidayResource;
 use App\Http\Resources\PaymentMethodResource;
+use App\Http\Resources\PermissionResource;
 use App\Models\Permission;
 use App\Repositories\CategoryRepository;
 use App\Repositories\PaymentMethodRepository;
@@ -64,7 +65,7 @@ class LookupController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'permissions' => $permissions,
+                'permissions' => PermissionResource::collection($permissions),
                 'working_days' => $workingDays,
                 'office_holidays' => OfficeHolidayResource::collection($holidays),
                 'payment_methods' => PaymentMethodResource::collection($paymentMethods),
