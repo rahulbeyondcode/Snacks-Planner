@@ -1,8 +1,17 @@
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 
 import AddEditEmployeeModal from "features/employee-directory/components/add-edit-employee-modal";
-import DataTable, {
+import DataTable from "shared/components/data-table";
+
+import {
+  addEmployee,
+  deleteEmployee,
+  getEmployees,
+  updateEmployee,
+} from "features/employee-directory/api";
+import {
   type TableAction,
   type TableColumn,
 } from "shared/components/data-table";
@@ -13,21 +22,37 @@ export type Employee = {
   email: string;
 };
 
-const initialEmployees = [
-  { id: 1, name: "Ajai Mathew", email: "ajai@quintet.dev" },
-  { id: 2, name: "Rahul R", email: "rahul@quintet.dev" },
-  { id: 3, name: "Parvathi", email: "parvathi@quintet.dev" },
-  { id: 4, name: "Ramsiya", email: "ramsiya@quintet.dev" },
-  { id: 5, name: "Sojo", email: "sojo@quintet.dev" },
-];
-
 const EmployeeDirectory: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null
   );
+
+  const { data: employees, isLoading } = useQuery({
+    queryKey: ["employees"],
+    queryFn: getEmployees,
+    staleTime: 1000 * 60 * 5,
+    retry: 3,
+  });
+
+  const addEmployeeMutation = useMutation({
+    mutationFn: (employee: Employee) => {
+      return addEmployee(employee);
+    },
+  });
+
+  const updateEmployeeMutation = useMutation({
+    mutationFn: (employee: Employee) => {
+      return updateEmployee(employee);
+    },
+  });
+
+  const deleteEmployeeMutation = useMutation({
+    mutationFn: (id: number) => {
+      return deleteEmployee(id);
+    },
+  });
 
   // Table column configuration
   const columns: TableColumn<Employee>[] = [
@@ -63,7 +88,7 @@ const EmployeeDirectory: React.FC = () => {
   ];
 
   const handleAdd = (name: string, email: string) => {
-    setEmployees([...employees, { id: employees.length + 1, name, email }]);
+    addEmployeeMutation.mutate({ id: employees.length + 1, name, email });
   };
 
   const handleEdit = (id: number) => {
@@ -74,13 +99,13 @@ const EmployeeDirectory: React.FC = () => {
   };
 
   const handleEditSave = (id: number, name: string, email: string) => {
-    setEmployees(
-      employees.map((emp) => (emp.id === id ? { ...emp, name, email } : emp))
-    );
+    // setEmployees(
+    //   employees.map((emp) => (emp.id === id ? { ...emp, name, email } : emp))
+    // );
   };
 
   const handleDelete = (id: number) => {
-    setEmployees(employees.filter((emp) => emp.id !== id));
+    // setEmployees(employees.filter((emp) => emp.id !== id));
   };
 
   return (
@@ -101,7 +126,13 @@ const EmployeeDirectory: React.FC = () => {
         </button>
       </div>
 
-      <DataTable data={employees} columns={columns} actions={actions} />
+      <DataTable
+        data={employees}
+        columns={columns}
+        actions={actions}
+        isLoading={isLoading}
+        skeletonRowCount={15}
+      />
 
       <AddEditEmployeeModal
         isOpen={isModalOpen}
