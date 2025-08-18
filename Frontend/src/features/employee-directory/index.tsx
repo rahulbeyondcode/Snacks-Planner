@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 
@@ -22,12 +22,30 @@ export type Employee = {
   email: string;
 };
 
+// Table column configuration
+const columns: TableColumn<Employee>[] = [
+  {
+    key: "serialNumber",
+    title: "Sl No",
+    render: (_value, _item, index) => index + 1,
+  },
+  {
+    key: "name",
+    title: "Name",
+  },
+  {
+    key: "email",
+    title: "Email",
+  },
+];
+
 const EmployeeDirectory: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null
   );
+  const queryClient = useQueryClient();
 
   const { data: employees, isLoading } = useQuery({
     queryKey: ["employees"],
@@ -37,39 +55,36 @@ const EmployeeDirectory: React.FC = () => {
   });
 
   const addEmployeeMutation = useMutation({
-    mutationFn: (employee: Employee) => {
-      return addEmployee(employee);
+    mutationFn: (employee: Omit<Employee, "id">) => addEmployee(employee),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setIsModalOpen(false);
+    },
+    onError: (error) => {
+      console.error("Failed to add employee:", error);
     },
   });
 
   const updateEmployeeMutation = useMutation({
-    mutationFn: (employee: Employee) => {
-      return updateEmployee(employee);
+    mutationFn: (employee: Employee) => updateEmployee(employee),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setIsModalOpen(false);
+    },
+    onError: (error) => {
+      console.error("Failed to update employee:", error);
     },
   });
 
   const deleteEmployeeMutation = useMutation({
-    mutationFn: (id: number) => {
-      return deleteEmployee(id);
+    mutationFn: (id: number) => deleteEmployee(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+    onError: (error) => {
+      console.error("Failed to delete employee:", error);
     },
   });
-
-  // Table column configuration
-  const columns: TableColumn<Employee>[] = [
-    {
-      key: "serialNumber",
-      title: "Sl No",
-      render: (_value, _item, index) => index + 1,
-    },
-    {
-      key: "name",
-      title: "Name",
-    },
-    {
-      key: "email",
-      title: "Email",
-    },
-  ];
 
   // Table action configuration
   const actions: TableAction<Employee>[] = [
@@ -88,24 +103,25 @@ const EmployeeDirectory: React.FC = () => {
   ];
 
   const handleAdd = (name: string, email: string) => {
-    addEmployeeMutation.mutate({ id: employees.length + 1, name, email });
+    addEmployeeMutation.mutate({ name, email });
   };
 
   const handleEdit = (id: number) => {
-    const emp = employees.find((e) => e.id === id) || null;
-    setSelectedEmployee(emp);
+    const employeeToEdit =
+      employees?.find((employee: Employee) => employee.id === id) || null;
+    setSelectedEmployee(employeeToEdit);
     setModalMode("edit");
     setIsModalOpen(true);
   };
 
   const handleEditSave = (id: number, name: string, email: string) => {
-    // setEmployees(
-    //   employees.map((emp) => (emp.id === id ? { ...emp, name, email } : emp))
-    // );
+    updateEmployeeMutation.mutate({ id, name, email });
   };
 
   const handleDelete = (id: number) => {
-    // setEmployees(employees.filter((emp) => emp.id !== id));
+    if (confirm("Are you sure you want to delete this employee?")) {
+      deleteEmployeeMutation.mutate(id);
+    }
   };
 
   return (
@@ -127,7 +143,7 @@ const EmployeeDirectory: React.FC = () => {
       </div>
 
       <DataTable
-        data={employees}
+        data={employees ?? []}
         columns={columns}
         actions={actions}
         isLoading={isLoading}
@@ -141,6 +157,9 @@ const EmployeeDirectory: React.FC = () => {
         mode={modalMode}
         onAdd={handleAdd}
         onSave={handleEditSave}
+        isLoading={
+          addEmployeeMutation.isPending || updateEmployeeMutation.isPending
+        }
       />
     </div>
   );

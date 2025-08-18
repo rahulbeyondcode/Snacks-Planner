@@ -13,6 +13,7 @@ type AddEditEmployeeModalProps = {
   mode?: "add" | "edit";
   onAdd?: (name: string, email: string) => void;
   onSave?: (id: number, name: string, email: string) => void;
+  isLoading?: boolean;
 };
 
 const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
@@ -22,6 +23,7 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
   mode = "add",
   onAdd,
   onSave,
+  isLoading = false,
 }) => {
   const isEditMode = mode === "edit" && employee;
 
@@ -60,7 +62,6 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
     } else if (!isEditMode && onAdd) {
       onAdd(data.name, data.email);
     }
-    onClose();
   };
 
   return (
@@ -120,9 +121,14 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-md border-2 border-black bg-yellow-300 text-black font-extrabold hover:bg-yellow-400 shadow-[2px_2px_0_0_#000] cursor-pointer"
+              disabled={isLoading || !isValid}
+              className={`px-4 py-2 rounded-md border-2 border-black font-extrabold shadow-[2px_2px_0_0_#000] ${
+                isLoading || !isValid
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-yellow-300 text-black hover:bg-yellow-400 cursor-pointer"
+              }`}
             >
-              {isEditMode ? "Save" : "Add"}
+              {isLoading ? "Saving..." : isEditMode ? "Save" : "Add"}
             </button>
           </div>
         </form>

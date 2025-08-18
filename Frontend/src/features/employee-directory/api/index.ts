@@ -6,7 +6,7 @@ const getEmployees = async () => {
   return response.data;
 };
 
-const addEmployee = async (employee: Employee) => {
+const addEmployee = async (employee: Omit<Employee, "id">) => {
   const response = await API.post("/employees", employee);
   return response.data;
 };
