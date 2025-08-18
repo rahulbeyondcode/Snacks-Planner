@@ -40,7 +40,7 @@ class SnackPlanController extends Controller
     public function index(Request $request)
     {
         $filters = $request->only(['snack_plan_id', 'snack_date', 'user_id', 'total_amount']);
-        $plans = $this->snackPlanService->listSnackPlans($filters);
+        $plans = $this->snackPlanService->listSnackPlans($filters);        
         return SnackPlanResource::collection($plans);
     }
 
@@ -79,7 +79,7 @@ class SnackPlanController extends Controller
                 'snack_date' => $snackDate,
                 'user_id' => $user->user_id,
                 'total_amount' => $validated['total_amount'],
-            ];
+            ];            
 
             // Handle file uploads for each snack item
             foreach ($snackItems as $i => $item) {
@@ -93,6 +93,7 @@ class SnackPlanController extends Controller
             }
 
             $snackPlan = $this->snackPlanService->planFullSnackDay($planData, $snackItems);
+          
             return (new SnackPlanResource($snackPlan))->response()->setStatusCode(201);
         } catch (\Exception $e) {
             return response()->json([

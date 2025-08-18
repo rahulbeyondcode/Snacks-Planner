@@ -17,7 +17,7 @@ class SnackPlanDetail extends Model
         'snack_item_id',
         'shop_id',
         'quantity',
-        'category',
+        'category_id',
         'price_per_item',
         'total_price',
         'payment_mode',

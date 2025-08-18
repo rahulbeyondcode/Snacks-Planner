@@ -9,6 +9,9 @@ use App\Http\Requests\UpdateOfficeHolidayRequest;
 use App\Services\OfficeHolidayServiceInterface;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Role;
+use App\Http\Resources\OfficeHolidayResource;
+use App\Models\OfficeHoliday;
 
 class OfficeHolidayController extends Controller
 {
@@ -25,7 +28,7 @@ class OfficeHolidayController extends Controller
     private function getActiveOfficeHolidaysList()
     {
         $holidays = $this->officeHolidayService->getOfficeHolidays();
-        return \App\Http\Resources\OfficeHolidayResource::collection($holidays);
+        return OfficeHolidayResource::collection($holidays);
     }
 
     // Update an office holiday
@@ -62,7 +65,7 @@ class OfficeHolidayController extends Controller
                 true,
                 'Holiday updated successfully',
                 [
-                    'holiday' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+                    'holiday' => new OfficeHolidayResource($holiday),
                     'active_holidays' => $this->getActiveOfficeHolidaysList()
                 ],
                 200
@@ -131,7 +134,7 @@ class OfficeHolidayController extends Controller
             return apiResponse(
                 true,
                 'Office holidays retrieved successfully',
-                \App\Http\Resources\OfficeHolidayResource::collection($holidays),
+                OfficeHolidayResource::collection($holidays),
                 200
             );
         } catch (\Exception $e) {
@@ -165,7 +168,7 @@ class OfficeHolidayController extends Controller
             }
 
             $data['user_id'] = $user->user_id;
-            $data['type'] = \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY; // Set type for office holidays
+            $data['type'] = OfficeHoliday::TYPE_OFFICE_HOLIDAY; // Set type for office holidays
             $data['group_id'] = null; // Office holidays are not group-specific
             $holiday = $this->officeHolidayService->createHoliday($data);
 
@@ -173,7 +176,7 @@ class OfficeHolidayController extends Controller
                 true,
                 'Holiday created successfully',
                 [
-                    'holiday' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+                    'holiday' => new OfficeHolidayResource($holiday),
                     'active_holidays' => $this->getActiveOfficeHolidaysList()
                 ],
                 201
@@ -217,7 +220,7 @@ class OfficeHolidayController extends Controller
                 'user_id' => $user->user_id,
                 'holiday_date' => $validated['holiday_date'],
                 'description' => $validated['description'] ?? null,
-                'type' => \App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY,
+                'type' => OfficeHoliday::TYPE_OFFICE_HOLIDAY,
                 'group_id' => null,
             ]);
 
@@ -225,7 +228,7 @@ class OfficeHolidayController extends Controller
                 true,
                 'Holiday set successfully',
                 [
-                    'holiday' => new \App\Http\Resources\OfficeHolidayResource($holiday),
+                    'holiday' => new OfficeHolidayResource($holiday),
                     'active_holidays' => $this->getActiveOfficeHolidaysList()
                 ],
                 201

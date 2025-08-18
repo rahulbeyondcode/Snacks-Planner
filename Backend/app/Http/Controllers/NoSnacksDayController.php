@@ -10,6 +10,7 @@ use App\Http\Resources\OfficeHolidayResource;
 use App\Models\OfficeHoliday;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Role;
 
 class NoSnacksDayController extends Controller
 {
@@ -54,7 +55,7 @@ class NoSnacksDayController extends Controller
             }
 
             // Get user's group
-            $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
+            $groupMember = $user->groupMembers()->where('role_id', Role::SNACK_MANAGER)->first();
             if (!$groupMember) {
                 return apiResponse(
                     false,
@@ -107,7 +108,7 @@ class NoSnacksDayController extends Controller
             }
 
             // Get user's group
-            $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
+            $groupMember = $user->groupMembers()->where('role_id', Role::SNACK_MANAGER)->first();
             if (!$groupMember) {
                 return apiResponse(
                     false,
@@ -166,7 +167,7 @@ class NoSnacksDayController extends Controller
             }
 
             // Get user's group
-            $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
+            $groupMember = $user->groupMembers()->where('role_id', Role::SNACK_MANAGER)->first();
             if (!$groupMember) {
                 return apiResponse(
                     false,
@@ -245,7 +246,7 @@ class NoSnacksDayController extends Controller
             }
 
             // Get user's group
-            $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
+            $groupMember = $user->groupMembers()->where('role_id', Role::SNACK_MANAGER)->first();
             if (!$groupMember) {
                 return apiResponse(
                     false,
