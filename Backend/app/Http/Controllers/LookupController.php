@@ -41,8 +41,8 @@ class LookupController extends Controller
     {
         $user = Auth::user();
 
-        // Get permissions
-        $permissions = Permission::with('roles')->get();
+        // Get permissions and transform to nested structure
+        $permissionsData = $this->getPermissionsStructure();
 
         // Get working days
         $current = $this->workingDayService->getCurrent();
@@ -65,12 +65,45 @@ class LookupController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'permissions' => PermissionResource::collection($permissions),
+                'permissions' => $permissionsData,
                 'working_days' => $workingDays,
                 'holidays' => OfficeHolidayResource::collection($holidays),
                 'payment_methods' => PaymentMethodResource::collection($paymentMethods),
                 'categories' => CategoryResource::collection($categories)
             ]
         ]);
+    }
+
+    /**
+     * Transform permissions into nested structure grouped by resource and module
+     */
+    private function getPermissionsStructure()
+    {
+        $permissions = Permission::all();
+
+        $structure = [];
+
+        foreach ($permissions as $permission) {
+            $module = $permission->module;
+            $resource = $permission->resource;
+            $action = $permission->action;
+
+            // Initialize resource if not exists
+            if (!isset($structure[$resource])) {
+                $structure[$resource] = [];
+            }
+
+            // Initialize module if not exists
+            if (!isset($structure[$resource][$module])) {
+                $structure[$resource][$module] = [];
+            }
+
+            // Add action if not already in array
+            if (!in_array($action, $structure[$resource][$module])) {
+                $structure[$resource][$module][] = $action;
+            }
+        }
+
+        return $structure;
     }
 }
