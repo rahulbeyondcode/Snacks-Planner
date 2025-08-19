@@ -67,7 +67,7 @@ class LookupController extends Controller
             'data' => [
                 'permissions' => PermissionResource::collection($permissions),
                 'working_days' => $workingDays,
-                'office_holidays' => OfficeHolidayResource::collection($holidays),
+                'holidays' => OfficeHolidayResource::collection($holidays),
                 'payment_methods' => PaymentMethodResource::collection($paymentMethods),
                 'categories' => CategoryResource::collection($categories)
             ]
