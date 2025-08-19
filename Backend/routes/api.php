@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MoneyPoolController;
 use App\Http\Controllers\MoneyPoolSettingsController;
+use App\Http\Controllers\SubGroupController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -64,6 +65,9 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
+
+        // Lookup API - accessible to all authenticated users
+        Route::get('/lookup', [\App\Http\Controllers\LookupController::class, 'index']);
 
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
@@ -160,6 +164,13 @@ Route::prefix('v1')->group(function () {
             // Money Pool Blocks
             Route::post('/money-pool-blocks', [MoneyPoolController::class, 'block']);
             Route::delete('/money-pool-blocks/{blockId}', [MoneyPoolController::class, 'deleteBlock']);
+
+            // Sub Group management with permissions
+            Route::get('/sub-groups', [SubGroupController::class, 'index']);
+            Route::get('/sub-groups/{id}', [SubGroupController::class, 'show']);
+            Route::post('/sub-groups', [SubGroupController::class, 'store']);
+            Route::put('/sub-groups/{id}', [SubGroupController::class, 'update']);
+            Route::delete('/sub-groups/{id}', [SubGroupController::class, 'destroy']);
         });
 
         // Operations Staff routes
@@ -199,7 +210,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'update']);
             Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
             Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
-            Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);            
+            Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);
             // Snack plan detail access
             Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
             Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);

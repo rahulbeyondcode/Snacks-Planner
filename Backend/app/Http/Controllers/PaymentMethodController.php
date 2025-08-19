@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Repositories\PaymentMethodRepository;
 use App\Http\Requests\StorePaymentMethodRequest;
 use App\Http\Requests\UpdatePaymentMethodRequest;
+use App\Http\Resources\PaymentMethodResource;
 use Illuminate\Http\Request;
 
 class PaymentMethodController extends Controller
@@ -17,100 +18,55 @@ class PaymentMethodController extends Controller
 
     public function index()
     {
-        try {
-            $paymentMethods = $this->repo->all();
-            return apiResponse(
-                true,
-                'Payment methods retrieved successfully',
-                $paymentMethods,
-                200
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to retrieve payment methods: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
+        $paymentMethods = $this->repo->all();
+        return response()->json([
+            'success' => true,
+            'data' => PaymentMethodResource::collection($paymentMethods)
+        ]);
     }
 
     public function store(StorePaymentMethodRequest $request)
     {
-        try {
-            $method = $this->repo->create($request->validated());
-            $all = $this->repo->all();
-            return apiResponse(
-                true,
-                'Payment method added successfully',
-                $all,
-                201
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to create payment method: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
+        $paymentMethod = $this->repo->create($request->validated());
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment method created successfully',
+            'data' => new PaymentMethodResource($paymentMethod)
+        ], 201);
     }
 
     public function update(UpdatePaymentMethodRequest $request, $id)
     {
-        try {
-            $method = $this->repo->update($id, $request->validated());
-            if (!$method) {
-                return apiResponse(
-                    false,
-                    'Payment method not found',
-                    [],
-                    404
-                );
-            }
-            $all = $this->repo->all();
-            return apiResponse(
-                true,
-                'Payment method updated successfully',
-                $all,
-                200
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to update payment method: ' . $e->getMessage(),
-                [],
-                500
-            );
+        $paymentMethod = $this->repo->update($id, $request->validated());
+        if (!$paymentMethod) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment method not found',
+                'data' => []
+            ], 404);
         }
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment method updated successfully',
+            'data' => new PaymentMethodResource($paymentMethod)
+        ]);
     }
 
     public function destroy($id)
     {
-        try {
-            $deleted = $this->repo->delete($id);
-            if (!$deleted) {
-                return apiResponse(
-                    false,
-                    'Payment method not found',
-                    [],
-                    404
-                );
-            }
-            $all = $this->repo->all();
-            return apiResponse(
-                true,
-                'Payment method deleted successfully',
-                $all,
-                200
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to delete payment method: ' . $e->getMessage(),
-                [],
-                500
-            );
+        $paymentMethod = $this->repo->find($id);
+        if (!$paymentMethod) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment method not found',
+                'data' => []
+            ], 404);
         }
+        $this->repo->delete($id);
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment method deleted successfully',
+            'data' => []
+        ]);
     }
 }
