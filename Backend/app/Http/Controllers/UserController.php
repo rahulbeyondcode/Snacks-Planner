@@ -96,7 +96,9 @@ class UserController extends Controller
     {
         try {
             $validated = $request->validated();
-            $validated['password'] = bcrypt($validated['password']);
+            // Use env USER_PASSWORD or default to 'password'
+            $defaultPassword = env('USER_PASSWORD', 'password');
+            $validated['password'] = bcrypt($defaultPassword);
             $validated['role_id'] = 4; // Always assign Employee role
             $validated['preference'] = $validated['preference'] ?? 'all_snacks'; // Default to 'all_snacks' if not provided
 
@@ -121,9 +123,9 @@ class UserController extends Controller
     {
         try {
             $validated = $request->validated();
-            if (isset($validated['password'])) {
-                $validated['password'] = bcrypt($validated['password']);
-            }
+            // Always set password using env USER_PASSWORD or default to 'password'
+            $defaultPassword = env('USER_PASSWORD', 'password');
+            $validated['password'] = bcrypt($defaultPassword);
 
             $updatedUser = $this->userService->updateUser($id, $validated);
 
