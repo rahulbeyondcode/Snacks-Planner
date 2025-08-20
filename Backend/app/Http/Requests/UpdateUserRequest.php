@@ -18,8 +18,6 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $userId . ',user_id',
-            'password' => 'nullable|string|min:8',
-
         ];
     }
 }
