@@ -11,32 +11,49 @@ use App\Http\Resources\ShopResource;
 
 class ShopController extends Controller
 {
+    /**
+     * Get all active shops with payment methods
+     */
+    private function getAllActiveShops()
+    {
+        return Shop::whereNull('deleted_at')
+            ->with('paymentMethods')
+            ->get();
+    }
+
     // List all shops
     public function index(Request $request)
     {
-        $query = Shop::query();
+        $shops = $this->getAllActiveShops();
 
-        // Always include payment methods
-        $query->with('paymentMethods');
-
-        $shops = $query->get();
-        return ShopResource::collection($shops);
+        return response()->json([
+            'success' => true,
+            'message' => 'Shops retrieved successfully',
+            'data' => ShopResource::collection($shops)
+        ]);
     }
 
     // Show a single shop
     public function show(Request $request, $id)
     {
-        $query = Shop::query();
-
-        // Always include payment methods
-        $query->with('paymentMethods');
-
-        $shop = $query->find($id);
+        $shop = Shop::whereNull('deleted_at')->find($id);
 
         if (!$shop) {
-            return response()->notFound(__('Shop not found'));
+            return response()->json([
+                'success' => false,
+                'message' => 'Shop not found',
+                'data' => null
+            ], 404);
         }
-        return new ShopResource($shop);
+
+        // Get all active shops for response
+        $shops = $this->getAllActiveShops();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Shop retrieved successfully',
+            'data' => ShopResource::collection($shops)
+        ]);
     }
 
     // Create a shop (admin only)
@@ -49,18 +66,26 @@ class ShopController extends Controller
             $this->attachPaymentMethods($shop, $request->input('payment_methods'));
         }
 
-        // Load the shop with payment methods for response
-        $shop->load('paymentMethods');
+        // Get all active shops for response (including the newly created one)
+        $shops = $this->getAllActiveShops();
 
-        return (new ShopResource($shop))->response()->setStatusCode(201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Shop created successfully',
+            'data' => ShopResource::collection($shops)
+        ], 201);
     }
 
     // Update a shop (admin only)
     public function update(UpdateShopRequest $request, $id)
     {
-        $shop = Shop::find($id);
+        $shop = Shop::whereNull('deleted_at')->find($id);
         if (!$shop) {
-            return response()->notFound(__('Shop not found'));
+            return response()->json([
+                'success' => false,
+                'message' => 'Shop not found',
+                'data' => null
+            ], 404);
         }
 
         $shop->update($request->validated());
@@ -70,25 +95,41 @@ class ShopController extends Controller
             $this->syncPaymentMethods($shop, $request->input('payment_methods'));
         }
 
-        // Load the shop with payment methods for response
-        $shop->load('paymentMethods');
+        // Get all active shops for response (including the updated one)
+        $shops = $this->getAllActiveShops();
 
-        return (new ShopResource($shop))->response()->setStatusCode(200);
+        return response()->json([
+            'success' => true,
+            'message' => 'Shop updated successfully',
+            'data' => ShopResource::collection($shops)
+        ]);
     }
 
     // Delete a shop (admin only)
     public function destroy($id)
     {
-        $shop = Shop::find($id);
+        $shop = Shop::whereNull('deleted_at')->find($id);
         if (!$shop) {
-            return response()->notFound(__('Shop not found'));
+            return response()->json([
+                'success' => false,
+                'message' => 'Shop not found',
+                'data' => null
+            ], 404);
         }
 
         // Delete related payment methods before deleting the shop
         $shop->paymentMethods()->delete();
 
         $shop->delete();
-        return response()->noContent();
+
+        // Get remaining active shops after deletion
+        $shops = $this->getAllActiveShops();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Shop deleted successfully',
+            'data' => ShopResource::collection($shops)
+        ]);
     }
 
     /**
