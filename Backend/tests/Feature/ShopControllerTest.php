@@ -90,6 +90,59 @@ class ShopControllerTest extends TestCase
         $this->assertDatabaseHas('shops', $shopData);
     }
 
+    public function test_store_creates_shop_with_payment_methods()
+    {
+        // Arrange
+        $paymentMethods = \App\Models\PaymentMethod::factory()->count(2)->create();
+        
+        $shopData = [
+            'name' => 'New Shop with Payment Methods',
+            'address' => 'New Address',
+            'payment_methods' => [
+                [
+                    'payment_method_id' => $paymentMethods[0]->payment_method_id,
+                    'is_active' => true,
+                    'additional_details' => ['merchant_id' => 'MERCH001']
+                ],
+                [
+                    'payment_method_id' => $paymentMethods[1]->payment_method_id,
+                    'is_active' => false,
+                    'additional_details' => null
+                ]
+            ]
+        ];
+
+        // Act & Assert
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/v1/shops', $shopData);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.name', 'New Shop with Payment Methods');
+
+        // Verify shop was created in database
+        $this->assertDatabaseHas('shops', [
+            'name' => 'New Shop with Payment Methods',
+            'address' => 'New Address'
+        ]);
+
+        // Verify payment methods were attached
+        $shop = Shop::where('name', 'New Shop with Payment Methods')->first();
+        $this->assertEquals(2, $shop->paymentMethods()->count());
+        
+        // Verify pivot table data
+        $this->assertDatabaseHas('shop_payment_methods', [
+            'shop_id' => $shop->shop_id,
+            'payment_method_id' => $paymentMethods[0]->payment_method_id,
+            'is_active' => true
+        ]);
+        
+        $this->assertDatabaseHas('shop_payment_methods', [
+            'shop_id' => $shop->shop_id,
+            'payment_method_id' => $paymentMethods[1]->payment_method_id,
+            'is_active' => false
+        ]);
+    }
+
     public function test_store_validates_required_fields()
     {
         // Act & Assert
@@ -142,6 +195,66 @@ class ShopControllerTest extends TestCase
             'shop_id' => $shop->shop_id,
             'name' => 'Updated Name',
             'address' => 'Updated Address'
+        ]);
+    }
+
+    public function test_update_syncs_payment_methods()
+    {
+        // Arrange
+        $shop = Shop::factory()->create();
+        $paymentMethods = \App\Models\PaymentMethod::factory()->count(3)->create();
+        
+        // Initially attach 2 payment methods
+        $shop->paymentMethods()->attach([
+            $paymentMethods[0]->payment_method_id => ['is_active' => true],
+            $paymentMethods[1]->payment_method_id => ['is_active' => true]
+        ]);
+
+        $updateData = [
+            'name' => 'Updated Shop',
+            'payment_methods' => [
+                [
+                    'payment_method_id' => $paymentMethods[1]->payment_method_id,
+                    'is_active' => false,
+                    'additional_details' => ['merchant_id' => 'MERCH002']
+                ],
+                [
+                    'payment_method_id' => $paymentMethods[2]->payment_method_id,
+                    'is_active' => true,
+                    'additional_details' => null
+                ]
+            ]
+        ];
+
+        // Act & Assert
+        $response = $this->actingAs($this->user)
+            ->putJson("/api/v1/shops/{$shop->shop_id}", $updateData);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.name', 'Updated Shop');
+
+        // Verify payment methods were synced (old ones removed, new ones added)
+        $shop->refresh();
+        $this->assertEquals(2, $shop->paymentMethods()->count());
+        
+        // First method should be removed
+        $this->assertDatabaseMissing('shop_payment_methods', [
+            'shop_id' => $shop->shop_id,
+            'payment_method_id' => $paymentMethods[0]->payment_method_id
+        ]);
+        
+        // Second method should be updated
+        $this->assertDatabaseHas('shop_payment_methods', [
+            'shop_id' => $shop->shop_id,
+            'payment_method_id' => $paymentMethods[1]->payment_method_id,
+            'is_active' => false
+        ]);
+        
+        // Third method should be added
+        $this->assertDatabaseHas('shop_payment_methods', [
+            'shop_id' => $shop->shop_id,
+            'payment_method_id' => $paymentMethods[2]->payment_method_id,
+            'is_active' => true
         ]);
     }
 
