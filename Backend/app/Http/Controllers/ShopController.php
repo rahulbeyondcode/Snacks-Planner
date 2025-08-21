@@ -15,10 +15,10 @@ class ShopController extends Controller
     public function index(Request $request)
     {
         $query = Shop::query();
-        
+
         // Always include payment methods
         $query->with('paymentMethods');
-        
+
         $shops = $query->get();
         return ShopResource::collection($shops);
     }
@@ -27,10 +27,10 @@ class ShopController extends Controller
     public function show(Request $request, $id)
     {
         $query = Shop::query();
-        
+
         // Always include payment methods
         $query->with('paymentMethods');
-        
+
         $shop = $query->find($id);
 
         if (!$shop) {
@@ -43,15 +43,15 @@ class ShopController extends Controller
     public function store(StoreShopRequest $request)
     {
         $shop = Shop::create($request->validated());
-        
+
         // Handle payment methods if provided
         if ($request->has('payment_methods')) {
             $this->attachPaymentMethods($shop, $request->input('payment_methods'));
         }
-        
+
         // Load the shop with payment methods for response
         $shop->load('paymentMethods');
-        
+
         return (new ShopResource($shop))->response()->setStatusCode(201);
     }
 
@@ -62,17 +62,17 @@ class ShopController extends Controller
         if (!$shop) {
             return response()->notFound(__('Shop not found'));
         }
-        
+
         $shop->update($request->validated());
-        
+
         // Handle payment methods if provided
         if ($request->has('payment_methods')) {
             $this->syncPaymentMethods($shop, $request->input('payment_methods'));
         }
-        
+
         // Load the shop with payment methods for response
         $shop->load('paymentMethods');
-        
+
         return (new ShopResource($shop))->response()->setStatusCode(200);
     }
 
@@ -83,6 +83,10 @@ class ShopController extends Controller
         if (!$shop) {
             return response()->notFound(__('Shop not found'));
         }
+
+        // Delete related payment methods before deleting the shop
+        $shop->paymentMethods()->delete();
+
         $shop->delete();
         return response()->noContent();
     }
@@ -107,11 +111,8 @@ class ShopController extends Controller
     {
         // Delete existing payment methods
         $shop->paymentMethods()->delete();
-        
+
         // Add new payment methods
         $this->attachPaymentMethods($shop, $paymentMethods);
     }
 }
-
-
-
