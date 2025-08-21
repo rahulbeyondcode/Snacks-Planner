@@ -9,30 +9,30 @@ class UserRepository implements UserRepositoryInterface
     public function all(array $filters = [])
     {
         $query = User::query();
-        // Exclude users with the 'account_manager' role
-        $query->whereHas('role', function ($q) {
-            $q->where('name', '!=', 'account_manager');
-        });
+
         if (!empty($filters['role_id'])) {
             $query->where('role_id', $filters['role_id']);
         }
+
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('name', 'like', '%' . $filters['search'] . '%')
                     ->orWhere('email', 'like', '%' . $filters['search'] . '%');
             });
         }
-        return $query->orderBy('name')->get();
+
+        if (!empty($filters['exclude_roles'])) {
+            $query->whereHas('role', function ($q) use ($filters) {
+                $q->whereNotIn('name', $filters['exclude_roles']);
+            });
+        }
+
+        return $query->with('role')->orderBy('user_id')->get();
     }
 
     public function find(int $id)
     {
-        $user = User::with('role')->find($id);
-        // Exclude account_manager from being found
-        if ($user && $user->role && $user->role->name === 'account_manager') {
-            return null;
-        }
-        return $user;
+        return User::with('role')->find($id);
     }
 
     public function create(array $data)
@@ -42,25 +42,17 @@ class UserRepository implements UserRepositoryInterface
 
     public function update(int $id, array $data)
     {
-        $user = User::with('role')->find($id);
-        if ($user && $user->role && $user->role->name === 'account_manager') {
-            // Prevent update for account_manager role
-            return null;
-        }
+        $user = User::find($id);
         if ($user) {
             $user->update($data);
-            return $user->fresh();
+            return $user->fresh('role');
         }
         return null;
     }
 
     public function delete(int $id)
     {
-        $user = User::with('role')->find($id);
-        if ($user && $user->role && $user->role->name === 'account_manager') {
-            // Prevent delete for account_manager role
-            return false;
-        }
+        $user = User::find($id);
         if ($user) {
             $user->delete();
             return true;
@@ -70,15 +62,11 @@ class UserRepository implements UserRepositoryInterface
 
     public function assignRole(int $userId, int $roleId)
     {
-        $user = User::with('role')->find($userId);
-        if ($user && $user->role && $user->role->name === 'account_manager') {
-            // Prevent role assignment for account_manager
-            return null;
-        }
+        $user = User::find($userId);
         if ($user) {
             $user->role_id = $roleId;
             $user->save();
-            return $user->fresh();
+            return $user->fresh('role');
         }
         return null;
     }

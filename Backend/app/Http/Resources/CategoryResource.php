@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PaymentMethodResource extends JsonResource
+class CategoryResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,7 +16,7 @@ class PaymentMethodResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'method' => $this->method,
+            'name' => $this->name,
         ];
     }
 }

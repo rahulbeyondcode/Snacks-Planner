@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "features/auth";
 import Dashboard from "features/dashboard";
 import EmployeeDirectory from "features/employee-directory";
+import ManageSettings from "features/manage-settings";
 import MoneyPool from "features/money-pool";
 import Notifications from "features/notifications";
 import RoleManagement from "features/role-management";
@@ -21,7 +22,7 @@ export default function AppRoutes() {
         <Route path="employee-directory" element={<EmployeeDirectory />} />
         <Route path="assign-roles" element={<RoleManagement />} />
         <Route path="user-contribution" element={<UserContribution />} />
-        <Route path="manage" element={<UserContribution />} />
+        <Route path="manage" element={<ManageSettings />} />
         <Route path="notifications" element={<Notifications />} />
       </Route>
 

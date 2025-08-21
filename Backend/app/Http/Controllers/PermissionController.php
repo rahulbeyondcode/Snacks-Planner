@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Permission;
 use App\Models\Role;
+use App\Http\Resources\PermissionResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,10 +19,8 @@ class PermissionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Permissions retrieved successfully',
-            'data' => $permissions,
-            'status' => 200
-        ], 200);
+            'data' => PermissionResource::collection($permissions)
+        ]);
     }
 
     /**
@@ -33,10 +32,8 @@ class PermissionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Permissions for module '{$module}' retrieved successfully",
-            'data' => $permissions,
-            'status' => 200
-        ], 200);
+            'data' => PermissionResource::collection($permissions)
+        ]);
     }
 
     /**
@@ -56,8 +53,7 @@ class PermissionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Permission created successfully',
-            'data' => $permission,
-            'status' => 201
+            'data' => new PermissionResource($permission)
         ], 201);
     }
 
@@ -80,9 +76,8 @@ class PermissionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Permission updated successfully',
-            'data' => $permission,
-            'status' => 200
-        ], 200);
+            'data' => new PermissionResource($permission)
+        ]);
     }
 
     /**
@@ -96,9 +91,8 @@ class PermissionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Permission deleted successfully',
-            'data' => null,
-            'status' => 200
-        ], 200);
+            'data' => []
+        ]);
     }
 
     /**
@@ -118,9 +112,11 @@ class PermissionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Permissions assigned to role successfully',
-            'data' => $role->load('permissions'),
-            'status' => 200
-        ], 200);
+            'data' => [
+                'role' => $role,
+                'permissions' => PermissionResource::collection($role->permissions)
+            ]
+        ]);
     }
 
     /**
@@ -132,13 +128,11 @@ class PermissionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Role permissions retrieved successfully',
             'data' => [
                 'role' => $role,
-                'permissions' => $role->permissions,
-            ],
-            'status' => 200
-        ], 200);
+                'permissions' => PermissionResource::collection($role->permissions)
+            ]
+        ]);
     }
 
     /**
@@ -178,8 +172,7 @@ class PermissionController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Bulk permissions created successfully',
-                'data' => null,
-                'status' => 201
+                'data' => []
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -216,14 +209,12 @@ class PermissionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Resource modules retrieved successfully',
             'data' => [
                 'resource_modules' => $resourceModules,
                 'available_actions' => ['create', 'read', 'update', 'delete', 'list'],
                 'available_resources' => array_keys($resourceModules),
-            ],
-            'status' => 200
-        ], 200);
+            ]
+        ]);
     }
 
     /**
@@ -241,9 +232,7 @@ class PermissionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Permissions grouped by resource retrieved successfully',
-            'data' => $groupedPermissions,
-            'status' => 200
-        ], 200);
+            'data' => $groupedPermissions
+        ]);
     }
 }
