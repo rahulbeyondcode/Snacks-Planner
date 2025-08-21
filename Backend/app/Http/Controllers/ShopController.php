@@ -28,7 +28,6 @@ class ShopController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Shops retrieved successfully',
             'data' => ShopResource::collection($shops)
         ]);
     }
@@ -51,7 +50,6 @@ class ShopController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Shop retrieved successfully',
             'data' => ShopResource::collection($shops)
         ]);
     }
