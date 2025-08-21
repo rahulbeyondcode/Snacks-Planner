@@ -1,36 +1,23 @@
 import { create } from "zustand";
 
-import type {
-  BlockedFundType,
-  MoneyPoolType,
-} from "features/money-pool/helpers/money-pool-types";
+import type { BlockedFundType } from "features/money-pool/helpers/money-pool-types";
 
+// This store is now primarily for blocked funds management
+// Money pool data is handled by React Query
 type MoneyPoolState = {
-  pool: MoneyPoolType;
   blockedFunds: BlockedFundType[];
-  setPool: (pool: MoneyPoolType) => void;
   addBlockedFund: (fund: BlockedFundType) => void;
+  removeBlockedFund: (id: string) => void;
+  setBlockedFunds: (funds: BlockedFundType[]) => void;
 };
 
 export const useMoneyPoolStore = create<MoneyPoolState>((set) => ({
-  pool: {
-    amountCollectedPerPerson: 200,
-    companyContributionMultiplier: 2,
-    paidEmployees: 70,
-    totalEmployees: 85,
-    totalCollectedFromEmployees: 14000,
-    companyContribution: 28000,
-    finalPoolAmount: 42000,
-  },
-  blockedFunds: [
-    {
-      id: "1",
-      name: "Grill fund",
-      date: "2025-07-30",
-      amount: "11000",
-    },
-  ],
-  setPool: (pool) => set({ pool }),
+  blockedFunds: [],
   addBlockedFund: (fund) =>
     set((state) => ({ blockedFunds: [...state.blockedFunds, fund] })),
+  removeBlockedFund: (id) =>
+    set((state) => ({
+      blockedFunds: state.blockedFunds.filter((fund) => fund.id !== id),
+    })),
+  setBlockedFunds: (funds) => set({ blockedFunds: funds }),
 }));

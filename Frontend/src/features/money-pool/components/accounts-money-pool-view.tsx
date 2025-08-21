@@ -1,35 +1,70 @@
-import React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useEffect } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
-import { useMoneyPoolStore } from "features/money-pool/store/money-pool-store";
 import InputField from "shared/components/form-components/input-field";
 import Button from "shared/components/save-button";
 
+import { getMoneyPool, updateMoneyPool } from "features/money-pool/api";
+import type { MoneyPoolFormType } from "features/money-pool/helpers/money-pool-types";
+import {
+  GET_MONEY_POOL_RETRY,
+  GET_MONEY_POOL_STALE_TIME,
+} from "shared/helpers/constants";
+
 const multipliers = [0, 1, 2, 3, 4];
 
-type FormValues = {
-  amountCollectedPerPerson: number;
-  companyContributionMultiplier: number;
-  totalEmployees?: number;
-};
-
 const AccountsMoneyPoolView: React.FC = () => {
-  const { pool, setPool } = useMoneyPoolStore();
-  const methods = useForm<FormValues>({
+  const queryClient = useQueryClient();
+
+  const { data: moneyPoolData, isLoading } = useQuery({
+    queryKey: ["money-pool"],
+    queryFn: getMoneyPool,
+    staleTime: GET_MONEY_POOL_STALE_TIME,
+    retry: GET_MONEY_POOL_RETRY,
+  });
+
+  const methods = useForm<MoneyPoolFormType>({
     defaultValues: {
-      amountCollectedPerPerson: pool.amountCollectedPerPerson,
-      companyContributionMultiplier: pool.companyContributionMultiplier,
-      totalEmployees: pool.totalEmployees,
+      amountCollectedPerPerson: 0,
+      companyContributionMultiplier: 0,
+      totalEmployees: 0,
     },
   });
-  const { register, handleSubmit, control } = methods;
+  const { register, handleSubmit, control, reset } = methods;
 
-  const watchedAmount = useWatch({ control, name: "amountCollectedPerPerson" });
-  const watchedMultiplier = useWatch({
-    control,
-    name: "companyContributionMultiplier",
+  // Update form when data loads
+  useEffect(() => {
+    if (moneyPoolData) {
+      const formData = {
+        amountCollectedPerPerson: moneyPoolData.amount_per_person,
+        companyContributionMultiplier:
+          moneyPoolData.company_contribution_multiplier,
+        totalEmployees: moneyPoolData.number_of_paid_people,
+      };
+      reset(formData);
+    }
+  }, [moneyPoolData, reset]);
+
+  // Mutation for updating money pool
+  const updateMoneyPoolMutation = useMutation({
+    mutationFn: updateMoneyPool,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["money-pool"] });
+    },
+    onError: (error) => {
+      console.error("Failed to update money pool:", error);
+    },
   });
-  const watchedTotalEmployees = useWatch({ control, name: "totalEmployees" });
+
+  const [watchedAmount, watchedMultiplier, watchedTotalEmployees] = useWatch({
+    control,
+    name: [
+      "amountCollectedPerPerson",
+      "companyContributionMultiplier",
+      "totalEmployees",
+    ],
+  });
 
   const employeesTotal = Number(
     (watchedTotalEmployees || 0) * (watchedAmount || 0)
@@ -37,39 +72,27 @@ const AccountsMoneyPoolView: React.FC = () => {
   const companyTotal = Number(employeesTotal * (watchedMultiplier || 0));
   const computedFinal = employeesTotal + companyTotal;
 
-  const onSubmit = (data: FormValues) => {
-    const amount = Number(data.amountCollectedPerPerson ?? 0);
-    const totalEmployees = Number(data.totalEmployees ?? 0);
-    const multiplier = Number(data.companyContributionMultiplier ?? 0);
-
-    setPool({
-      ...pool,
-      amountCollectedPerPerson: amount,
-      companyContributionMultiplier: multiplier,
-      totalEmployees,
-      totalCollectedFromEmployees:
-        typeof totalEmployees === "number" && typeof amount === "number"
-          ? totalEmployees * amount
-          : pool.totalCollectedFromEmployees,
-      companyContribution:
-        typeof multiplier === "number"
-          ? (typeof totalEmployees === "number" && typeof amount === "number"
-              ? totalEmployees * amount
-              : pool.totalCollectedFromEmployees) * multiplier
-          : pool.companyContribution,
-      finalPoolAmount: (() => {
-        const employeesTotal =
-          typeof totalEmployees === "number" && typeof amount === "number"
-            ? totalEmployees * amount
-            : pool.totalCollectedFromEmployees;
-        const companyTotal =
-          typeof multiplier === "number"
-            ? employeesTotal * multiplier
-            : pool.companyContribution;
-        return employeesTotal + companyTotal;
-      })(),
-    });
+  const onSubmit = (data: MoneyPoolFormType) => {
+    updateMoneyPoolMutation.mutate(data);
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full mx-auto mt-6 px-2 sm:px-4">
+        <div className="mb-5 sm:mb-6 flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-black">
+            Money Pool Setup
+          </h2>
+          <span className="px-2 py-1 rounded-md bg-yellow-300 text-black border-2 border-black text-[10px] font-bold tracking-wide">
+            Accounts
+          </span>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-lg">Loading money pool data...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full mx-auto mt-6 px-2 sm:px-4">
@@ -187,7 +210,12 @@ const AccountsMoneyPoolView: React.FC = () => {
           </div>
 
           <div className="flex justify-end mt-5">
-            <Button type="submit">Save</Button>
+            <Button
+              type="submit"
+              disabled={updateMoneyPoolMutation.isPending || isLoading}
+            >
+              {updateMoneyPoolMutation.isPending ? "Saving..." : "Save"}
+            </Button>
           </div>
         </form>
       </FormProvider>

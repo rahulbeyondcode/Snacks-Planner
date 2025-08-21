@@ -1,11 +1,17 @@
 export type MoneyPoolType = {
+  amount_per_person: number;
+  total_amount_collected: number;
+  company_contribution: number;
+  company_contribution_multiplier: number;
+  number_of_paid_people: number;
+  blocked_funds?: BlockedFundType[];
+};
+
+// For frontend form handling - maps to API structure
+export type MoneyPoolFormType = {
   amountCollectedPerPerson: number;
-  companyContributionMultiplier: number; // e.g. 2 for 2x
-  paidEmployees: number;
+  companyContributionMultiplier: number;
   totalEmployees?: number;
-  totalCollectedFromEmployees: number;
-  companyContribution: number;
-  finalPoolAmount: number;
 };
 
 export type BlockedFundType = {
