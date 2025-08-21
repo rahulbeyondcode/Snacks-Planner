@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             GroupMemberSeeder::class,
             OfficeHolidaySeeder::class,
             PermissionSeeder::class,
+            PaymentMethodSeeder::class,
             ShopSeeder::class,
         ]);
     }

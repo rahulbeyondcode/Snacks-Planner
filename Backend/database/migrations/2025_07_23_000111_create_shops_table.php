@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->string('name');
             $table->text('address')->nullable();
             $table->string('contact_number')->nullable();
+            $table->string('notes')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\OfficeHoliday;
 use App\Repositories\OfficeHolidayRepositoryInterface;
+
 
 class OfficeHolidayService implements OfficeHolidayServiceInterface
 {
@@ -43,14 +45,14 @@ class OfficeHolidayService implements OfficeHolidayServiceInterface
 
     public function getOfficeHolidays()
     {
-        return $this->officeHolidayRepository->getByType(\App\Models\OfficeHoliday::TYPE_OFFICE_HOLIDAY);
+        return $this->officeHolidayRepository->getByType(OfficeHoliday::TYPE_OFFICE_HOLIDAY);
     }
 
     public function getNoSnacksDaysForGroup(int $groupId, ?int $year = null, ?int $month = null)
     {
         if ($year && $month) {
             return $this->officeHolidayRepository->getByTypeAndGroupForMonth(
-                \App\Models\OfficeHoliday::TYPE_NO_SNACKS_DAY,
+                OfficeHoliday::TYPE_NO_SNACKS_DAY,
                 $groupId,
                 $year,
                 $month
@@ -58,7 +60,7 @@ class OfficeHolidayService implements OfficeHolidayServiceInterface
         }
 
         return $this->officeHolidayRepository->getByTypeAndGroup(
-            \App\Models\OfficeHoliday::TYPE_NO_SNACKS_DAY,
+            OfficeHoliday::TYPE_NO_SNACKS_DAY,
             $groupId
         );
     }
