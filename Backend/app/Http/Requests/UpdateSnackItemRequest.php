@@ -13,7 +13,7 @@ class UpdateSnackItemRequest extends FormRequest
     }
 
     public function rules()
-    {
+    {        
         return [
             'name' => [
                 'sometimes',

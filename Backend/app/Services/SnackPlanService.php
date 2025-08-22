@@ -55,7 +55,7 @@ class SnackPlanService implements SnackPlanServiceInterface
             $item['snack_plan_id'] = $planId;
             $details[] = $this->snackPlanDetailRepository->create($item);
         }
-        $snackPlan->details = $details;
+        $snackPlan->details = $details;       
         return $snackPlan;
     }
 

@@ -8,7 +8,7 @@ class GroupWeeklyOperationRepository implements GroupWeeklyOperationRepositoryIn
 {
     public function allWithRelations(array $filters = [])
     {
-        $query = \App\Models\GroupWeeklyOperation::with(['group', 'employee', 'assignedBy', 'details']);
+        $query = GroupWeeklyOperation::with(['group', 'employee', 'assignedBy', 'details']);
         if (isset($filters['group_id'])) {
             $query->where('group_id', $filters['group_id']);
         }

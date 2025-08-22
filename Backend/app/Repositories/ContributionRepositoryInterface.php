@@ -23,4 +23,5 @@ interface ContributionRepositoryInterface
     public function update(int $id, array $data);
     public function delete(int $id);
     public function getTotalContributions();
+    public function getCurrentMonthCounts();
 }

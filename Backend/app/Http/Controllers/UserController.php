@@ -104,10 +104,13 @@ class UserController extends Controller
 
             $created = $this->userService->createUser($validated);
 
+            // Get all active users for the response
+            $allUsers = $this->userService->listUsers();
+
             return response()->json([
                 'success' => true,
                 'message' => 'User created successfully',
-                'data' => new UserResource($created)
+                'data' => UserResource::collection($allUsers)
             ], 201);
         } catch (UnauthorizedActionException $e) {
             return response()->json([
@@ -129,10 +132,13 @@ class UserController extends Controller
 
             $updatedUser = $this->userService->updateUser($id, $validated);
 
+            // Get all active users for the response
+            $allUsers = $this->userService->listUsers();
+
             return response()->json([
                 'success' => true,
                 'message' => 'User updated successfully',
-                'data' => new UserResource($updatedUser)
+                'data' => UserResource::collection($allUsers)
             ]);
         } catch (UserNotFoundException $e) {
             return response()->json([
@@ -155,10 +161,13 @@ class UserController extends Controller
         try {
             $deleted = $this->userService->deleteUser($id);
 
+            // Get all active users for the response
+            $allUsers = $this->userService->listUsers();
+
             return response()->json([
                 'success' => true,
                 'message' => 'User deleted successfully',
-                'data' => []
+                'data' => UserResource::collection($allUsers)
             ]);
         } catch (UserNotFoundException $e) {
             return response()->json([
