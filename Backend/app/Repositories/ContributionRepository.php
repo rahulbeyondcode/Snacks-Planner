@@ -123,7 +123,7 @@ class ContributionRepository implements ContributionRepositoryInterface
             $query->where('contributions.status', $filters['status']);
         }
         $perPage = $filters['per_page'] ?? 15;
-        return $query->orderByDesc('contributions.created_at')->paginate($perPage);
+        return $query->orderBy('contributions.user_id')->paginate($perPage);
     }
     public function create(array $data)
     {
@@ -137,7 +137,7 @@ class ContributionRepository implements ContributionRepositoryInterface
 
     public function findByUser(int $userId)
     {
-        return Contribution::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
+        return Contribution::where('user_id', $userId)->orderBy('user_id')->get();
     }
 
     public function update(int $id, array $data)
@@ -180,7 +180,7 @@ class ContributionRepository implements ContributionRepositoryInterface
         )
             ->join('users', 'contributions.user_id', '=', 'users.user_id')
             ->groupBy('contributions.user_id', 'users.name')
-            ->orderBy('users.name')
+            ->orderBy('contributions.user_id')
             ->get()
             ->toArray();
 
@@ -189,6 +189,38 @@ class ContributionRepository implements ContributionRepositoryInterface
             'total_unpaid' => $totalUnpaid,
             'total_all' => $totalAll,
             'by_user' => $byUser,
+        ];
+    }
+
+    public function getCurrentMonthCounts()
+    {
+        // Get current month date range
+        $now = now();
+        $monthStart = $now->copy()->startOfMonth()->toDateString();
+        $monthEnd = $now->copy()->endOfMonth()->toDateString();
+
+        // Get counts for current month, excluding account_manager role
+        $paidCount = Contribution::query()
+            ->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->whereDate('contributions.created_at', '>=', $monthStart)
+            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->where('roles.name', '!=', 'account_manager')
+            ->where('contributions.status', 'paid')
+            ->count();
+
+        $unpaidCount = Contribution::query()
+            ->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->whereDate('contributions.created_at', '>=', $monthStart)
+            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->where('roles.name', '!=', 'account_manager')
+            ->where('contributions.status', 'unpaid')
+            ->count();
+
+        return [
+            'paid_contributions' => $paidCount,
+            'unpaid_records' => $unpaidCount,
         ];
     }
 }
