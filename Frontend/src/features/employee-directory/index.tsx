@@ -1,26 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Plus, Trash2 } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
 
 import AddEditEmployeeModal from "features/employee-directory/components/add-edit-employee-modal";
 import DataTable from "shared/components/data-table";
 
 import {
-  addEmployee,
-  deleteEmployee,
-  getEmployees,
-  updateEmployee,
-} from "features/employee-directory/api";
-import {
-  type TableAction,
-  type TableColumn,
-} from "shared/components/data-table";
+  useEmployeeDirectoryStore,
+  type Employee,
+} from "features/employee-directory/store";
+import type { TableAction, TableColumn } from "shared/components/data-table";
 
-export type Employee = {
-  id: number;
-  name: string;
-  email: string;
-};
+import { deleteEmployee, getEmployees } from "features/employee-directory/api";
+import { useModalStore } from "shared/components/modals/store";
+import {
+  GET_EMPLOYEE_LIST_RETRY,
+  GET_EMPLOYEE_LIST_STALE_TIME,
+} from "shared/helpers/constants";
 
 // Table column configuration
 const columns: TableColumn<Employee>[] = [
@@ -40,46 +36,29 @@ const columns: TableColumn<Employee>[] = [
 ];
 
 const EmployeeDirectory: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null
-  );
   const queryClient = useQueryClient();
 
-  const { data: employees, isLoading } = useQuery({
+  const updateModalData = useModalStore((state) => state.updateModalData);
+  const resetModalData = useModalStore((state) => state.resetModalData);
+  const openCreateModal = useEmployeeDirectoryStore(
+    (state) => state.openCreateModal
+  );
+  const openEditModal = useEmployeeDirectoryStore(
+    (state) => state.openEditModal
+  );
+
+  const { data: employees, isLoading } = useQuery<Employee[]>({
     queryKey: ["employees"],
     queryFn: getEmployees,
-    staleTime: 1000 * 60 * 5,
-    retry: 3,
-  });
-
-  const addEmployeeMutation = useMutation({
-    mutationFn: (employee: Omit<Employee, "id">) => addEmployee(employee),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
-      setIsModalOpen(false);
-    },
-    onError: (error) => {
-      console.error("Failed to add employee:", error);
-    },
-  });
-
-  const updateEmployeeMutation = useMutation({
-    mutationFn: (employee: Employee) => updateEmployee(employee),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
-      setIsModalOpen(false);
-    },
-    onError: (error) => {
-      console.error("Failed to update employee:", error);
-    },
+    staleTime: GET_EMPLOYEE_LIST_STALE_TIME,
+    retry: GET_EMPLOYEE_LIST_RETRY,
   });
 
   const deleteEmployeeMutation = useMutation({
     mutationFn: (id: number) => deleteEmployee(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
+      resetModalData("confirmAction");
     },
     onError: (error) => {
       console.error("Failed to delete employee:", error);
@@ -90,39 +69,39 @@ const EmployeeDirectory: React.FC = () => {
   const actions: TableAction<Employee>[] = [
     {
       icon: <Edit />,
-      onClick: (employee: Employee) => handleEdit(employee.id),
+      onClick: (employee: Employee) => openEditModal(employee),
       className: "hover:text-blue-500",
       title: "Edit Employee",
     },
     {
       icon: <Trash2 />,
-      onClick: (employee: Employee) => handleDelete(employee.id),
+      onClick: (employee: Employee) => handleDelete(employee.user_id),
       className: "hover:text-red-500",
       title: "Delete Employee",
     },
   ];
 
-  const handleAdd = (name: string, email: string) => {
-    addEmployeeMutation.mutate({ name, email });
-  };
-
-  const handleEdit = (id: number) => {
-    const employeeToEdit =
-      employees?.find((employee: Employee) => employee.id === id) || null;
-    setSelectedEmployee(employeeToEdit);
-    setModalMode("edit");
-    setIsModalOpen(true);
-  };
-
-  const handleEditSave = (id: number, name: string, email: string) => {
-    updateEmployeeMutation.mutate({ id, name, email });
-  };
-
   const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this employee?")) {
-      deleteEmployeeMutation.mutate(id);
+    const employee = employees?.find((emp) => emp.user_id === id);
+
+    if (employee) {
+      updateModalData("confirmAction", {
+        isVisible: true,
+        extraProps: {
+          title: "Delete Employee",
+          description: `Are you sure you want to delete "${employee.name}"? This action cannot be undone.`,
+          successButtonText: "Delete",
+          cancelButtonText: "Cancel",
+          variant: "danger",
+          onSuccess: () => {
+            deleteEmployeeMutation.mutate(id);
+          },
+        },
+      });
     }
   };
+
+  console.log("Rendered");
 
   return (
     <div className="px-2 py-6 sm:px-4 md:px-6 max-w-7xl w-full mx-auto">
@@ -132,11 +111,7 @@ const EmployeeDirectory: React.FC = () => {
         </h2>
         <button
           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-black bg-yellow-300 text-black font-extrabold shadow-[2px_2px_0_0_#000] hover:bg-yellow-400 cursor-pointer"
-          onClick={() => {
-            setModalMode("add");
-            setSelectedEmployee(null);
-            setIsModalOpen(true);
-          }}
+          onClick={openCreateModal}
         >
           <Plus /> Add Employee
         </button>
@@ -150,17 +125,7 @@ const EmployeeDirectory: React.FC = () => {
         skeletonRowCount={15}
       />
 
-      <AddEditEmployeeModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        employee={selectedEmployee}
-        mode={modalMode}
-        onAdd={handleAdd}
-        onSave={handleEditSave}
-        isLoading={
-          addEmployeeMutation.isPending || updateEmployeeMutation.isPending
-        }
-      />
+      <AddEditEmployeeModal />
     </div>
   );
 };

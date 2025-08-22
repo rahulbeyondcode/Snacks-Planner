@@ -1,31 +1,26 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
+
+import { addEmployee, updateEmployee } from "features/employee-directory/api";
+import {
+  useEmployeeDirectoryStore,
+  type Employee,
+} from "features/employee-directory/store";
+import { toast } from "react-toastify";
 
 type EmployeeFormData = {
   name: string;
   email: string;
 };
 
-type AddEditEmployeeModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  employee?: { id: number; name: string; email: string } | null;
-  mode?: "add" | "edit";
-  onAdd?: (name: string, email: string) => void;
-  onSave?: (id: number, name: string, email: string) => void;
-  isLoading?: boolean;
-};
+const AddEditEmployeeModal: React.FC = () => {
+  const queryClient = useQueryClient();
 
-const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
-  isOpen,
-  onClose,
-  employee,
-  mode = "add",
-  onAdd,
-  onSave,
-  isLoading = false,
-}) => {
-  const isEditMode = mode === "edit" && employee;
+  const { isModalOpen, modalMode, selectedEmployee, closeModal } =
+    useEmployeeDirectoryStore();
+
+  const isEditMode = modalMode === "edit" && selectedEmployee;
 
   const {
     register,
@@ -40,11 +35,39 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
     },
   });
 
+  // Mutations for add and update operations
+  const addEmployeeMutation = useMutation({
+    mutationFn: (employee: Omit<Employee, "user_id">) => addEmployee(employee),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      toast.success("Employee added successfully");
+      closeModal();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to add employee");
+    },
+  });
+
+  const updateEmployeeMutation = useMutation({
+    mutationFn: (employee: Employee) => updateEmployee(employee),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      toast.success("Employee updated successfully");
+      closeModal();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update employee");
+    },
+  });
+
+  const isLoading =
+    addEmployeeMutation.isPending || updateEmployeeMutation.isPending;
+
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode && selectedEmployee) {
       reset({
-        name: employee.name || "",
-        email: employee.email || "",
+        name: selectedEmployee.name || "",
+        email: selectedEmployee.email || "",
       });
     } else {
       reset({
@@ -52,15 +75,22 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
         email: "",
       });
     }
-  }, [employee, isEditMode, isOpen, reset]);
+  }, [selectedEmployee, isEditMode, isModalOpen, reset]);
 
-  if (!isOpen) return null;
+  if (!isModalOpen) return null;
 
   const onSubmit = (data: EmployeeFormData) => {
-    if (isEditMode && onSave && employee) {
-      onSave(employee.id, data.name, data.email);
-    } else if (!isEditMode && onAdd) {
-      onAdd(data.name, data.email);
+    if (isEditMode && selectedEmployee) {
+      updateEmployeeMutation.mutate({
+        user_id: selectedEmployee.user_id,
+        name: data.name,
+        email: data.email,
+      });
+    } else {
+      addEmployeeMutation.mutate({
+        name: data.name,
+        email: data.email,
+      });
     }
   };
 
@@ -114,7 +144,7 @@ const AddEditEmployeeModal: React.FC<AddEditEmployeeModalProps> = ({
           <div className="flex justify-end gap-2 pt-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               className="px-4 py-2 rounded-md border-2 border-black bg-white hover:bg-gray-100 shadow-[2px_2px_0_0_#000] cursor-pointer"
             >
               Cancel

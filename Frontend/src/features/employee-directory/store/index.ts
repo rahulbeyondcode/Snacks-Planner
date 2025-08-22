@@ -1,12 +1,12 @@
 import { create } from "zustand";
 
 export type Employee = {
-  id: number;
+  user_id: number;
   name: string;
   email: string;
 };
 
-type EmployeeDirectoryModalStore = {
+type EmployeeDirectoryStore = {
   isModalOpen: boolean;
   modalMode: "add" | "edit";
   selectedEmployee: Employee | null;
@@ -15,8 +15,8 @@ type EmployeeDirectoryModalStore = {
   closeModal: () => void;
 };
 
-export const useEmployeeDirectoryModalStore =
-  create<EmployeeDirectoryModalStore>((set) => ({
+export const useEmployeeDirectoryStore = create<EmployeeDirectoryStore>(
+  (set) => ({
     isModalOpen: false,
     modalMode: "add",
     selectedEmployee: null,
@@ -40,4 +40,5 @@ export const useEmployeeDirectoryModalStore =
         isModalOpen: false,
         selectedEmployee: null,
       }),
-  }));
+  })
+);

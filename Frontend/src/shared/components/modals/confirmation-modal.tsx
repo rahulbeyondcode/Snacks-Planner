@@ -3,29 +3,32 @@ import React from "react";
 import SpinnerIcon from "assets/components/spinner-icon";
 import Modal from "shared/components/modal";
 
-interface ConfirmationModalProps {
-  isOpen: boolean;
-  title: string;
-  description: string;
-  successButtonText: string;
-  cancelButtonText: string;
-  onSuccess: () => void;
-  onCancel: () => void;
-  isLoading?: boolean;
-  variant?: "default" | "danger";
-}
+import { useModalStore } from "shared/components/modals/store";
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
-  isOpen,
-  title,
-  description,
-  successButtonText,
-  cancelButtonText,
-  onSuccess,
-  onCancel,
-  isLoading = false,
-  variant = "default",
-}) => {
+const ConfirmationModal: React.FC = () => {
+  const { confirmAction, resetModalData } = useModalStore();
+
+  const {
+    title = "Confirm Action",
+    description = "Are you sure?",
+    successButtonText = "Confirm",
+    cancelButtonText = "Cancel",
+    variant = "default",
+    isLoading = false,
+    closable = true,
+    closeOnOutsideClick = true,
+    onSuccess,
+    onClose,
+  } = confirmAction.extraProps;
+
+  const handleCancel = () => {
+    onClose?.();
+    resetModalData("confirmAction");
+  };
+
+  const handleSuccess = () => {
+    onSuccess?.();
+  };
   const getButtonStyles = () => {
     const generalStyles =
       "px-4 py-3 rounded-lg border-2 border-black font-semibold text-sm shadow-[4px_4px_0_0_#000] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black";
@@ -46,13 +49,15 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   const buttonStyles = getButtonStyles();
 
+  if (!confirmAction.isVisible) return null;
+
   return (
     <Modal
-      isOpen={isOpen}
-      onClose={onCancel}
+      isOpen
+      onClose={handleCancel}
       title={title}
-      closable={!isLoading}
-      closeOnOutsideClick={!isLoading}
+      closable={closable && !isLoading}
+      closeOnOutsideClick={closeOnOutsideClick && !isLoading}
     >
       <div className="space-y-6">
         {/* Description */}
@@ -61,7 +66,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         {/* Action Buttons */}
         <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
           <button
-            onClick={onCancel}
+            onClick={handleCancel}
             disabled={isLoading}
             className={`
               ${buttonStyles.generalStyles} 
@@ -73,7 +78,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </button>
 
           <button
-            onClick={onSuccess}
+            onClick={handleSuccess}
             disabled={isLoading}
             className={`
               ${buttonStyles.generalStyles} 

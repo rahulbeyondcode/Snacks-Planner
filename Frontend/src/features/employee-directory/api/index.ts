@@ -6,13 +6,13 @@ const getEmployees = async () => {
   return response.data.data;
 };
 
-const addEmployee = async (employee: Omit<Employee, "id">) => {
+const addEmployee = async (employee: Omit<Employee, "user_id">) => {
   const response = await API.post("/users", employee);
   return response.data.data;
 };
 
 const updateEmployee = async (employee: Employee) => {
-  const response = await API.put(`/users/${employee.id}`, employee);
+  const response = await API.put(`/users/${employee.user_id}`, employee);
   return response.data.data;
 };
 

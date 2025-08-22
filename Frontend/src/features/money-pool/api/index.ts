@@ -5,7 +5,7 @@ import type {
 import API from "shared/helpers/api";
 
 const getMoneyPool = async (): Promise<MoneyPoolType> => {
-  const response = await API.get("/money_pool");
+  const response = await API.get("/money-pools");
   return response.data;
 };
 
