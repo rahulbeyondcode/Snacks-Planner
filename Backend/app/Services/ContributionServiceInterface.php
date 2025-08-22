@@ -22,4 +22,5 @@ interface ContributionServiceInterface
     public function getUserContributions(int $userId);
     public function updateContribution(int $id, array $data);
     public function deleteContribution(int $id);
+    public function getCurrentMonthCounts();
 }
