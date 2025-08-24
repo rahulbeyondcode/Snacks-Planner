@@ -1,17 +1,16 @@
 import AccountsMoneyPoolView from "features/money-pool/components/accounts-money-pool-view";
 import SnackManagerMoneyPoolView from "features/money-pool/components/snack-manager-money-pool-view";
 
-import { useAuthStore } from "features/auth/store";
-
 const MoneyPoolManagement = () => {
-  const { hasAnyOfTheseRoles } = useAuthStore();
+  return <SnackManagerMoneyPoolView />;
+  return <AccountsMoneyPoolView />;
 
-  if (hasAnyOfTheseRoles(["accounts"])) {
-    return <AccountsMoneyPoolView />;
-  }
-  if (hasAnyOfTheseRoles(["snack-manager"])) {
-    return <SnackManagerMoneyPoolView />;
-  }
+  // if (hasAnyOfTheseRoles(["accounts"])) {
+  //   return <AccountsMoneyPoolView />;
+  // }
+  // if (hasAnyOfTheseRoles(["snack-manager"])) {
+  //   return <SnackManagerMoneyPoolView />;
+  // }
   // No access for other roles
   return (
     <div className="w-full flex items-center justify-center mt-10 px-4">

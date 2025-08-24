@@ -1,15 +1,16 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import MultiDatePicker from "shared/components/form-components/multi-date-picker";
 import Button from "shared/components/save-button";
 
+import { createBlockedFund } from "features/money-pool/api";
 import {
   blockFundsFormDefaultValues,
   blockFundsFormSchema,
 } from "features/money-pool/components/form-config";
-import { useMoneyPoolStore } from "features/money-pool/store/money-pool-store";
 
 type BlockFundsFormProps = {
   maxAmount: number;
@@ -22,7 +23,7 @@ type FormValues = {
 };
 
 const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
-  const { addBlockedFund } = useMoneyPoolStore();
+  const queryClient = useQueryClient();
 
   const methods = useForm<FormValues>({
     defaultValues: blockFundsFormDefaultValues,
@@ -40,14 +41,27 @@ const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
     reset,
   } = methods;
 
+  const createBlockedFundMutation = useMutation({
+    mutationFn: createBlockedFund,
+    onSuccess: () => {
+      // Invalidate and refetch money pool data to get updated blocked funds list
+      queryClient.invalidateQueries({ queryKey: ["money-pool"] });
+      reset();
+    },
+    onError: (error) => {
+      console.error("Failed to create blocked fund:", error);
+      // Could add toast notification here
+    },
+  });
+
   const onSubmit = (data: FormValues) => {
-    addBlockedFund({
-      id: Date.now().toString(),
-      name: data.name,
-      date: data.date,
-      amount: data.amount,
-    });
-    reset();
+    // Transform form data to API structure in component
+    const apiData = {
+      reason: data.name,
+      block_date: data.date,
+      amount: Number(data.amount) || 0,
+    };
+    createBlockedFundMutation.mutate(apiData);
   };
 
   return (
@@ -61,7 +75,7 @@ const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
             Add New Blocked Fund
           </h4>
           <span className="px-2 py-1 rounded-md bg-yellow-300 text-black border-2 border-black text-[10px] font-bold tracking-wide">
-            Max Rs. {maxAmount.toLocaleString()}
+            Max Rs. {Number(maxAmount || 0).toLocaleString()}
           </span>
         </div>
 
@@ -116,7 +130,9 @@ const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
         </div>
 
         <div className="mt-5 flex justify-end">
-          <Button type="submit">Save</Button>
+          <Button type="submit" disabled={createBlockedFundMutation.isPending}>
+            {createBlockedFundMutation.isPending ? "Saving..." : "Save"}
+          </Button>
         </div>
       </form>
     </FormProvider>
