@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import InputField from "shared/components/form-components/input-field";
-import { MultiSelect } from "shared/components/form-components/multi-select";
+import MultiSelect from "shared/components/form-components/multi-select";
 import Modal from "shared/components/modal";
 
 import {

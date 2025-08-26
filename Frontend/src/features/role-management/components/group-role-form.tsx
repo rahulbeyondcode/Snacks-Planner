@@ -9,10 +9,10 @@ import {
 } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
 
-import { MultiSelect } from "shared/components/form-components/multi-select";
+import MultiSelect from "shared/components/form-components/multi-select";
 import Button from "shared/components/save-button";
 
-import { schema } from "features/role-management/components/form-config";
+import { schema } from "features/role-management/helpers/form-config";
 import type {
   Employee,
   Group,

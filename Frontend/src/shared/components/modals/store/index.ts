@@ -6,11 +6,6 @@ import type {
   ModalStore,
 } from "shared/components/modals/store/types";
 
-const initialState: ModalStore = {
-  confirmAction: { isVisible: false, extraProps: {} },
-  infoModal: { isVisible: false, extraProps: {} },
-};
-
 type ModalActions = {
   updateModalData: (
     modalType: ModalNames,
@@ -21,6 +16,11 @@ type ModalActions = {
   ) => void;
   resetModalData: (modalType: ModalNames) => void;
   resetAllModals: () => void;
+};
+
+const initialState: ModalStore = {
+  confirmAction: { isVisible: false, extraProps: {} },
+  infoModal: { isVisible: false, extraProps: {} },
 };
 
 export const useModalStore = create<ModalStore & ModalActions>((set) => ({

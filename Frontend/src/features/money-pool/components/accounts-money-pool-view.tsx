@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
+import InfoCard from "features/money-pool/components/info-card";
 import InputField from "shared/components/form-components/input-field";
+import MultiSelect from "shared/components/form-components/multi-select";
 import Button from "shared/components/save-button";
 
-import { getMoneyPool, updateMoneyPool } from "features/money-pool/api";
+import { getMoneyPool, updateMoneyPoolSettings } from "features/money-pool/api";
 import type { MoneyPoolFormType } from "features/money-pool/helpers/money-pool-types";
 import {
   GET_MONEY_POOL_RETRY,
@@ -13,6 +15,11 @@ import {
 } from "shared/helpers/constants";
 
 const multipliers = [0, 1, 2, 3, 4];
+
+const multiplierOptions = multipliers.map((mult) => ({
+  value: mult.toString(),
+  label: `${mult}X`,
+}));
 
 const AccountsMoneyPoolView: React.FC = () => {
   const queryClient = useQueryClient();
@@ -27,20 +34,26 @@ const AccountsMoneyPoolView: React.FC = () => {
   const methods = useForm<MoneyPoolFormType>({
     defaultValues: {
       amountCollectedPerPerson: 0,
-      companyContributionMultiplier: 0,
+      companyContributionMultiplier: "0",
       totalEmployees: 0,
     },
   });
-  const { register, handleSubmit, control, reset } = methods;
+  const { handleSubmit, control, reset } = methods;
 
   // Update form when data loads
   useEffect(() => {
     if (moneyPoolData) {
       const formData = {
-        amountCollectedPerPerson: moneyPoolData.amount_per_person,
-        companyContributionMultiplier:
-          moneyPoolData.company_contribution_multiplier,
-        totalEmployees: moneyPoolData.number_of_paid_people,
+        amountCollectedPerPerson: moneyPoolData.settings?.per_month_amount || 0,
+        companyContributionMultiplier: (
+          moneyPoolData.settings?.multiplier || 0
+        ).toString(),
+        totalEmployees: moneyPoolData.settings?.per_month_amount
+          ? Math.floor(
+              (moneyPoolData.total_collected_amount || 0) /
+                moneyPoolData.settings.per_month_amount
+            )
+          : 0,
       };
       reset(formData);
     }
@@ -48,7 +61,7 @@ const AccountsMoneyPoolView: React.FC = () => {
 
   // Mutation for updating money pool
   const updateMoneyPoolMutation = useMutation({
-    mutationFn: updateMoneyPool,
+    mutationFn: updateMoneyPoolSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["money-pool"] });
     },
@@ -69,11 +82,15 @@ const AccountsMoneyPoolView: React.FC = () => {
   const employeesTotal = Number(
     (watchedTotalEmployees || 0) * (watchedAmount || 0)
   );
-  const companyTotal = Number(employeesTotal * (watchedMultiplier || 0));
+  const companyTotal = Number(employeesTotal * Number(watchedMultiplier || 0));
   const computedFinal = employeesTotal + companyTotal;
 
   const onSubmit = (data: MoneyPoolFormType) => {
-    updateMoneyPoolMutation.mutate(data);
+    const finalPayload = {
+      per_month_amount: data.amountCollectedPerPerson,
+      multiplier: Number(data.companyContributionMultiplier),
+    };
+    updateMoneyPoolMutation.mutate(finalPayload);
   };
 
   if (isLoading) {
@@ -121,49 +138,42 @@ const AccountsMoneyPoolView: React.FC = () => {
           </div>
 
           {/* Employee contributions */}
-          <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]">
-            <div className="mb-2 font-extrabold text-black">
-              Employee contributions
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-black/70">Per person</div>
-              <div className="text-right font-extrabold">
-                Rs. {Number(watchedAmount || 0).toLocaleString()}
-              </div>
-              <div className="text-black/70">Total</div>
-              <div className="text-right font-extrabold">
-                Rs.{" "}
-                {Number(
+          <InfoCard
+            title="Employee contributions"
+            data={[
+              {
+                label: "Per person",
+                value: `Rs. ${Number(watchedAmount || 0).toLocaleString()}`,
+              },
+              {
+                label: "Total",
+                value: `Rs. ${Number(
                   (watchedTotalEmployees || 0) * (watchedAmount || 0)
-                ).toLocaleString()}
-              </div>
-            </div>
-          </div>
+                ).toLocaleString()}`,
+              },
+            ]}
+          />
 
-          {/* Company contribution (bottom-left) */}
-          <div className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]">
-            <div className="mb-2 font-extrabold text-black">
-              Company contribution
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-black/70">Multiplier</div>
-              <div className="text-right font-extrabold">
-                {Number(watchedMultiplier || 0)}X
-              </div>
-              <div className="text-black/70">Total</div>
-              <div className="text-right font-extrabold">
-                Rs.{" "}
-                {Number(
+          {/* Company contribution */}
+          <InfoCard
+            title="Company contribution"
+            data={[
+              {
+                label: "Multiplier",
+                value: `${Number(watchedMultiplier || 0)}X`,
+              },
+              {
+                label: "Total",
+                value: `Rs. ${Number(
                   (watchedTotalEmployees || 0) *
                     (watchedAmount || 0) *
-                    (watchedMultiplier || 0)
-                ).toLocaleString()}
-              </div>
-            </div>
-          </div>
+                    Number(watchedMultiplier || 0)
+                ).toLocaleString()}`,
+              },
+            ]}
+          />
         </div>
 
-        {/* Form below */}
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="bg-white rounded-xl border-2 border-black p-4 shadow-[4px_4px_0_0_#000]"
@@ -185,27 +195,14 @@ const AccountsMoneyPoolView: React.FC = () => {
               isDisabled
             />
             <div className="sm:col-span-2">
-              <label className="block mb-1 text-sm font-semibold text-black">
-                Company contribution multiplier
-              </label>
-              <div className="relative">
-                <select
-                  {...register("companyContributionMultiplier", {
-                    valueAsNumber: true,
-                  })}
-                  className="w-full appearance-none border-2 border-black rounded-lg px-4 py-2.5 text-base bg-white shadow-[2px_2px_0_0_#000]"
-                >
-                  <option value="">Select</option>
-                  {multipliers.map((mult) => (
-                    <option key={mult} value={mult}>
-                      {mult}X
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded-md bg-black text-yellow-50 text-[10px] font-bold border border-black">
-                  ▼
-                </div>
-              </div>
+              <MultiSelect
+                name="companyContributionMultiplier"
+                label="Company contribution multiplier"
+                options={multiplierOptions}
+                placeholder="Select multiplier..."
+                isMulti={false}
+                className="w-full"
+              />
             </div>
           </div>
 

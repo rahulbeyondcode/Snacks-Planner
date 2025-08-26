@@ -3,27 +3,10 @@ import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import Select from "react-select";
 
-type OptionType = {
-  value: string;
-  label: string;
-  isDisabled?: boolean;
-};
-
-type MultiSelectProps = {
-  name: string;
-  label?: string;
-  options: OptionType[];
-  placeholder?: string;
-  isMulti?: boolean;
-  className?: string;
-  isDisabled?: boolean;
-  classNamePrefix?: string;
-  closeMenuOnSelect?: boolean;
-  maxMenuHeight?: number;
-  isOptionDisabled?: (option: OptionType) => boolean;
-  customError?: string;
-  required?: boolean;
-};
+import type {
+  MultiSelectProps,
+  OptionType,
+} from "shared/components/form-components/types";
 
 const MultiSelect: React.FC<MultiSelectProps> = ({
   name,
@@ -105,4 +88,4 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   );
 };
 
-export { MultiSelect, type OptionType };
+export default MultiSelect;

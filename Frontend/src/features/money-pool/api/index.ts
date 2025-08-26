@@ -1,33 +1,47 @@
 import type {
-  MoneyPoolFormType,
+  BlockedFundPayloadType,
+  BlockedFundType,
+  MoneyPoolPayloadType,
   MoneyPoolType,
 } from "features/money-pool/helpers/money-pool-types";
 import API from "shared/helpers/api";
 
 const getMoneyPool = async (): Promise<MoneyPoolType> => {
   const response = await API.get("/money-pools");
+  // const response = await API.get("/money-pool-settings");
   return response.data;
 };
 
-const updateMoneyPool = async (
-  formData: MoneyPoolFormType
+const updateMoneyPoolSettings = async (
+  payload: MoneyPoolPayloadType
 ): Promise<MoneyPoolType> => {
-  // Transform form data to API structure
-  const apiData = {
-    amount_per_person: formData.amountCollectedPerPerson,
-    company_contribution_multiplier: formData.companyContributionMultiplier,
-    // Calculate derived values
-    total_amount_collected:
-      (formData.totalEmployees || 0) * formData.amountCollectedPerPerson,
-    company_contribution:
-      (formData.totalEmployees || 0) *
-      formData.amountCollectedPerPerson *
-      formData.companyContributionMultiplier,
-    number_of_paid_people: formData.totalEmployees || 0,
-  };
-
-  const response = await API.put("/money_pool", apiData);
+  const response = await API.put("/money-pool-settings", payload);
   return response.data;
 };
 
-export { getMoneyPool, updateMoneyPool };
+const createBlockedFund = async (
+  payload: BlockedFundPayloadType
+): Promise<BlockedFundType> => {
+  const response = await API.post("/money-pool-blocks", payload);
+  return response.data;
+};
+
+const updateBlockedFund = async (
+  blockId: number,
+  payload: BlockedFundPayloadType
+): Promise<BlockedFundType> => {
+  const response = await API.put(`/money-pool-blocks/${blockId}`, payload);
+  return response.data;
+};
+
+const deleteBlockedFund = async (blockId: number): Promise<void> => {
+  await API.delete(`/money-pool-blocks/${blockId}`);
+};
+
+export {
+  createBlockedFund,
+  deleteBlockedFund,
+  getMoneyPool,
+  updateBlockedFund,
+  updateMoneyPoolSettings,
+};
