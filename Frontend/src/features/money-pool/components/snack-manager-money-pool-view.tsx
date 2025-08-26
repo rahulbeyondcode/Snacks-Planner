@@ -130,10 +130,6 @@ const SnackManagerMoneyPoolView: React.FC = () => {
           <BlockedFundsSection
             blockedFunds={blockedFunds}
             maxAmount={availablePoolAmount}
-            onEditFund={(fund) => {
-              // TODO: Implement edit functionality
-              console.log("Edit fund:", fund);
-            }}
           />
         </div>
       </div>

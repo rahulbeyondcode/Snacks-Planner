@@ -2,8 +2,8 @@ import AccountsMoneyPoolView from "features/money-pool/components/accounts-money
 import SnackManagerMoneyPoolView from "features/money-pool/components/snack-manager-money-pool-view";
 
 const MoneyPoolManagement = () => {
-  return <AccountsMoneyPoolView />;
   return <SnackManagerMoneyPoolView />;
+  return <AccountsMoneyPoolView />;
 
   // if (hasAnyOfTheseRoles(["accounts"])) {
   //   return <AccountsMoneyPoolView />;
