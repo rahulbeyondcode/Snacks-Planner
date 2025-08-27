@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\BlockMoneyPoolRequest;
+use App\Http\Requests\StoreMoneyPoolBlockRequest;
+use App\Http\Requests\UpdateMoneyPoolBlockRequest;
 use App\Http\Resources\MoneyPoolBlockResource;
 use App\Http\Resources\MoneyPoolResource;
 use App\Http\Resources\MoneyPoolSettingsResource;
@@ -45,7 +46,7 @@ class MoneyPoolController extends Controller
                     'success' => false,
                     'message' => 'Money pool settings not found',
                     'data' => []
-                ], 404);
+                ], 200);
             }
 
             return response()->json([
@@ -66,7 +67,7 @@ class MoneyPoolController extends Controller
                     'success' => false,
                     'message' => 'Money pool not found',
                     'data' => []
-                ], 404);
+                ], 200);
             }
 
             // Get contribution counts similar to getTotalContributions
@@ -104,21 +105,87 @@ class MoneyPoolController extends Controller
         ], 403);
     }
 
-    public function block(BlockMoneyPoolRequest $request)
+    public function storeBlock(StoreMoneyPoolBlockRequest $request): JsonResponse
     {
         try {
             $validated = $request->validated();
-            $block = $this->moneyPoolBlockService->blockMoneyPool($validated);
+            $result = $this->moneyPoolBlockService->createBlock($validated);
 
-            if ($block instanceof JsonResponse && $block->getStatusCode() == 422) {
-                return response()->unprocessableEntity($block->getData()->message);
-            } elseif (! $block) {
-                return response()->notFound(__('money_pool_blocks.block_not_found'));
+            // Handle error responses from service
+            if (is_array($result) && isset($result['error']) && $result['error']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'data' => []
+                ], $result['code']);
+            } elseif (! $result) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('money_pool_blocks.block_not_found'),
+                    'data' => []
+                ], 404);
             }
 
-            return $this->getBlocks($block->money_pool_id);
+            return response()->json([
+                'success' => true,
+                'message' => 'Money pool block created successfully',
+                'data' => $this->getBlocks($result->money_pool_id)
+            ], 201);
         } catch (\Exception $e) {
-            return response()->internalServerError(__('messages.error'));
+            // Log the actual error for debugging
+            \Log::error('MoneyPoolController::storeBlock Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('messages.error'),
+                'data' => []
+            ], 500);
+        }
+    }
+
+    public function updateBlock(UpdateMoneyPoolBlockRequest $request, int $blockId): JsonResponse
+    {
+        try {
+            $validated = $request->validated();
+            $result = $this->moneyPoolBlockService->updateBlock($blockId, $validated);
+
+            // Handle error responses from service
+            if (is_array($result) && isset($result['error']) && $result['error']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'data' => []
+                ], $result['code']);
+            } elseif (! $result) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('money_pool_blocks.block_not_found'),
+                    'data' => []
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Money pool block updated successfully',
+                'data' => $this->getBlocks($result->money_pool_id)
+            ]);
+        } catch (\Exception $e) {
+            // Log the actual error for debugging
+            \Log::error('MoneyPoolController::updateBlock Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('messages.error'),
+                'data' => []
+            ], 500);
         }
     }
 

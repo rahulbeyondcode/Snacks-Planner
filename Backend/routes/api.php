@@ -177,7 +177,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/weekly-operations/{id}', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'show']);
 
             // Money Pool Blocks
-            Route::post('/money-pool-blocks', [MoneyPoolController::class, 'block']);
+            Route::post('/money-pool-blocks', [MoneyPoolController::class, 'storeBlock']);
+            Route::put('/money-pool-blocks/{blockId}', [MoneyPoolController::class, 'updateBlock']);
             Route::delete('/money-pool-blocks/{blockId}', [MoneyPoolController::class, 'deleteBlock']);
 
             // Sub Group management with permissions
