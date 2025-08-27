@@ -163,8 +163,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/profit-loss', [\App\Http\Controllers\ProfitLossController::class, 'index']);
         });
 
-        // Money Pool Access (account_manager, snack_manager and operation)
-        Route::middleware(['role:account_manager,snack_manager,operation'])->group(function () {
+        // Money Pool Access (account_manager and snack_manager only)
+        Route::middleware(['role:account_manager,snack_manager'])->group(function () {
             // Money Pool Management
             Route::get('/money-pool', [MoneyPoolController::class, 'index']);
         });

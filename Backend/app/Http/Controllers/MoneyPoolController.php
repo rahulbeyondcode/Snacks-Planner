@@ -55,8 +55,8 @@ class MoneyPoolController extends Controller
             ]);
         }
 
-        // For snack_manager and operation: return full pool details except creator
-        if (in_array($roleName, ['snack_manager', 'operation'])) {
+        // For snack_manager: return full pool details except creator
+        if (in_array($roleName, ['snack_manager'])) {
             $pool = $this->moneyPoolService->getCurrentMonthMoneyPool();
 
             if (!$pool) {

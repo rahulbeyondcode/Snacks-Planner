@@ -77,16 +77,26 @@ class ContributionRepository implements ContributionRepositoryInterface
             $totalCollected = $paidCount * $perMonthAmount;
             $employerContribution = $totalCollected * $multiplier;
             $totalPoolAmount = $totalCollected + $employerContribution;
+
+            // Calculate total_available_amount based on insert/update case
+            $totalAvailableAmount = $totalPoolAmount; // Default for insert case
+
             $poolData = [
                 'money_pool_setting_id' => $setting->money_pool_setting_id,
                 'total_collected_amount' => $totalCollected,
                 'employer_contribution' => $employerContribution,
                 'total_pool_amount' => $totalPoolAmount,
+                'total_available_amount' => $totalAvailableAmount,
             ];
             if ($pool) {
+                // Update case: Calculate total_available_amount considering blocked_amount
+                $blockedAmount = $pool->blocked_amount ?? 0;
+                $poolData['total_available_amount'] = $totalPoolAmount - $blockedAmount;
+
                 // Only update relevant fields, do not overwrite created_by
                 $pool->update($poolData);
             } else {
+                // Insert case: total_available_amount = total_pool_amount (no blocked amount yet)
                 $poolData['created_by'] = $userId;
                 $poolData['created_at'] = $now;
                 $poolData['updated_at'] = $now;
