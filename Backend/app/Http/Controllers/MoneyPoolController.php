@@ -9,6 +9,7 @@ use App\Http\Resources\MoneyPoolSettingsResource;
 use App\Services\MoneyPoolBlockServiceInterface;
 use App\Services\MoneyPoolServiceInterface;
 use App\Services\MoneyPoolSettingsServiceInterface;
+use App\Services\ContributionServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +18,8 @@ class MoneyPoolController extends Controller
     public function __construct(
         private readonly MoneyPoolServiceInterface $moneyPoolService,
         private readonly MoneyPoolBlockServiceInterface $moneyPoolBlockService,
-        private readonly MoneyPoolSettingsServiceInterface $moneyPoolSettingsService
+        private readonly MoneyPoolSettingsServiceInterface $moneyPoolSettingsService,
+        private readonly ContributionServiceInterface $contributionService
     ) {}
 
     public function index(): JsonResponse
@@ -67,6 +69,9 @@ class MoneyPoolController extends Controller
                 ], 404);
             }
 
+            // Get contribution counts similar to getTotalContributions
+            $contributionCounts = $this->contributionService->getTotalContributions();
+
             // Create custom response without creator details
             $poolData = [
                 'money_pool_id' => $pool->money_pool_id,
@@ -76,7 +81,12 @@ class MoneyPoolController extends Controller
                 'blocked_amount' => (float) $pool->blocked_amount,
                 'total_available_amount' => (float) $pool->total_available_amount,
                 'settings' => $pool->settings ? new MoneyPoolSettingsResource($pool->settings) : null,
-                'blocks' => $pool->blocks ? MoneyPoolBlockResource::collection($pool->blocks) : []
+                'blocks' => $pool->blocks ? MoneyPoolBlockResource::collection($pool->blocks) : [],
+                'contribution_counts' => [
+                    'total_users' => $contributionCounts['total_all'] ?? 0,
+                    'total_paid' => $contributionCounts['total_paid'] ?? 0,
+                    'total_unpaid' => $contributionCounts['total_unpaid'] ?? 0
+                ]
             ];
 
             return response()->json([
