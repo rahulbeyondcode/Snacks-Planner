@@ -77,16 +77,26 @@ class ContributionRepository implements ContributionRepositoryInterface
             $totalCollected = $paidCount * $perMonthAmount;
             $employerContribution = $totalCollected * $multiplier;
             $totalPoolAmount = $totalCollected + $employerContribution;
+
+            // Calculate total_available_amount based on insert/update case
+            $totalAvailableAmount = $totalPoolAmount; // Default for insert case
+
             $poolData = [
                 'money_pool_setting_id' => $setting->money_pool_setting_id,
                 'total_collected_amount' => $totalCollected,
                 'employer_contribution' => $employerContribution,
                 'total_pool_amount' => $totalPoolAmount,
+                'total_available_amount' => $totalAvailableAmount,
             ];
             if ($pool) {
+                // Update case: Calculate total_available_amount considering blocked_amount
+                $blockedAmount = $pool->blocked_amount ?? 0;
+                $poolData['total_available_amount'] = $totalPoolAmount - $blockedAmount;
+
                 // Only update relevant fields, do not overwrite created_by
                 $pool->update($poolData);
             } else {
+                // Insert case: total_available_amount = total_pool_amount (no blocked amount yet)
                 $poolData['created_by'] = $userId;
                 $poolData['created_at'] = $now;
                 $poolData['updated_at'] = $now;
@@ -161,16 +171,41 @@ class ContributionRepository implements ContributionRepositoryInterface
 
     public function getTotalContributions()
     {
-        // Get total count of paid contributions (actual contributions)
-        $totalPaid = Contribution::where('status', 'paid')->count();
+        // Get current month date range
+        $now = now();
+        $monthStart = $now->copy()->startOfMonth()->toDateString();
+        $monthEnd = $now->copy()->endOfMonth()->toDateString();
 
-        // Get total count of unpaid contributions (non-contributions)
-        $totalUnpaid = Contribution::where('status', 'unpaid')->count();
+        // Get total count of paid contributions for current month, excluding account_manager role
+        $totalPaid = Contribution::query()
+            ->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->whereDate('contributions.created_at', '>=', $monthStart)
+            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->where('roles.name', '!=', 'account_manager')
+            ->where('contributions.status', 'paid')
+            ->count();
 
-        // Get total count of all records
-        $totalAll = Contribution::count();
+        // Get total count of unpaid contributions for current month, excluding account_manager role
+        $totalUnpaid = Contribution::query()
+            ->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->whereDate('contributions.created_at', '>=', $monthStart)
+            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->where('roles.name', '!=', 'account_manager')
+            ->where('contributions.status', 'unpaid')
+            ->count();
 
-        // Get contributions by user with user names and status breakdown
+        // Get total count of all records for current month, excluding account_manager role
+        $totalAll = Contribution::query()
+            ->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->whereDate('contributions.created_at', '>=', $monthStart)
+            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->where('roles.name', '!=', 'account_manager')
+            ->count();
+
+        // Get contributions by user with user names and status breakdown for current month
         $byUser = Contribution::select(
             'contributions.user_id',
             'users.name as user_name',
@@ -179,6 +214,10 @@ class ContributionRepository implements ContributionRepositoryInterface
             DB::raw('SUM(CASE WHEN contributions.status = "unpaid" THEN 1 ELSE 0 END) as unpaid_records')
         )
             ->join('users', 'contributions.user_id', '=', 'users.user_id')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->whereDate('contributions.created_at', '>=', $monthStart)
+            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->where('roles.name', '!=', 'account_manager')
             ->groupBy('contributions.user_id', 'users.name')
             ->orderBy('contributions.user_id')
             ->get()

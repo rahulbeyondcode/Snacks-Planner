@@ -14,23 +14,66 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
         private readonly MoneyPoolRepositoryInterface $moneyPoolRepository
     ) {}
 
-    public function blockMoneyPool(array $data)
+    public function createBlock(array $data)
     {
         return DB::transaction(function () use ($data) {
-            $isUpdate = isset($data['block_id']);
+            // Get current month's money pool ID
+            $currentMoneyPool = $this->moneyPoolRepository->getCurrentMonthMoneyPool();
 
-            $amountDetails = $this->getAmountDetails($data, $isUpdate);
+            if (!$currentMoneyPool) {
+                return [
+                    'error' => true,
+                    'message' => __('money_pool_blocks.no_active_money_pool'),
+                    'code' => 422
+                ];
+            }
+
+            $data['money_pool_id'] = $currentMoneyPool->money_pool_id;
+            $amountDetails = $this->getAmountDetails($data, false);
 
             if ($amountDetails['total_available'] < $data['amount']) {
-                return response()->unprocessableEntity(__('money_pool_blocks.block_not_enough_amount'));
+                return [
+                    'error' => true,
+                    'message' => __('money_pool_blocks.block_not_enough_amount'),
+                    'code' => 422
+                ];
             }
 
-            if ($isUpdate) {
-                $block = $this->moneyPoolBlockRepository->update($data['block_id'], $data);
-            } else {
-                $data['created_by'] = Auth::id();
-                $block = $this->moneyPoolBlockRepository->create($data);
+            $data['created_by'] = Auth::id();
+            $block = $this->moneyPoolBlockRepository->create($data);
+
+            if (! $block) {
+                return null;
             }
+
+            $this->updateMoneyPoolBlockedAmount($data['money_pool_id']);
+
+            return $block;
+        });
+    }
+
+    public function updateBlock(int $blockId, array $data)
+    {
+        return DB::transaction(function () use ($blockId, $data) {
+            // Get current block to find its money_pool_id
+            $existingBlock = $this->moneyPoolBlockRepository->find($blockId);
+
+            if (!$existingBlock) {
+                return null;
+            }
+
+            $data['money_pool_id'] = $existingBlock->money_pool_id;
+            $amountDetails = $this->getAmountDetails($data, true, $blockId);
+
+            if ($amountDetails['total_available'] < $data['amount']) {
+                return [
+                    'error' => true,
+                    'message' => __('money_pool_blocks.block_not_enough_amount'),
+                    'code' => 422
+                ];
+            }
+
+            $block = $this->moneyPoolBlockRepository->update($blockId, $data);
 
             if (! $block) {
                 return null;
@@ -52,10 +95,10 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
         return $this->moneyPoolBlockRepository->delete($blockId);
     }
 
-    private function getAmountDetails(array $data, bool $isUpdate)
+    private function getAmountDetails(array $data, bool $isUpdate, ?int $blockId = null)
     {
-        $totalBlocked = $isUpdate ? $this->moneyPoolBlockRepository->getTotalBlockedAmountWithoutCurrentBlock($data['money_pool_id'], $data['block_id'])
-                                  : $this->moneyPoolBlockRepository->getTotalBlockedAmount($data['money_pool_id']);
+        $totalBlocked = $isUpdate ? $this->moneyPoolBlockRepository->getTotalBlockedAmountWithoutCurrentBlock($data['money_pool_id'], $blockId)
+            : $this->moneyPoolBlockRepository->getTotalBlockedAmount($data['money_pool_id']);
         $totalAvailable = $this->moneyPoolRepository->getTotalAvailableAmount($data['money_pool_id'], $totalBlocked);
 
         return [
