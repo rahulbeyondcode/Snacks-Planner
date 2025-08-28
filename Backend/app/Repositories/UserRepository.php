@@ -10,6 +10,9 @@ class UserRepository implements UserRepositoryInterface
     {
         $query = User::query();
 
+        // Exclude soft-deleted users by default
+        $query->whereNull('deleted_at');
+
         if (!empty($filters['role_id'])) {
             $query->where('role_id', $filters['role_id']);
         }
@@ -32,7 +35,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function find(int $id)
     {
-        return User::with('role')->find($id);
+        return User::with('role')->whereNull('deleted_at')->find($id);
     }
 
     public function create(array $data)
@@ -42,7 +45,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function update(int $id, array $data)
     {
-        $user = User::find($id);
+        $user = User::whereNull('deleted_at')->find($id);
         if ($user) {
             $user->update($data);
             return $user->fresh('role');
@@ -52,8 +55,9 @@ class UserRepository implements UserRepositoryInterface
 
     public function delete(int $id)
     {
-        $user = User::find($id);
+        $user = User::whereNull('deleted_at')->find($id);
         if ($user) {
+            // Soft delete - sets deleted_at timestamp
             $user->delete();
             return true;
         }
@@ -62,7 +66,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function assignRole(int $userId, int $roleId)
     {
-        $user = User::find($userId);
+        $user = User::whereNull('deleted_at')->find($userId);
         if ($user) {
             $user->role_id = $roleId;
             $user->save();

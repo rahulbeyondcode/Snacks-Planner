@@ -58,7 +58,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [App\Http\Controllers\ShopController::class, 'store'])->middleware('permission:shops,create,account_manager');
             Route::put('/{id}', [App\Http\Controllers\ShopController::class, 'update'])->middleware('permission:shops,update,account_manager');
             Route::delete('/{id}', [App\Http\Controllers\ShopController::class, 'destroy'])->middleware('permission:shops,delete,account_manager');
-            
+
             // Shop payment methods management
             Route::prefix('{shopId}/payment-methods')->group(function () {
                 Route::get('/', [App\Http\Controllers\ShopPaymentMethodController::class, 'index']);
@@ -68,7 +68,7 @@ Route::prefix('v1')->group(function () {
                 Route::patch('/{paymentMethodId}/toggle', [App\Http\Controllers\ShopPaymentMethodController::class, 'toggleStatus'])->middleware('permission:shops,update,account_manager');
             });
         });
-        
+
         // Available payment methods (for all authenticated users)
         Route::get('/payment-methods/available', [App\Http\Controllers\ShopPaymentMethodController::class, 'availableMethods']);
 
@@ -163,6 +163,12 @@ Route::prefix('v1')->group(function () {
             Route::get('/profit-loss', [\App\Http\Controllers\ProfitLossController::class, 'index']);
         });
 
+        // Money Pool Access (account_manager and snack_manager only)
+        Route::middleware(['role:account_manager,snack_manager'])->group(function () {
+            // Money Pool Management
+            Route::get('/money-pool', [MoneyPoolController::class, 'index']);
+        });
+
         // Operations Manager routes
         Route::middleware(['role:snack_manager'])->group(function () {
             // Weekly operations staff assignment
@@ -170,11 +176,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
             Route::get('/weekly-operations/{id}', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'show']);
 
-            // Money Pool Management
-            Route::get('/money-pools', [MoneyPoolController::class, 'index']);
-
             // Money Pool Blocks
-            Route::post('/money-pool-blocks', [MoneyPoolController::class, 'block']);
+            Route::post('/money-pool-blocks', [MoneyPoolController::class, 'storeBlock']);
+            Route::put('/money-pool-blocks/{blockId}', [MoneyPoolController::class, 'updateBlock']);
             Route::delete('/money-pool-blocks/{blockId}', [MoneyPoolController::class, 'deleteBlock']);
 
             // Sub Group management with permissions

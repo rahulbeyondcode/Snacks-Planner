@@ -66,4 +66,9 @@ class ContributionService implements ContributionServiceInterface
     {
         return $this->contributionRepository->getCurrentMonthCounts();
     }
+
+    public function getTotalContributions()
+    {
+        return $this->contributionRepository->getTotalContributions();
+    }
 }
