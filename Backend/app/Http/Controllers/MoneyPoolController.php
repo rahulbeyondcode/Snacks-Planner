@@ -84,7 +84,6 @@ class MoneyPoolController extends Controller
                 'settings' => $pool->settings ? new MoneyPoolSettingsResource($pool->settings) : null,
                 'blocks' => $pool->blocks ? MoneyPoolBlockResource::collection($pool->blocks) : [],
                 'contribution_counts' => [
-                    'total_users' => $contributionCounts['total_all'] ?? 0,
                     'total_paid' => $contributionCounts['total_paid'] ?? 0,
                     'total_unpaid' => $contributionCounts['total_unpaid'] ?? 0
                 ]

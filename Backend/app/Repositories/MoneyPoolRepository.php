@@ -13,7 +13,7 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
 
     public function getCurrentMonthMoneyPool()
     {
-        return MoneyPool::with(['creator', 'settings', 'blocks'])
+        return MoneyPool::with(['creator', 'settings', 'blocks.creator'])
             ->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->orderBy('created_at', 'desc')
@@ -22,7 +22,7 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
 
     public function find(int $id)
     {
-        return MoneyPool::with(['creator', 'settings', 'blocks'])->find($id);
+        return MoneyPool::with(['creator', 'settings', 'blocks.creator'])->find($id);
     }
 
     public function update(int $id, array $data): ?MoneyPool
