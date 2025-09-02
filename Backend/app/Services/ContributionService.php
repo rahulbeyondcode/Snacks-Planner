@@ -61,4 +61,14 @@ class ContributionService implements ContributionServiceInterface
     {
         return $this->contributionRepository->delete($id);
     }
+
+    public function getCurrentMonthCounts()
+    {
+        return $this->contributionRepository->getCurrentMonthCounts();
+    }
+
+    public function getTotalContributions()
+    {
+        return $this->contributionRepository->getTotalContributions();
+    }
 }

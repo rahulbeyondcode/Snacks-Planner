@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,9 +14,9 @@ class User extends Authenticatable
     protected $primaryKey = 'user_id';
     public $incrementing = true;
     protected $keyType = 'int';
-    public $timestamps = false;
+    public $timestamps = true;
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'preference',
         'created_at',
         'password', // If you use password authentication
+        'deleted_at',
     ];
 
     /**
@@ -136,7 +138,7 @@ class User extends Authenticatable
     public function getPermissionsByModule()
     {
         $permissions = $this->getPermissions();
-        
+
         return $permissions->groupBy('module')->map(function ($modulePermissions) {
             return $modulePermissions->pluck('action')->unique()->values()->toArray();
         });
@@ -150,7 +152,7 @@ class User extends Authenticatable
         if (is_string($roles)) {
             $roles = [$roles];
         }
-        
+
         return $this->role && in_array($this->role->name, $roles);
     }
 
@@ -162,7 +164,7 @@ class User extends Authenticatable
         if (is_string($roles)) {
             $roles = [$roles];
         }
-        
+
         return $this->role && in_array($this->role->name, $roles);
     }
 }

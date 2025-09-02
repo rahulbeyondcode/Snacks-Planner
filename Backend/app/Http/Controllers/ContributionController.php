@@ -49,12 +49,16 @@ class ContributionController extends Controller
             }
             $result['updated_count'] = $count;
 
-            return apiResponse(
-                true,
-                "Successfully updated status for {$count} contributions",
-                $result,
-                200
-            );
+            // Add counts for current month
+            $counts = $this->contributionService->getCurrentMonthCounts();
+            $result['paid_contributions'] = $counts['paid_contributions'];
+            $result['unpaid_records'] = $counts['unpaid_records'];
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully updated the contributions status",
+                'data' => $result
+            ]);
         } catch (\Exception $e) {
             return apiResponse(
                 false,
@@ -96,12 +100,15 @@ class ContributionController extends Controller
                 $result['meta'] = $response['meta'];
             }
 
-            return apiResponse(
-                true,
-                'Contributions retrieved successfully',
-                $result,
-                200
-            );
+            // Add counts for current month
+            $counts = $this->contributionService->getCurrentMonthCounts();
+            $result['paid_contributions'] = $counts['paid_contributions'];
+            $result['unpaid_records'] = $counts['unpaid_records'];
+
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
         } catch (\Exception $e) {
             return apiResponse(
                 false,

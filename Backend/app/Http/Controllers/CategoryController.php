@@ -16,12 +16,20 @@ class CategoryController extends Controller
         $this->repo = $repo;
     }
 
-    public function index()
+    /**
+     * Get all active categories for consistent response format
+     */
+    private function getAllActiveCategories()
     {
         $categories = $this->repo->all();
+        return CategoryResource::collection($categories);
+    }
+
+    public function index()
+    {
         return response()->json([
             'success' => true,
-            'data' => CategoryResource::collection($categories)
+            'data' => $this->getAllActiveCategories()
         ]);
     }
 
@@ -31,7 +39,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category created successfully',
-            'data' => new CategoryResource($category)
+            'data' => $this->getAllActiveCategories()
         ], 201);
     }
 
@@ -48,7 +56,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category updated successfully',
-            'data' => new CategoryResource($category)
+            'data' => $this->getAllActiveCategories()
         ]);
     }
 
@@ -66,7 +74,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category deleted successfully',
-            'data' => []
+            'data' => $this->getAllActiveCategories()
         ]);
     }
 }
