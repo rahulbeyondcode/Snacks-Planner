@@ -57,22 +57,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}', [App\Http\Controllers\ShopController::class, 'show']);
             Route::post('/', [App\Http\Controllers\ShopController::class, 'store'])->middleware('permission:shops,create,account_manager');
             Route::put('/{id}', [App\Http\Controllers\ShopController::class, 'update'])->middleware('permission:shops,update,account_manager');
-            Route::delete('/{id}', [App\Http\Controllers\ShopController::class, 'destroy'])->middleware('permission:shops,delete,account_manager');
+            Route::delete('/{id}', [App\Http\Controllers\ShopController::class, 'destroy'])->middleware('permission:shops,delete,account_manager');           
             
-            // Shop payment methods management
-            Route::prefix('{shopId}/payment-methods')->group(function () {
-                Route::get('/', [App\Http\Controllers\ShopPaymentMethodController::class, 'index']);
-                Route::post('/', [App\Http\Controllers\ShopPaymentMethodController::class, 'store'])->middleware('permission:shops,update,account_manager');
-                Route::put('/{paymentMethodId}', [App\Http\Controllers\ShopPaymentMethodController::class, 'update'])->middleware('permission:shops,update,account_manager');
-                Route::delete('/{paymentMethodId}', [App\Http\Controllers\ShopPaymentMethodController::class, 'destroy'])->middleware('permission:shops,update,account_manager');
-                Route::patch('/{paymentMethodId}/toggle', [App\Http\Controllers\ShopPaymentMethodController::class, 'toggleStatus'])->middleware('permission:shops,update,account_manager');
-            });
-        });
-        
-        // Available payment methods (for all authenticated users)
-        Route::get('/payment-methods/available', [App\Http\Controllers\ShopPaymentMethodController::class, 'availableMethods']);
-
-        // Add other module routes with similar permission structure...
+        });    
     });
 
     Route::middleware('auth:sanctum')->group(function () {
