@@ -3,151 +3,171 @@
 use App\Http\Controllers\MoneyPoolController;
 use App\Http\Controllers\MoneyPoolSettingsController;
 use App\Http\Controllers\SubGroupController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\GroupController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\LookupController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\WorkingDayController;
+use App\Http\Controllers\OfficeHolidayController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ContributionController;
+use App\Http\Controllers\SnackItemController;
+use App\Http\Controllers\ProfitLossController;
+use App\Http\Controllers\GroupWeeklyOperationController;
+use App\Http\Controllers\SnackPreferenceController;
+use App\Http\Controllers\SnackPlanController;
+use App\Http\Controllers\SnackPlanDetailController;
+use App\Http\Controllers\SnackSuggestionController;
+use App\Http\Controllers\SnackRatingController;
+use App\Http\Controllers\NoSnacksDayController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     // Authentication routes
-    Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login']);
 
     // Permission management routes (admin only)
     Route::middleware(['auth:sanctum', 'permission:permissions,list,account_manager'])->prefix('permissions')->group(function () {
-        Route::get('/', [App\Http\Controllers\PermissionController::class, 'index']);
-        Route::get('/module/{module}', [App\Http\Controllers\PermissionController::class, 'getByModule']);
-        Route::post('/', [App\Http\Controllers\PermissionController::class, 'store']);
-        Route::put('/{id}', [App\Http\Controllers\PermissionController::class, 'update']);
-        Route::delete('/{id}', [App\Http\Controllers\PermissionController::class, 'destroy']);
-        Route::post('/bulk-create', [App\Http\Controllers\PermissionController::class, 'bulkCreate']);
-        Route::post('/roles/{roleId}/assign', [App\Http\Controllers\PermissionController::class, 'assignToRole']);
-        Route::get('/roles/{roleId}', [App\Http\Controllers\PermissionController::class, 'getRolePermissions']);
+        Route::get('/', [PermissionController::class, 'index']);
+        Route::get('/module/{module}', [PermissionController::class, 'getByModule']);
+        Route::post('/', [PermissionController::class, 'store']);
+        Route::put('/{id}', [PermissionController::class, 'update']);
+        Route::delete('/{id}', [PermissionController::class, 'destroy']);
+        Route::post('/bulk-create', [PermissionController::class, 'bulkCreate']);
+        Route::post('/roles/{roleId}/assign', [PermissionController::class, 'assignToRole']);
+        Route::get('/roles/{roleId}', [PermissionController::class, 'getRolePermissions']);
     });
 
     // Protected routes with permission middleware
     Route::middleware(['auth:sanctum'])->group(function () {
 
-        Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
-        Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile']);
-        Route::patch('/reset-password', [App\Http\Controllers\AuthController::class, 'resetPassword']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/profile', [AuthController::class, 'profile']);
+        Route::patch('/reset-password', [AuthController::class, 'resetPassword']);
 
         // Group management with permissions
         Route::middleware(['permission:groups,list,account_manager'])->prefix('groups')->group(function () {
-            Route::get('/', [App\Http\Controllers\GroupController::class, 'index']);
-            Route::get('/{id}', [App\Http\Controllers\GroupController::class, 'show']);
-            Route::post('/', [App\Http\Controllers\GroupController::class, 'store'])->middleware('permission:groups,create,account_manager');
-            Route::put('/{id}', [App\Http\Controllers\GroupController::class, 'update'])->middleware('permission:groups,update,account_manager');
-            Route::delete('/{id}', [App\Http\Controllers\GroupController::class, 'destroy'])->middleware('permission:groups,delete,account_manager');
-            Route::patch('/{id}/leader', [App\Http\Controllers\GroupController::class, 'assignLeader'])->middleware('permission:groups,update,account_manager');
-            Route::get('/{id}/members', [App\Http\Controllers\GroupController::class, 'members']);
-            Route::post('/{id}/members', [App\Http\Controllers\GroupController::class, 'addMembers'])->middleware('permission:groups,update,account_manager');
-            Route::delete('/{id}/members', [App\Http\Controllers\GroupController::class, 'removeMembers'])->middleware('permission:groups,update,account_manager');
-            Route::post('/sort-order', [App\Http\Controllers\GroupController::class, 'setSortOrder'])->middleware('permission:groups,update,account_manager');
+            Route::get('/', [GroupController::class, 'index']);
+            Route::get('/{id}', [GroupController::class, 'show']);
+            Route::post('/', [GroupController::class, 'store'])->middleware('permission:groups,create,account_manager');
+            Route::put('/{id}', [GroupController::class, 'update'])->middleware('permission:groups,update,account_manager');
+            Route::delete('/{id}', [GroupController::class, 'destroy'])->middleware('permission:groups,delete,account_manager');
+            Route::patch('/{id}/leader', [GroupController::class, 'assignLeader'])->middleware('permission:groups,update,account_manager');
+            Route::get('/{id}/members', [GroupController::class, 'members']);
+            Route::post('/{id}/members', [GroupController::class, 'addMembers'])->middleware('permission:groups,update,account_manager');
+            Route::delete('/{id}/members', [GroupController::class, 'removeMembers'])->middleware('permission:groups,update,account_manager');
+            Route::post('/sort-order', [GroupController::class, 'setSortOrder'])->middleware('permission:groups,update,account_manager');
         });
 
         // User management with permissions
         Route::middleware(['permission:users,list,account_manager'])->prefix('users')->group(function () {
-            Route::get('/', [App\Http\Controllers\UserController::class, 'index']);
-            Route::get('/{id}', [App\Http\Controllers\UserController::class, 'show']);
-            Route::post('/', [App\Http\Controllers\UserController::class, 'store'])->middleware('permission:users,create,account_manager');
-            Route::put('/{id}', [App\Http\Controllers\UserController::class, 'update'])->middleware('permission:users,update,account_manager');
-            Route::delete('/{id}', [App\Http\Controllers\UserController::class, 'destroy'])->middleware('permission:users,delete,account_manager');
+            Route::get('/', [UserController::class, 'index']);
+            Route::get('/{id}', [UserController::class, 'show']);
+            Route::post('/', [UserController::class, 'store'])->middleware('permission:users,create,account_manager');
+            Route::put('/{id}', [UserController::class, 'update'])->middleware('permission:users,update,account_manager');
+            Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:users,delete,account_manager');
         });
 
         // Shop management with permissions
         Route::middleware(['permission:shops,list,account_manager'])->prefix('shops')->group(function () {
-            Route::get('/', [App\Http\Controllers\ShopController::class, 'index']);
-            Route::get('/{id}', [App\Http\Controllers\ShopController::class, 'show']);
-            Route::post('/', [App\Http\Controllers\ShopController::class, 'store'])->middleware('permission:shops,create,account_manager');
-            Route::put('/{id}', [App\Http\Controllers\ShopController::class, 'update'])->middleware('permission:shops,update,account_manager');
-            Route::delete('/{id}', [App\Http\Controllers\ShopController::class, 'destroy'])->middleware('permission:shops,delete,account_manager');           
-            
-        });    
+            Route::get('/', [ShopController::class, 'index']);
+            Route::get('/{id}', [ShopController::class, 'show']);
+            Route::post('/', [ShopController::class, 'store'])->middleware('permission:shops,create,account_manager');
+            Route::put('/{id}', [ShopController::class, 'update'])->middleware('permission:shops,update,account_manager');
+            Route::delete('/{id}', [ShopController::class, 'destroy'])->middleware('permission:shops,delete,account_manager');
+        });
     });
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::patch('/me', [\App\Http\Controllers\UserController::class, 'updateProfile']);
+        Route::patch('/me', [UserController::class, 'updateProfile']);
 
         // Lookup API - accessible to all authenticated users
-        Route::get('/lookup', [\App\Http\Controllers\LookupController::class, 'index']);
+        Route::get('/lookup', [LookupController::class, 'index']);
 
         // Account Manager routes
         Route::middleware(['role:account_manager'])->group(function () {
             // Payment Methods CRUD
-            Route::get('/payment-methods', [\App\Http\Controllers\PaymentMethodController::class, 'index']);
-            Route::post('/payment-methods', [\App\Http\Controllers\PaymentMethodController::class, 'store']);
-            Route::put('/payment-methods/{id}', [\App\Http\Controllers\PaymentMethodController::class, 'update']);
-            Route::delete('/payment-methods/{id}', [\App\Http\Controllers\PaymentMethodController::class, 'destroy']);
+            Route::get('/payment-methods', [PaymentMethodController::class, 'index']);
+            Route::post('/payment-methods', [PaymentMethodController::class, 'store']);
+            Route::put('/payment-methods/{id}', [PaymentMethodController::class, 'update']);
+            Route::delete('/payment-methods/{id}', [PaymentMethodController::class, 'destroy']);
 
             // Working Days Management
-            Route::get('/working-days', [\App\Http\Controllers\WorkingDayController::class, 'show']);
-            Route::put('/working-days', [\App\Http\Controllers\WorkingDayController::class, 'update']);
+            Route::get('/working-days', [WorkingDayController::class, 'show']);
+            Route::put('/working-days', [WorkingDayController::class, 'update']);
 
             // Office Holidays (pill-style CRUD)
-            Route::get('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'index']);
-            Route::post('/office-holidays', [\App\Http\Controllers\OfficeHolidayController::class, 'store']);
-            Route::put('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'update']);
-            Route::delete('/office-holidays/{id}', [\App\Http\Controllers\OfficeHolidayController::class, 'destroy']);
+            Route::get('/office-holidays', [OfficeHolidayController::class, 'index']);
+            Route::post('/office-holidays', [OfficeHolidayController::class, 'store']);
+            Route::put('/office-holidays/{id}', [OfficeHolidayController::class, 'update']);
+            Route::delete('/office-holidays/{id}', [OfficeHolidayController::class, 'destroy']);
 
             // Money Pool Settings
             Route::post('/money-pool-settings', [MoneyPoolSettingsController::class, 'store']);
             Route::get('/money-pool-settings', [MoneyPoolSettingsController::class, 'index']);
 
             // User management (admin only)
-            Route::get('/users', [\App\Http\Controllers\UserController::class, 'index']);
-            Route::get('/users/{id}', [\App\Http\Controllers\UserController::class, 'show']);
-            Route::post('/users', [\App\Http\Controllers\UserController::class, 'store']);
-            Route::put('/users/{id}', [\App\Http\Controllers\UserController::class, 'update']);
-            Route::delete('/users/{id}', [\App\Http\Controllers\UserController::class, 'destroy']);
-            Route::patch('/users/{id}/role', [\App\Http\Controllers\UserController::class, 'assignRole']);
+            Route::get('/users', [UserController::class, 'index']);
+            Route::get('/users/{id}', [UserController::class, 'show']);
+            Route::post('/users', [UserController::class, 'store']);
+            Route::put('/users/{id}', [UserController::class, 'update']);
+            Route::delete('/users/{id}', [UserController::class, 'destroy']);
+            Route::patch('/users/{id}/role', [UserController::class, 'assignRole']);
 
             // Group management (admin only)
             Route::prefix('groups')->group(function () {
-                Route::get('/', [\App\Http\Controllers\GroupController::class, 'index']);
-                Route::get('/{id}', [\App\Http\Controllers\GroupController::class, 'show']);
-                Route::post('/', [\App\Http\Controllers\GroupController::class, 'store']);
-                Route::put('/{id}', [\App\Http\Controllers\GroupController::class, 'update']);
-                Route::delete('/{id}', [\App\Http\Controllers\GroupController::class, 'destroy']);
-                Route::put('/update-sort-order', [\App\Http\Controllers\GroupController::class, 'setSortOrder']);
+                Route::get('/', [GroupController::class, 'index']);
+                Route::get('/{id}', [GroupController::class, 'show']);
+                Route::post('/', [GroupController::class, 'store']);
+                Route::put('/{id}', [GroupController::class, 'update']);
+                Route::delete('/{id}', [GroupController::class, 'destroy']);
+                Route::put('/update-sort-order', [GroupController::class, 'setSortOrder']);
             });
 
             // Reporting
-            Route::post('/reports/download', [\App\Http\Controllers\ReportController::class, 'download']);
+            Route::post('/reports/download', [ReportController::class, 'download']);
         });
 
         // Contribution management (snack_manager and operation only)
         Route::middleware(['role:snack_manager,operation'])->group(function () {
             // Categories CRUD
-            Route::get('/categories', [\App\Http\Controllers\CategoryController::class, 'index']);
-            Route::post('/categories', [\App\Http\Controllers\CategoryController::class, 'store']);
-            Route::put('/categories/{id}', [\App\Http\Controllers\CategoryController::class, 'update']);
-            Route::delete('/categories/{id}', [\App\Http\Controllers\CategoryController::class, 'destroy']);
+            Route::get('/categories', [CategoryController::class, 'index']);
+            Route::post('/categories', [CategoryController::class, 'store']);
+            Route::put('/categories/{id}', [CategoryController::class, 'update']);
+            Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
             // Contribution status update
-            Route::patch('/contributions/{id}/status', [\App\Http\Controllers\ContributionController::class, 'updateStatus']);
+            Route::patch('/contributions/{id}/status', [ContributionController::class, 'updateStatus']);
             // Listing all contributions
-            Route::get('/contributions', [\App\Http\Controllers\ContributionController::class, 'index']);
+            Route::get('/contributions', [ContributionController::class, 'index']);
             // Bulk update contribution status
-            Route::post('/contributions/bulk-update-status', [\App\Http\Controllers\ContributionController::class, 'bulkUpdateStatus']);
+            Route::post('/contributions/bulk-update-status', [ContributionController::class, 'bulkUpdateStatus']);
         });
 
         // Snack Item & Shop CRUD (account_manager, operations_manager, operation)
         Route::middleware(['role:account_manager,snack_manager,operation'])->group(function () {
             // Snack Item CRUD
-            Route::get('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'index']);
-            Route::get('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'show']);
-            Route::post('/snack-items', [\App\Http\Controllers\SnackItemController::class, 'store']);
-            Route::put('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'update']);
-            Route::delete('/snack-items/{id}', [\App\Http\Controllers\SnackItemController::class, 'destroy']);
-            Route::get('/get-snacks', [\App\Http\Controllers\SnackItemController::class, 'getSnacks']);
+            Route::get('/snack-items', [SnackItemController::class, 'index']);
+            Route::get('/snack-items/{id}', [SnackItemController::class, 'show']);
+            Route::post('/snack-items', [SnackItemController::class, 'store']);
+            Route::put('/snack-items/{id}', [SnackItemController::class, 'update']);
+            Route::delete('/snack-items/{id}', [SnackItemController::class, 'destroy']);
+            Route::get('/get-snacks', [SnackItemController::class, 'getSnacks']);
 
             // Shop CRUD
-            Route::get('/shops', [\App\Http\Controllers\ShopController::class, 'index']);
-            Route::get('/shops/{id}', [\App\Http\Controllers\ShopController::class, 'show']);
-            Route::post('/shops', [\App\Http\Controllers\ShopController::class, 'store']);
-            Route::put('/shops/{id}', [\App\Http\Controllers\ShopController::class, 'update']);
-            Route::delete('/shops/{id}', [\App\Http\Controllers\ShopController::class, 'destroy']);
+            Route::get('/shops', [ShopController::class, 'index']);
+            Route::get('/shops/{id}', [ShopController::class, 'show']);
+            Route::post('/shops', [ShopController::class, 'store']);
+            Route::put('/shops/{id}', [ShopController::class, 'update']);
+            Route::delete('/shops/{id}', [ShopController::class, 'destroy']);
         });
 
         // Profit/Loss (account_manager only)
         Route::middleware(['role:account_manager'])->group(function () {
-            Route::get('/profit-loss', [\App\Http\Controllers\ProfitLossController::class, 'index']);
+            Route::get('/profit-loss', [ProfitLossController::class, 'index']);
         });
 
         // Money Pool Access (account_manager and snack_manager only)
@@ -159,9 +179,9 @@ Route::prefix('v1')->group(function () {
         // Operations Manager routes
         Route::middleware(['role:snack_manager'])->group(function () {
             // Weekly operations staff assignment
-            Route::post('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'assign']);
-            Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
-            Route::get('/weekly-operations/{id}', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'show']);
+            Route::post('/weekly-operations', [GroupWeeklyOperationController::class, 'assign']);
+            Route::get('/weekly-operations', [GroupWeeklyOperationController::class, 'index']);
+            Route::get('/weekly-operations/{id}', [GroupWeeklyOperationController::class, 'show']);
 
             // Money Pool Blocks
             Route::post('/money-pool-blocks', [MoneyPoolController::class, 'storeBlock']);
@@ -179,47 +199,47 @@ Route::prefix('v1')->group(function () {
         // Operations Staff routes
         Route::middleware(['role:operation'])->group(function () {
             // Update status for assigned weekly operations
-            Route::patch('/weekly-operations/{id}/status', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'updateStatus']);
-            Route::get('/weekly-operations', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'index']);
-            Route::get('/weekly-operations/{id}', [\App\Http\Controllers\GroupWeeklyOperationController::class, 'show']);
+            Route::patch('/weekly-operations/{id}/status', [GroupWeeklyOperationController::class, 'updateStatus']);
+            Route::get('/weekly-operations', [GroupWeeklyOperationController::class, 'index']);
+            Route::get('/weekly-operations/{id}', [GroupWeeklyOperationController::class, 'show']);
         });
 
         // Employee routes
         Route::middleware(['role:employee'])->group(function () {
             // View own contributions
-            Route::get('/my-contributions', [\App\Http\Controllers\ContributionController::class, 'myContributions']);
+            Route::get('/my-contributions', [ContributionController::class, 'myContributions']);
 
             // Snack suggestion endpoints
-            Route::post('/snack-suggestions', [\App\Http\Controllers\SnackSuggestionController::class, 'store']);
-            Route::get('/snack-suggestions', [\App\Http\Controllers\SnackSuggestionController::class, 'index']);
+            Route::post('/snack-suggestions', [SnackSuggestionController::class, 'store']);
+            Route::get('/snack-suggestions', [SnackSuggestionController::class, 'index']);
             // Snack rating endpoints
-            Route::post('/snack-ratings', [\App\Http\Controllers\SnackRatingController::class, 'store']);
-            Route::get('/snack-ratings', [\App\Http\Controllers\SnackRatingController::class, 'index']);
+            Route::post('/snack-ratings', [SnackRatingController::class, 'store']);
+            Route::get('/snack-ratings', [SnackRatingController::class, 'index']);
         });
 
         // Snack Manager routes
         Route::middleware(['role:snack_manager'])->group(function () {
             // No Snacks Day Management
-            Route::get('/no-snacks-days', [\App\Http\Controllers\NoSnacksDayController::class, 'index']);
-            Route::post('/no-snacks-days', [\App\Http\Controllers\NoSnacksDayController::class, 'store']);
-            Route::put('/no-snacks-days/{id}', [\App\Http\Controllers\NoSnacksDayController::class, 'update']);
-            Route::delete('/no-snacks-days/{id}', [\App\Http\Controllers\NoSnacksDayController::class, 'destroy']);
+            Route::get('/no-snacks-days', [NoSnacksDayController::class, 'index']);
+            Route::post('/no-snacks-days', [NoSnacksDayController::class, 'store']);
+            Route::put('/no-snacks-days/{id}', [NoSnacksDayController::class, 'update']);
+            Route::delete('/no-snacks-days/{id}', [NoSnacksDayController::class, 'destroy']);
         });
 
         // The following routes are only for operations_manager and operation
         Route::middleware(['role:snack_manager,operation,account_manager'])->group(function () {
             // Snack Preference Management (all roles except account_manager)
-            Route::get('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'index']);
-            Route::put('/snack-preferences', [\App\Http\Controllers\SnackPreferenceController::class, 'update']);
-            Route::get('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'index']);
-            Route::post('/snack-plans', [\App\Http\Controllers\SnackPlanController::class, 'store']);
-            Route::get('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'show']);
+            Route::get('/snack-preferences', [SnackPreferenceController::class, 'index']);
+            Route::put('/snack-preferences', [SnackPreferenceController::class, 'update']);
+            Route::get('/snack-plans', [SnackPlanController::class, 'index']);
+            Route::post('/snack-plans', [SnackPlanController::class, 'store']);
+            Route::get('/snack-plans/{id}', [SnackPlanController::class, 'show']);
             // Snack plan detail access
-            Route::get('/snack-plan-details', [\App\Http\Controllers\SnackPlanDetailController::class, 'index']);
-            Route::get('/snack-plan-details/{id}', [\App\Http\Controllers\SnackPlanDetailController::class, 'show']);
-            Route::put('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'update']);
-            Route::delete('/snack-plans/{id}', [\App\Http\Controllers\SnackPlanController::class, 'destroy']);
-            Route::patch('/snack-plan-details/{id}/receipt', [\App\Http\Controllers\SnackPlanController::class, 'uploadReceipt']);
+            Route::get('/snack-plan-details', [SnackPlanDetailController::class, 'index']);
+            Route::get('/snack-plan-details/{id}', [SnackPlanDetailController::class, 'show']);
+            Route::put('/snack-plans/{id}', [SnackPlanController::class, 'update']);
+            Route::delete('/snack-plans/{id}', [SnackPlanController::class, 'destroy']);
+            Route::patch('/snack-plan-details/{id}/receipt', [SnackPlanController::class, 'uploadReceipt']);
         });
     });
 });

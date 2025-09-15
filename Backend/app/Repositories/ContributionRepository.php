@@ -26,8 +26,11 @@ class ContributionRepository implements ContributionRepositoryInterface
         $monthStart = $now->copy()->startOfMonth();
         $monthEnd = $now->copy()->endOfMonth();
 
-        // Get all users
-        $allUsers = User::pluck('user_id')->toArray();
+        // Get all users excluding account_manager role
+        $allUsers = User::join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->where('roles.name', '!=', 'account_manager')
+            ->pluck('users.user_id')
+            ->toArray();
         $count = 0;
         foreach ($allUsers as $targetUserId) {
             $status = in_array($targetUserId, $paidUserIds) ? 'paid' : 'unpaid';
@@ -132,7 +135,7 @@ class ContributionRepository implements ContributionRepositoryInterface
         if (!empty($filters['status'])) {
             $query->where('contributions.status', $filters['status']);
         }
-        $perPage = $filters['per_page'] ?? 15;
+        $perPage = $filters['per_page'] ?? 100;
         return $query->orderBy('contributions.user_id')->paginate($perPage);
     }
     public function create(array $data)
