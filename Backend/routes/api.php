@@ -145,9 +145,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/contributions', [ContributionController::class, 'index']);
             // Bulk update contribution status
             Route::post('/contributions/bulk-update-status', [ContributionController::class, 'bulkUpdateStatus']);
+            Route::get('/weekly-operations', [GroupWeeklyOperationController::class, 'index']);
+            Route::get('/weekly-operations/{id}', [GroupWeeklyOperationController::class, 'show']);
         });
 
-        // Snack Item & Shop CRUD (account_manager, operations_manager, operation)
+        // Snack Item & Shop CRUD (account_manager, snack_manager, operation)
         Route::middleware(['role:account_manager,snack_manager,operation'])->group(function () {
             // Snack Item CRUD
             Route::get('/snack-items', [SnackItemController::class, 'index']);
@@ -176,12 +178,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/money-pool', [MoneyPoolController::class, 'index']);
         });
 
-        // Operations Manager routes
+        // Snack Manager routes
         Route::middleware(['role:snack_manager'])->group(function () {
             // Weekly operations staff assignment
             Route::post('/weekly-operations', [GroupWeeklyOperationController::class, 'assign']);
-            Route::get('/weekly-operations', [GroupWeeklyOperationController::class, 'index']);
-            Route::get('/weekly-operations/{id}', [GroupWeeklyOperationController::class, 'show']);
 
             // Money Pool Blocks
             Route::post('/money-pool-blocks', [MoneyPoolController::class, 'storeBlock']);
@@ -194,14 +194,18 @@ Route::prefix('v1')->group(function () {
             Route::post('/sub-groups', [SubGroupController::class, 'store']);
             Route::put('/sub-groups/{id}', [SubGroupController::class, 'update']);
             Route::delete('/sub-groups/{id}', [SubGroupController::class, 'destroy']);
+
+            // No Snacks Day Management
+            Route::get('/no-snacks-days', [NoSnacksDayController::class, 'index']);
+            Route::post('/no-snacks-days', [NoSnacksDayController::class, 'store']);
+            Route::put('/no-snacks-days/{id}', [NoSnacksDayController::class, 'update']);
+            Route::delete('/no-snacks-days/{id}', [NoSnacksDayController::class, 'destroy']);
         });
 
         // Operations Staff routes
         Route::middleware(['role:operation'])->group(function () {
             // Update status for assigned weekly operations
             Route::patch('/weekly-operations/{id}/status', [GroupWeeklyOperationController::class, 'updateStatus']);
-            Route::get('/weekly-operations', [GroupWeeklyOperationController::class, 'index']);
-            Route::get('/weekly-operations/{id}', [GroupWeeklyOperationController::class, 'show']);
         });
 
         // Employee routes
@@ -217,16 +221,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/snack-ratings', [SnackRatingController::class, 'index']);
         });
 
-        // Snack Manager routes
-        Route::middleware(['role:snack_manager'])->group(function () {
-            // No Snacks Day Management
-            Route::get('/no-snacks-days', [NoSnacksDayController::class, 'index']);
-            Route::post('/no-snacks-days', [NoSnacksDayController::class, 'store']);
-            Route::put('/no-snacks-days/{id}', [NoSnacksDayController::class, 'update']);
-            Route::delete('/no-snacks-days/{id}', [NoSnacksDayController::class, 'destroy']);
-        });
 
-        // The following routes are only for operations_manager and operation
         Route::middleware(['role:snack_manager,operation,account_manager'])->group(function () {
             // Snack Preference Management (all roles except account_manager)
             Route::get('/snack-preferences', [SnackPreferenceController::class, 'index']);
