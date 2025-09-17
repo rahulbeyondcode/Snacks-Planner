@@ -90,9 +90,27 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
         return $this->moneyPoolBlockRepository->findByPoolId($moneyPoolId);
     }
 
-    public function deleteBlock(int $blockId): bool
+    public function deleteBlock(int $blockId)
     {
-        return $this->moneyPoolBlockRepository->delete($blockId);
+        return DB::transaction(function () use ($blockId) {
+            $existingBlock = $this->moneyPoolBlockRepository->find($blockId);
+
+            if (! $existingBlock) {
+                return null;
+            }
+
+            $moneyPoolId = $existingBlock->money_pool_id;
+
+            $deleted = $this->moneyPoolBlockRepository->delete($blockId);
+
+            if (! $deleted) {
+                return null;
+            }
+
+            $this->updateMoneyPoolBlockedAmount($moneyPoolId);
+
+            return $moneyPoolId;
+        });
     }
 
     private function getAmountDetails(array $data, bool $isUpdate, ?int $blockId = null)
