@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\GroupServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 use App\Models\Group;
 use App\Models\GroupMember;
 use Illuminate\Validation\Rule;
@@ -13,6 +14,7 @@ use App\Http\Resources\GroupResource;
 use App\Http\Requests\StoreGroupRequest;
 use App\Http\Requests\UpdateGroupRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class GroupController extends Controller
 {
@@ -24,12 +26,17 @@ class GroupController extends Controller
         $this->groupService = $groupService;
     }
 
+    private function error500($message)
+    {
+        return response()->json(['message' => $message], 500);
+    }
+
     // List groups (admin only)
     public function index(Request $request)
     {
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->internalServerError(__('Forbidden'));
+            return $this->error500(__('Forbidden'));
         }
         $filters = $request->only(['search']);
         $groups = $this->groupService->listGroups($filters);
@@ -41,11 +48,11 @@ class GroupController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->internalServerError(__('Forbidden'));
+            return $this->error500(__('Forbidden'));
         }
         $group = $this->groupService->getGroup($id);
         if (!$group) {
-            return response()->internalServerError(__('Group not found'));
+            return $this->error500(__('Group not found'));
         }
 
         return new GroupResource($group);
@@ -58,7 +65,7 @@ class GroupController extends Controller
         $user = Auth::user();
 
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->internalServerError(__('Forbidden'));
+            return $this->error500(__('Forbidden'));
         }
 
         try {
@@ -67,11 +74,11 @@ class GroupController extends Controller
             // Check if account manager's user_id is included in employees or snack_managers
             $currentUserId = $user->user_id;
             if (in_array($currentUserId, $validated['employees'])) {
-                return response()->internalServerError(__('Account manager cannot be added as an employee.'));
+                return Response::internalServerError(__('Account manager cannot be added as an employee.'));
             }
 
             if (in_array($currentUserId, $validated['snack_managers'])) {
-                return response()->internalServerError(__('Account manager cannot be added as a snack manager.'));
+                return Response::internalServerError(__('Account manager cannot be added as a snack manager.'));
             }
 
             // Collect all user IDs from employees and snack_managers
@@ -114,17 +121,17 @@ class GroupController extends Controller
 
                 $finalMessage = implode('. ', $errorMessages);
 
-                return response()->internalServerError($finalMessage);
+                return Response::internalServerError($finalMessage);
             }
 
             $newGroup = $this->groupService->createGroup($validated);
 
             return (new GroupResource($newGroup))->response()->setStatusCode(201);
         } catch (ValidationException $e) {
-            return response()->internalServerError(__('Validation failed'));
+            return Response::internalServerError(__('Validation failed'));
         } catch (\Exception $e) {
-            \Log::error('Error creating group: ' . $e->getMessage());
-            return response()->internalServerError(__('An error occurred while creating the group'));
+            Log::error('Error creating group: ' . $e->getMessage());
+            return Response::internalServerError(__('An error occurred while creating the group'));
         }
     }
 
@@ -142,11 +149,11 @@ class GroupController extends Controller
             // Check if account manager's user_id is included in employees or snack_managers
             $currentUserId = $user->user_id;
             if (in_array($currentUserId, $validated['employees'])) {
-                return response()->internalServerError(__('Account manager cannot be added as an employee.'));
+                return Response::internalServerError(__('Account manager cannot be added as an employee.'));
             }
 
             if (in_array($currentUserId, $validated['snack_managers'])) {
-                return response()->internalServerError(__('Account manager cannot be added as a snack manager.'));
+                return Response::internalServerError(__('Account manager cannot be added as a snack manager.'));
             }
 
             // Collect all user IDs from employees and snack_managers
@@ -190,20 +197,20 @@ class GroupController extends Controller
 
                 $finalMessage = implode('. ', $errorMessages);
 
-                return response()->internalServerError($finalMessage);
+                return Response::internalServerError($finalMessage);
             }
 
             $updatedGroup = $this->groupService->updateGroup($id, $validated);
             if (!$updatedGroup) {
-                return response()->internalServerError(__('Group not found'));
+                return Response::internalServerError(__('Group not found'));
             }
 
             return (new GroupResource($updatedGroup))->response()->setStatusCode(201);
         } catch (ValidationException $e) {
-            return response()->internalServerError(__('Validation failed'));
+            return Response::internalServerError(__('Validation failed'));
         } catch (\Exception $e) {
-            \Log::error('Error updating group: ' . $e->getMessage());
-            return response()->internalServerError(__('An error occurred while updating the group'));
+            Log::error('Error updating group: ' . $e->getMessage());
+            return Response::internalServerError(__('An error occurred while updating the group'));
         }
     }
 
@@ -212,11 +219,11 @@ class GroupController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->internalServerError(__('Forbidden'));
+            return Response::internalServerError(__('Forbidden'));
         }
         $deleted = $this->groupService->deleteGroup($id);
         if (!$deleted) {
-            return response()->internalServerError(__('Group not found'));
+            return Response::internalServerError(__('Group not found'));
         }
 
         return response()->noContent();
@@ -227,11 +234,11 @@ class GroupController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->internalServerError(__('Forbidden'));
+            return Response::internalServerError(__('Forbidden'));
         }
         $members = $this->groupService->listMembers($id);
         if ($members === null) {
-            return response()->internalServerError(__('Group not found'));
+            return $this->error500(__('Group not found'));
         }
         return GroupResource::collection($members);
     }
@@ -241,7 +248,7 @@ class GroupController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->internalServerError(__('Forbidden'));
+            return $this->error500(__('Forbidden'));
         }
         $validated = $request->validate([
             'user_ids' => 'required|array',
@@ -249,7 +256,7 @@ class GroupController extends Controller
         ]);
         $members = $this->groupService->addMembers($id, $validated['user_ids']);
         if ($members === null) {
-            return response()->internalServerError(__('Group not found'));
+            return Response::internalServerError(__('Group not found'));
         }
         return GroupResource::collection($members);
     }
@@ -259,7 +266,7 @@ class GroupController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->internalServerError(__('Forbidden'));
+            return Response::internalServerError(__('Forbidden'));
         }
         $validated = $request->validate([
             'user_ids' => 'required|array',
@@ -267,7 +274,7 @@ class GroupController extends Controller
         ]);
         $members = $this->groupService->removeMembers($id, $validated['user_ids']);
         if ($members === null) {
-            return response()->internalServerError(__('Group not found'));
+            return Response::internalServerError(__('Group not found'));
         }
         return GroupResource::collection($members);
     }
@@ -277,20 +284,20 @@ class GroupController extends Controller
         // Add authorization check
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->internalServerError(__('Forbidden'));
+            return Response::internalServerError(__('Forbidden'));
         }
 
         $sortOrders = $request->input('sort_orders');
 
         // Improved validation
         if (!is_array($sortOrders) || empty($sortOrders)) {
-            return response()->internalServerError(__('Invalid input format. Expected a non-empty array.'));
+            return $this->error500(__('Invalid input format. Expected a non-empty array.'));
         }
 
         // Validate sort order values are numeric
         foreach ($sortOrders as $groupId => $sortOrder) {
             if (!is_numeric($sortOrder) || $sortOrder < 0) {
-                return response()->internalServerError(__('Invalid sort order value. Expected non-negative numbers.'));
+                return $this->error500(__('Invalid sort order value. Expected non-negative numbers.'));
             }
         }
 
@@ -298,7 +305,7 @@ class GroupController extends Controller
             // Use database transaction for data consistency
             DB::transaction(function () use ($sortOrders) {
                 $groupIds = array_keys($sortOrders);
-                
+
                 // Get only existing group_ids
                 $existingGroupIds = Group::whereIn('group_id', $groupIds)
                     ->pluck('group_id')
@@ -319,8 +326,8 @@ class GroupController extends Controller
                 'data' => $sortOrders
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Error updating group sort orders: ' . $e->getMessage());
-            return response()->internalServerError(__('An error occurred while updating sort orders'));
+            Log::error('Error updating group sort orders: ' . $e->getMessage());
+            return $this->error500(__('An error occurred while updating sort orders'));
         }
     }
 }

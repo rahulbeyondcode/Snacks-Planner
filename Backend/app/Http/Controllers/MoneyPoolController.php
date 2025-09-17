@@ -14,6 +14,7 @@ use App\Services\ContributionServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Log;
 
 class MoneyPoolController extends Controller
 {
@@ -133,7 +134,7 @@ class MoneyPoolController extends Controller
             ], 201);
         } catch (\Exception $e) {
             // Log the actual error for debugging
-            \Log::error('MoneyPoolController::storeBlock Error: ' . $e->getMessage(), [
+            Log::error('MoneyPoolController::storeBlock Error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
@@ -175,7 +176,7 @@ class MoneyPoolController extends Controller
             ]);
         } catch (\Exception $e) {
             // Log the actual error for debugging
-            \Log::error('MoneyPoolController::updateBlock Error: ' . $e->getMessage(), [
+            Log::error('MoneyPoolController::updateBlock Error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
