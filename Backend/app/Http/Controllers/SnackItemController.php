@@ -9,6 +9,7 @@ use App\Http\Requests\StoreSnackItemRequest;
 use App\Http\Requests\UpdateSnackItemRequest;
 use App\Http\Resources\SnackItemResource;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
 
 class SnackItemController extends Controller
 {
@@ -42,7 +43,7 @@ class SnackItemController extends Controller
                 'data' => $snacks
             ], 200);
         } catch (\Exception $e) {
-            return response()->internalServerError(__('Failed to retrieve snacks'));
+            return Response::internalServerError(__('Failed to retrieve snacks'));
         }
     }
 
@@ -93,7 +94,7 @@ class SnackItemController extends Controller
             return (new SnackItemResource($item))->response()->setStatusCode(201);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->internalServerError(__('Failed to create snack item'));
+            return Response::internalServerError(__('Failed to create snack item'));
         }
     }
 
@@ -157,7 +158,7 @@ class SnackItemController extends Controller
             return (new SnackItemResource($item))->response()->setStatusCode(200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->internalServerError(__('Failed to update snack item'));
+            return Response::internalServerError(__('Failed to update snack item'));
         }
     }
 
@@ -180,7 +181,7 @@ class SnackItemController extends Controller
             return apiResponse(true, __('delete'), null, 200);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->internalServerError(__('Failed to delete snack item'));
+            return Response::internalServerError(__('Failed to delete snack item'));
         }
     }
 }

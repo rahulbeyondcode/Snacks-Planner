@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateSubGroupRequest;
 use App\Http\Resources\SubGroupResource;
 use App\Services\SubGroupServiceInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 
 class SubGroupController extends Controller
 {
@@ -31,7 +32,7 @@ class SubGroupController extends Controller
 
             return SubGroupResource::collection($subGroups);
         } catch (\Exception $e) {
-            return response()->internalServerError(__('messages.error'));
+            return Response::internalServerError(__('messages.error'));
         }
     }
 
@@ -49,7 +50,7 @@ class SubGroupController extends Controller
 
             return new SubGroupResource($subGroup);
         } catch (\Exception $e) {
-            return response()->internalServerError(__('messages.error'));
+            return Response::internalServerError(__('messages.error'));
         }
     }
 
@@ -76,7 +77,7 @@ class SubGroupController extends Controller
         } catch (\Exception $e) {
             dd($e);
 
-            return response()->internalServerError(__('messages.error'));
+            return Response::internalServerError(__('messages.error'));
         }
     }
 
@@ -97,7 +98,7 @@ class SubGroupController extends Controller
 
             return new SubGroupResource($subGroup);
         } catch (\Exception $e) {
-            return response()->internalServerError(__('messages.error'));
+            return Response::internalServerError(__('messages.error'));
         }
     }
 
@@ -114,7 +115,7 @@ class SubGroupController extends Controller
 
             return response()->noContent();
         } catch (\Exception $e) {
-            return response()->internalServerError(__('messages.error'));
+            return Response::internalServerError(__('messages.error'));
         }
     }
 }

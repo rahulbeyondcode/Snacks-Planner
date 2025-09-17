@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateSnackPlanRequest;
 use App\Http\Resources\SnackPlanResource;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 class SnackPlanController extends Controller
 {
@@ -107,7 +108,7 @@ class SnackPlanController extends Controller
     {
         $snackPlan = $this->snackPlanService->getSnackPlan($id);
         if (!$snackPlan) {
-            return response()->internalServerError(__('messages.error'));
+            return Response::internalServerError(__('messages.error'));
         }
         return apiResponse(true, __('success'), $snackPlan, 200);
     }
@@ -126,7 +127,7 @@ class SnackPlanController extends Controller
                     $snackDate = Carbon::createFromFormat('d-m-Y', trim($validated['snack_date']))->format('Y-m-d');
                     $planData['snack_date'] = $snackDate;
                 } catch (\Exception $e) {
-                    return response()->internalServerError(__('Invalid date format. Please use DD-MM-YYYY format'));
+                    return Response::internalServerError(__('Invalid date format. Please use DD-MM-YYYY format'));
                 }
             }
 
@@ -137,7 +138,7 @@ class SnackPlanController extends Controller
             // Check if user is authenticated for update
             $user = Auth::user();
             if (!$user) {
-                return response()->internalServerError(__('User not authenticated'));
+                return Response::internalServerError(__('User not authenticated'));
             }
             $planData['user_id'] = $user->user_id;
 
@@ -156,7 +157,7 @@ class SnackPlanController extends Controller
 
             $updated = $this->snackPlanService->updateSnackPlan($id, $planData, $snackItems);
             if (!$updated) {
-                return response()->internalServerError(__('Snack Plan not found'));
+                return Response::internalServerError(__('Snack Plan not found'));
             }
 
             return response()->json([
@@ -165,7 +166,7 @@ class SnackPlanController extends Controller
                 'data' => $updated
             ], 200);
         } catch (\Exception $e) {
-            return response()->internalServerError(__('Failed to update snack plan'));
+            return Response::internalServerError(__('Failed to update snack plan'));
         }
     }
 
@@ -179,7 +180,7 @@ class SnackPlanController extends Controller
             }
             return response()->noContent();
         } catch (\Exception $e) {
-            return response()->internalServerError(__('Failed to delete snack plan'));
+            return Response::internalServerError(__('Failed to delete snack plan'));
         }
     }
 }
