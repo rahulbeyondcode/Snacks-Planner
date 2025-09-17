@@ -11,14 +11,18 @@ import {
 } from "shared/helpers/constants";
 
 const SnackManagerMoneyPoolView: React.FC = () => {
-  const { data: moneyPoolData, isLoading } = useQuery({
+  const {
+    data: moneyPoolData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["money-pool"],
     queryFn: getMoneyPool,
     staleTime: GET_MONEY_POOL_STALE_TIME,
     retry: GET_MONEY_POOL_RETRY,
   });
 
-  if (isLoading || !moneyPoolData) {
+  if (isLoading || error || !moneyPoolData) {
     return (
       <div className="w-full mx-auto mt-6 px-2 sm:px-4">
         <div className="mb-4 sm:mb-6 flex items-center justify-between">
@@ -27,7 +31,26 @@ const SnackManagerMoneyPoolView: React.FC = () => {
           </h2>
         </div>
         <div className="flex items-center justify-center py-8">
-          <div className="text-lg">Loading money pool data...</div>
+          {isLoading ? (
+            <div className="text-lg">Loading money pool data...</div>
+          ) : (
+            ""
+          )}
+          {error ? (
+            <div className="text-lg text-red-600">
+              Error loading money pool data:{" "}
+              {error instanceof Error ? error.message : "Unknown error"}
+            </div>
+          ) : (
+            ""
+          )}
+          {!moneyPoolData ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-lg">No money pool data available</div>
+            </div>
+          ) : (
+            ""
+          )}
         </div>
       </div>
     );
@@ -40,6 +63,8 @@ const SnackManagerMoneyPoolView: React.FC = () => {
   );
   const finalPoolAmount = moneyPoolData.total_pool_amount || 0;
   const availablePoolAmount = finalPoolAmount - totalBlockedAmount;
+
+  console.log("moneyPoolData: ", moneyPoolData);
 
   return (
     <div className="w-full mx-auto mt-6 px-2 sm:px-4">
@@ -73,6 +98,20 @@ const SnackManagerMoneyPoolView: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <InfoCard
+            title="Employees"
+            data={[
+              {
+                label: "Paid",
+                value: moneyPoolData.contribution_counts?.total_paid || 0,
+              },
+              {
+                label: "Unpaid",
+                value: moneyPoolData.contribution_counts?.total_unpaid || 0,
+              },
+            ]}
+          />
+
+          <InfoCard
             title="Employee contributions"
             data={[
               {
@@ -105,32 +144,10 @@ const SnackManagerMoneyPoolView: React.FC = () => {
               },
             ]}
           />
-
-          <InfoCard
-            title="Employees"
-            data={[
-              {
-                label: "Paid",
-                value: moneyPoolData.settings?.per_month_amount
-                  ? Math.floor(
-                      (moneyPoolData.total_collected_amount || 0) /
-                        moneyPoolData.settings.per_month_amount
-                    )
-                  : 0,
-              },
-              {
-                label: "Unpaid",
-                value: 12,
-              },
-            ]}
-          />
         </div>
 
         <div className="grid grid-cols-1 gap-3">
-          <BlockedFundsSection
-            blockedFunds={blockedFunds}
-            maxAmount={availablePoolAmount}
-          />
+          <BlockedFundsSection />
         </div>
       </div>
     </div>

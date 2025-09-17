@@ -1,5 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import React, { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -7,12 +8,12 @@ import InputField from "shared/components/form-components/input-field";
 import MultiDatePicker from "shared/components/form-components/multi-date-picker";
 import Button from "shared/components/save-button";
 
-import { createBlockedFund } from "features/money-pool/api";
+import { createBlockedFund, updateBlockedFund } from "features/money-pool/api";
 import {
   blockFundsFormDefaultValues,
   blockFundsFormSchema,
 } from "features/money-pool/helpers/form-config";
-import { useBlockedFundsFormStore } from "features/money-pool/store";
+import { useBlockedFundsFormStore } from "features/money-pool/store/blocked-funds-store";
 
 type BlockFundsFormProps = {
   maxAmount: number;
@@ -60,18 +61,44 @@ const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
       closeForm();
     },
     onError: (error) => {
-      // TODO: Handle error if needed
       console.error("Failed to create blocked fund:", error);
     },
   });
 
+  const updateBlockedFundMutation = useMutation({
+    mutationFn: ({
+      blockId,
+      payload,
+    }: {
+      blockId: number;
+      payload: { reason: string; block_date: string; amount: number };
+    }) => updateBlockedFund(blockId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["money-pool"] });
+      reset(blockFundsFormDefaultValues);
+      closeForm();
+    },
+    onError: (error) => {
+      console.error("Failed to update blocked fund:", error);
+    },
+  });
+
   const onSubmit = (data: FormValues) => {
+    console.log("data: ", data);
     const payload = {
       reason: data.name,
-      block_date: data.date,
+      block_date: dayjs(data.date).format("YYYY-MM-DD"),
       amount: Number(data.amount) || 0,
     };
-    createBlockedFundMutation.mutate(payload);
+
+    if (isEditMode && editingFund) {
+      updateBlockedFundMutation.mutate({
+        blockId: editingFund.block_id,
+        payload,
+      });
+    } else {
+      createBlockedFundMutation.mutate(payload);
+    }
   };
 
   return (
@@ -141,8 +168,15 @@ const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
           >
             Cancel
           </button>
-          <Button type="submit" disabled={createBlockedFundMutation.isPending}>
-            {createBlockedFundMutation.isPending
+          <Button
+            type="submit"
+            disabled={
+              createBlockedFundMutation.isPending ||
+              updateBlockedFundMutation.isPending
+            }
+          >
+            {createBlockedFundMutation.isPending ||
+            updateBlockedFundMutation.isPending
               ? isEditMode
                 ? "Updating..."
                 : "Saving..."

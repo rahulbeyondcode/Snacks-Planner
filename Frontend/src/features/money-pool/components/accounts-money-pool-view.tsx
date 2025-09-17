@@ -24,7 +24,11 @@ const multiplierOptions = multipliers.map((mult) => ({
 const AccountsMoneyPoolView: React.FC = () => {
   const queryClient = useQueryClient();
 
-  const { data: moneyPoolData, isLoading } = useQuery({
+  const {
+    data: moneyPoolData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["money-pool"],
     queryFn: getMoneyPool,
     staleTime: GET_MONEY_POOL_STALE_TIME,
@@ -48,12 +52,7 @@ const AccountsMoneyPoolView: React.FC = () => {
         companyContributionMultiplier: (
           moneyPoolData.settings?.multiplier || 0
         ).toString(),
-        totalEmployees: moneyPoolData.settings?.per_month_amount
-          ? Math.floor(
-              (moneyPoolData.total_collected_amount || 0) /
-                moneyPoolData.settings.per_month_amount
-            )
-          : 0,
+        totalEmployees: moneyPoolData.settings?.total_users || 0,
       };
       reset(formData);
     }
@@ -106,6 +105,45 @@ const AccountsMoneyPoolView: React.FC = () => {
         </div>
         <div className="flex items-center justify-center py-8">
           <div className="text-lg">Loading money pool data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full mx-auto mt-6 px-2 sm:px-4">
+        <div className="mb-5 sm:mb-6 flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-black">
+            Money Pool Setup
+          </h2>
+          <span className="px-2 py-1 rounded-md bg-yellow-300 text-black border-2 border-black text-[10px] font-bold tracking-wide">
+            Accounts
+          </span>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-lg text-red-600">
+            Error loading money pool data:{" "}
+            {error instanceof Error ? error.message : "Unknown error"}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!moneyPoolData) {
+    return (
+      <div className="w-full mx-auto mt-6 px-2 sm:px-4">
+        <div className="mb-5 sm:mb-6 flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-black">
+            Money Pool Setup
+          </h2>
+          <span className="px-2 py-1 rounded-md bg-yellow-300 text-black border-2 border-black text-[10px] font-bold tracking-wide">
+            Accounts
+          </span>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-lg">No money pool data available</div>
         </div>
       </div>
     );

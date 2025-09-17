@@ -8,7 +8,7 @@ import API from "shared/helpers/api";
 
 const getMoneyPool = async (): Promise<MoneyPoolType> => {
   const response = await API.get("/money-pool");
-  return response.data;
+  return response.data?.data;
 };
 
 const updateMoneyPoolSettings = async (
