@@ -6,6 +6,9 @@ import InfoCard from "features/money-pool/components/info-card";
 import InputField from "shared/components/form-components/input-field";
 import MultiSelect from "shared/components/form-components/multi-select";
 import Button from "shared/components/save-button";
+import Tooltip from "shared/components/tooltip";
+
+import InfoIcon from "assets/components/info-icon";
 
 import { getMoneyPool, updateMoneyPoolSettings } from "features/money-pool/api";
 import type { MoneyPoolFormType } from "features/money-pool/helpers/money-pool-types";
@@ -48,9 +51,10 @@ const AccountsMoneyPoolView: React.FC = () => {
   useEffect(() => {
     if (moneyPoolData) {
       const formData = {
-        amountCollectedPerPerson: moneyPoolData.settings?.per_month_amount || 0,
+        amountCollectedPerPerson:
+          moneyPoolData.settings?.per_month_amount || "",
         companyContributionMultiplier: (
-          moneyPoolData.settings?.multiplier || 0
+          moneyPoolData.settings?.multiplier || ""
         ).toString(),
         totalEmployees: moneyPoolData.settings?.total_users || 0,
       };
@@ -79,7 +83,7 @@ const AccountsMoneyPoolView: React.FC = () => {
   });
 
   const employeesTotal = Number(
-    (watchedTotalEmployees || 0) * (watchedAmount || 0)
+    (watchedTotalEmployees || 0) * (Number(watchedAmount) || 0)
   );
   const companyTotal = Number(employeesTotal * Number(watchedMultiplier || 0));
   const computedFinal = employeesTotal + companyTotal;
@@ -92,7 +96,7 @@ const AccountsMoneyPoolView: React.FC = () => {
     updateMoneyPoolMutation.mutate(finalPayload);
   };
 
-  if (isLoading) {
+  if (isLoading || error || !moneyPoolData) {
     return (
       <div className="w-full mx-auto mt-6 px-2 sm:px-4">
         <div className="mb-5 sm:mb-6 flex items-center justify-between">
@@ -104,46 +108,15 @@ const AccountsMoneyPoolView: React.FC = () => {
           </span>
         </div>
         <div className="flex items-center justify-center py-8">
-          <div className="text-lg">Loading money pool data...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="w-full mx-auto mt-6 px-2 sm:px-4">
-        <div className="mb-5 sm:mb-6 flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-black">
-            Money Pool Setup
-          </h2>
-          <span className="px-2 py-1 rounded-md bg-yellow-300 text-black border-2 border-black text-[10px] font-bold tracking-wide">
-            Accounts
-          </span>
-        </div>
-        <div className="flex items-center justify-center py-8">
-          <div className="text-lg text-red-600">
-            Error loading money pool data:{" "}
-            {error instanceof Error ? error.message : "Unknown error"}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!moneyPoolData) {
-    return (
-      <div className="w-full mx-auto mt-6 px-2 sm:px-4">
-        <div className="mb-5 sm:mb-6 flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-black">
-            Money Pool Setup
-          </h2>
-          <span className="px-2 py-1 rounded-md bg-yellow-300 text-black border-2 border-black text-[10px] font-bold tracking-wide">
-            Accounts
-          </span>
-        </div>
-        <div className="flex items-center justify-center py-8">
-          <div className="text-lg">No money pool data available</div>
+          {isLoading && (
+            <div className="text-lg">Loading money pool data...</div>
+          )}
+          {error && (
+            <div className="text-lg text-red-600">
+              Error loading money pool data:{" "}
+              {error instanceof Error ? error.message : "Unknown error"}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -161,9 +134,7 @@ const AccountsMoneyPoolView: React.FC = () => {
       </div>
 
       <FormProvider {...methods}>
-        {/* Summary cards - total first, then two equal cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-8">
-          {/* Total pool amount (full width) */}
           <div className="bg-white rounded-2xl border-2 border-black p-4 sm:p-5 shadow-[4px_4px_0_0_#000] md:col-span-2">
             <div className="text-sm font-semibold text-black/70">
               Total pool amount
@@ -185,9 +156,7 @@ const AccountsMoneyPoolView: React.FC = () => {
               },
               {
                 label: "Total",
-                value: `Rs. ${Number(
-                  (watchedTotalEmployees || 0) * (watchedAmount || 0)
-                ).toLocaleString()}`,
+                value: `Rs. ${Number(employeesTotal).toLocaleString()}`,
               },
             ]}
           />
@@ -202,11 +171,7 @@ const AccountsMoneyPoolView: React.FC = () => {
               },
               {
                 label: "Total",
-                value: `Rs. ${Number(
-                  (watchedTotalEmployees || 0) *
-                    (watchedAmount || 0) *
-                    Number(watchedMultiplier || 0)
-                ).toLocaleString()}`,
+                value: `Rs. ${Number(companyTotal).toLocaleString()}`,
               },
             ]}
           />
@@ -224,14 +189,36 @@ const AccountsMoneyPoolView: React.FC = () => {
               placeholder="e.g. 500"
               className="w-full"
             />
-            <InputField
-              name="totalEmployees"
-              label="Total employees"
-              type="number"
-              placeholder="e.g. 85"
-              className="w-full"
-              isDisabled
-            />
+
+            <div className="w-full">
+              <div className="flex items-center gap-2 mb-2">
+                <label
+                  htmlFor="totalEmployees"
+                  className="block text-sm font-medium text-black"
+                >
+                  Total employees
+                </label>
+                <Tooltip
+                  content="You cannot change the number of employees here. You have to add or remove employees from the employees page."
+                  position="top"
+                >
+                  <button
+                    type="button"
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <InfoIcon className="w-4 h-4" />
+                  </button>
+                </Tooltip>
+              </div>
+              <InputField
+                name="totalEmployees"
+                type="number"
+                placeholder="e.g. 85"
+                className="w-full"
+                isDisabled
+              />
+            </div>
+
             <div className="sm:col-span-2">
               <MultiSelect
                 name="companyContributionMultiplier"

@@ -82,13 +82,15 @@ const SnackManagerMoneyPoolView: React.FC = () => {
           <div className="mb-2 font-extrabold text-black">Pool amounts</div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-black/70 text-sm">Available</span>
+              <span className="text-black/70 text-sm">
+                Available amount to spend
+              </span>
               <span className="inline-flex items-center px-3 py-1 rounded-md bg-yellow-200 border-2 border-black font-extrabold text-lg sm:text-2xl">
                 Rs. {Number(availablePoolAmount).toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-black/70 text-sm">Final</span>
+              <span className="text-black/70 text-sm">Total pool amount</span>
               <span className="font-extrabold text-base sm:text-xl">
                 Rs. {Number(finalPoolAmount).toLocaleString()}
               </span>

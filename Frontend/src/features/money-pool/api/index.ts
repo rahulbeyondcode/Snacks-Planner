@@ -14,7 +14,7 @@ const getMoneyPool = async (): Promise<MoneyPoolType> => {
 const updateMoneyPoolSettings = async (
   payload: MoneyPoolPayloadType
 ): Promise<MoneyPoolType> => {
-  const response = await API.put("/money-pool-settings", payload);
+  const response = await API.post("/money-pool-settings", payload);
   return response.data;
 };
 

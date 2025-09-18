@@ -1,14 +1,7 @@
-export type CreatorType = {
+type CreatorType = {
   id: number;
   name: string;
   email: string;
-};
-
-export type SettingsType = {
-  money_pool_setting_id: number;
-  per_month_amount: number;
-  multiplier: number;
-  total_users: number;
 };
 
 export type BlockedFundType = {
@@ -20,9 +13,16 @@ export type BlockedFundType = {
   creator: CreatorType;
 };
 
-export type ContributionCountsType = {
+type ContributionCountsType = {
   total_paid: number;
   total_unpaid: number;
+};
+
+type SettingsType = {
+  money_pool_setting_id: number;
+  per_month_amount: string | number;
+  multiplier: number;
+  total_users: number;
 };
 
 export type MoneyPoolType = {
@@ -39,7 +39,7 @@ export type MoneyPoolType = {
 
 // For frontend form handling - maps to API structure
 export type MoneyPoolFormType = {
-  amountCollectedPerPerson: number;
+  amountCollectedPerPerson: string | number;
   companyContributionMultiplier: string | number;
   totalEmployees?: number;
 };
@@ -51,6 +51,6 @@ export type BlockedFundPayloadType = {
 };
 
 export type MoneyPoolPayloadType = {
-  per_month_amount: number;
+  per_month_amount: string | number;
   multiplier: number;
 };
