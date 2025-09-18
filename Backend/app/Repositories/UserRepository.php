@@ -30,7 +30,7 @@ class UserRepository implements UserRepositoryInterface
             });
         }
 
-        return $query->with('role')->orderBy('user_id')->get();
+        return $query->with('role')->orderBy('name')->get();
     }
 
     public function find(int $id)

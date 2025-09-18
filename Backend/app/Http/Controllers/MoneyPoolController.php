@@ -13,6 +13,8 @@ use App\Services\MoneyPoolSettingsServiceInterface;
 use App\Services\ContributionServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Log;
 
 class MoneyPoolController extends Controller
 {
@@ -132,7 +134,7 @@ class MoneyPoolController extends Controller
             ], 201);
         } catch (\Exception $e) {
             // Log the actual error for debugging
-            \Log::error('MoneyPoolController::storeBlock Error: ' . $e->getMessage(), [
+            Log::error('MoneyPoolController::storeBlock Error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
@@ -174,7 +176,7 @@ class MoneyPoolController extends Controller
             ]);
         } catch (\Exception $e) {
             // Log the actual error for debugging
-            \Log::error('MoneyPoolController::updateBlock Error: ' . $e->getMessage(), [
+            Log::error('MoneyPoolController::updateBlock Error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
@@ -198,13 +200,19 @@ class MoneyPoolController extends Controller
     public function deleteBlock(int $blockId): JsonResponse
     {
         try {
-            if (! $this->moneyPoolBlockService->deleteBlock($blockId)) {
-                return response()->notFound(__('money_pool_blocks.block_not_found'));
+            $moneyPoolId = $this->moneyPoolBlockService->deleteBlock($blockId);
+
+            if (! $moneyPoolId) {
+                return Response::notFound(__('money_pool_blocks.block_not_found'));
             }
 
-            return response()->noContent();
+            return response()->json([
+                'success' => true,
+                'message' => 'Money pool block deleted successfully',
+                'data' => $this->getBlocks($moneyPoolId)
+            ]);
         } catch (\Exception $e) {
-            return response()->internalServerError(__('messages.error'));
+            return Response::internalServerError(__('messages.error'));
         }
     }
 }
