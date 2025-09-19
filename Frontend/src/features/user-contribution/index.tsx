@@ -1,65 +1,212 @@
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
 
 import EmployeeContributionList from "features/user-contribution/components/employee-contribution-list";
 import FilterBar from "features/user-contribution/components/filter-bar";
-import Button from "shared/components/save-button";
+import UnsavedChangesAlert from "features/user-contribution/components/unsaved-changes-alert";
 
-import type { EmployeeContribution } from "features/user-contribution/helpers/user-contribution-type";
-
-const initialEmployees: EmployeeContribution[] = [
-  { id: 1, name: "Ajai Mathew", paid: false },
-  { id: 2, name: "Akhil Dileep", paid: true },
-  { id: 3, name: "Amal KK", paid: true },
-  { id: 4, name: "Rahul R", paid: true },
-  { id: 5, name: "Parvathy", paid: false },
-  { id: 6, name: "Vishak", paid: false },
-];
+import {
+  bulkUpdateContributionStatus,
+  getContributions,
+} from "features/user-contribution/api";
+import {
+  applyPendingChangesToContributions,
+  hasPendingChanges,
+  useUserContributionStore,
+} from "features/user-contribution/store";
+import {
+  GET_CONTRIBUTIONS_RETRY,
+  GET_CONTRIBUTIONS_STALE_TIME,
+} from "shared/helpers/constants";
 
 const UserContributionManagement = () => {
-  const [filter, setFilter] = useState<string>("all");
-  const [search, setSearch] = useState<string>("");
-  const [employees, setEmployees] =
-    useState<EmployeeContribution[]>(initialEmployees);
+  const {
+    filter,
+    search,
+    pendingChanges,
+    setFilter,
+    setSearch,
+    setStats,
+    togglePendingStatus,
+    discardPendingChanges,
+    commitPendingChanges,
+    loadPendingChanges,
+    clearSelectedContributors,
+  } = useUserContributionStore();
 
-  const filteredEmployees = employees.filter((emp) => {
-    if (filter === "paid" && !emp.paid) return false;
-    if (filter === "unpaid" && emp.paid) return false;
-    if (search && !emp.name.toLowerCase().includes(search.toLowerCase()))
-      return false;
-    return true;
+  const queryClient = useQueryClient();
+
+  // React Query hooks
+  const {
+    data: contributionData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["contributions"],
+    queryFn: getContributions,
+    staleTime: GET_CONTRIBUTIONS_STALE_TIME,
+    retry: GET_CONTRIBUTIONS_RETRY,
   });
 
-  const handleTogglePaid = (id: number) => {
-    setEmployees((emps) =>
-      emps.map((emp) => (emp.id === id ? { ...emp, paid: !emp.paid } : emp))
+  const bulkUpdateMutation = useMutation({
+    mutationFn: bulkUpdateContributionStatus,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["contributions"], data);
+    },
+    onError: (error) => {
+      console.error("Failed to update contributions:", error);
+    },
+  });
+
+  // Process contributions with pending changes
+  const contributionsWithPending = useMemo(() => {
+    if (!contributionData?.data?.contributions) return [];
+    return applyPendingChangesToContributions(
+      contributionData.data.contributions,
+      pendingChanges
     );
+  }, [contributionData?.data?.contributions, pendingChanges]);
+
+  const filteredEmployees = useMemo(() => {
+    return contributionsWithPending.filter((emp) => {
+      const displayStatus =
+        emp.pendingStatus !== undefined ? emp.pendingStatus : emp.status;
+
+      if (filter === "paid" && !displayStatus) return false;
+      if (filter === "unpaid" && displayStatus) return false;
+      if (search && !emp.user_name.toLowerCase().includes(search.toLowerCase()))
+        return false;
+      return true;
+    });
+  }, [contributionsWithPending, filter, search]);
+
+  const hasUnsavedChanges = hasPendingChanges(pendingChanges);
+  const pendingChangesCount = Object.keys(pendingChanges).length;
+
+  const handleTogglePaid = (userId: number) => {
+    const employee = contributionsWithPending.find(
+      (emp) => emp.user_id === userId
+    );
+    if (employee) {
+      togglePendingStatus(userId, employee.status);
+    }
   };
 
-  const handleSave = () => {
-    // Placeholder for save logic
-    alert("Saved!");
+  const handleSave = async () => {
+    if (!hasUnsavedChanges) {
+      alert("No changes to save");
+      return;
+    }
+
+    // Commit pending changes to prepare selected contributor IDs
+    commitPendingChanges();
+
+    // Get the contributor IDs that have pending status changes
+    const contributorIds = Object.entries(pendingChanges)
+      .filter(([_, change]) => change.pendingStatus !== change.originalStatus)
+      .map(([userId, _]) => parseInt(userId));
+
+    if (contributorIds.length === 0) {
+      alert("No valid changes to save");
+      return;
+    }
+
+    try {
+      await bulkUpdateMutation.mutateAsync({
+        contributors: contributorIds,
+      });
+
+      // Clear pending changes after successful save
+      discardPendingChanges();
+      clearSelectedContributors();
+
+      alert("Successfully updated contributions");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update contributions";
+      alert(errorMessage);
+    }
   };
 
-  return (
-    <div className="w-full mx-auto mt-8 md:mt-10 px-3 sm:px-6">
-      <div className="bg-white rounded-3xl p-5 sm:p-6 md:p-8 max-w-5xl w-full mx-auto">
-        <h2 className="text-xl sm:text-2xl font-extrabold text-black mb-6">
-          Employee Contribution
-        </h2>
-        <FilterBar
-          activeFilter={filter}
-          onFilterChange={setFilter}
-          searchValue={search}
-          onSearchChange={setSearch}
-        />
-        <EmployeeContributionList
-          employees={filteredEmployees}
-          onTogglePaid={handleTogglePaid}
-        />
-        <div className="flex justify-end mt-4">
-          <Button onClick={handleSave}>Save</Button>
+  const handleDiscardChanges = () => {
+    discardPendingChanges();
+  };
+
+  // Load pending changes from localStorage on component mount
+  useEffect(() => {
+    loadPendingChanges();
+  }, [loadPendingChanges]);
+
+  // Update stats when data is available
+  useEffect(() => {
+    if (contributionData?.data) {
+      setStats(
+        contributionData.data.paid_contributions,
+        contributionData.data.unpaid_records
+      );
+    }
+  }, [contributionData?.data, setStats]);
+
+  if (isLoading && !contributionData) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-lg font-semibold text-gray-600">
+          Loading contributions...
         </div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-lg font-semibold text-red-600">
+          Error loading contributions:{" "}
+          {error instanceof Error ? error.message : "Unknown error"}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col gap-4 box-border">
+      <header className="h-20 flex-shrink-0 border-b border-gray-200">
+        <div className="max-w-5xl mx-auto px-4 h-full">
+          <h2 className="text-xl sm:text-2xl font-extrabold m-0 leading-none mb-5">
+            Employee Contribution
+          </h2>
+
+          <FilterBar
+            activeFilter={filter}
+            onFilterChange={setFilter}
+            searchValue={search}
+            onSearchChange={setSearch}
+          />
+        </div>
+      </header>
+
+      <main className="flex-1 min-h-0 overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-4 py-4 min-h-0">
+          <EmployeeContributionList
+            employees={filteredEmployees}
+            onTogglePaid={handleTogglePaid}
+          />
+        </div>
+      </main>
+
+      <footer className="h-20 flex-shrink-0">
+        <div className="px-4 h-full w-[60%] mx-auto">
+          {hasUnsavedChanges && (
+            <UnsavedChangesAlert
+              isVisible={hasUnsavedChanges}
+              pendingChangesCount={pendingChangesCount}
+              onSave={handleSave}
+              onDiscard={handleDiscardChanges}
+              isSaving={bulkUpdateMutation.isPending}
+            />
+          )}
+        </div>
+      </footer>
     </div>
   );
 };

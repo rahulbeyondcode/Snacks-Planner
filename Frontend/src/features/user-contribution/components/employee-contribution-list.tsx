@@ -16,7 +16,7 @@ const EmployeeContributionList: React.FC<EmployeeContributionListProps> = ({
     <div className="flex flex-col gap-3 sm:gap-4">
       {employees.map((emp) => (
         <EmployeeContributionRow
-          key={emp.id}
+          key={emp.user_id}
           employee={emp}
           onTogglePaid={onTogglePaid}
         />
