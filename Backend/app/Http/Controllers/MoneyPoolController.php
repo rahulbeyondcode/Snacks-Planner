@@ -74,10 +74,13 @@ class MoneyPoolController extends Controller
             $pool = $this->moneyPoolService->getCurrentMonthMoneyPool();
 
             if (!$pool) {
+                $settings = $this->moneyPoolSettingsService->getSettings();
                 return response()->json([
                     'success' => false,
                     'message' => 'Money pool not found',
-                    'data' => []
+                    'data' => [
+                        'settings' => new MoneyPoolSettingsResource($settings)
+                    ]
                 ], 200);
             }
 
