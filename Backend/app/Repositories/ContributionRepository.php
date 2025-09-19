@@ -22,6 +22,14 @@ class ContributionRepository implements ContributionRepositoryInterface
      */
     public function bulkUpdateStatus(array $paidUserIds, $userId = null)
     {
+        // Validate that active money pool settings exist before proceeding
+        $activeSettings = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+        if (!$activeSettings) {
+            $validator = \Illuminate\Support\Facades\Validator::make([], []);
+            $validator->errors()->add('money_pool_settings', 'No active money pool settings found. Please configure money pool settings before accepting contributions.');
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+
         $now = now();
         $monthStart = $now->copy()->startOfMonth();
         $monthEnd = $now->copy()->endOfMonth();
@@ -155,6 +163,16 @@ class ContributionRepository implements ContributionRepositoryInterface
 
     public function update(int $id, array $data)
     {
+        // Validate that active money pool settings exist before updating contribution status
+        if (isset($data['status'])) {
+            $activeSettings = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+            if (!$activeSettings) {
+                $validator = \Illuminate\Support\Facades\Validator::make([], []);
+                $validator->errors()->add('money_pool_settings', 'No active money pool settings found. Please configure money pool settings before accepting contributions.');
+                throw new \Illuminate\Validation\ValidationException($validator);
+            }
+        }
+
         $contribution = Contribution::find($id);
         if ($contribution) {
             $contribution->update($data);
