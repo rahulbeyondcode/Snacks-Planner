@@ -44,10 +44,19 @@ class MoneyPoolController extends Controller
             $settings = $this->moneyPoolSettingsService->getSettings();
 
             if (!$settings) {
+                $totalActiveUsers = \App\Models\User::join('roles', 'users.role_id', '=', 'roles.role_id')
+                    ->where('roles.name', '!=', 'account_manager')
+                    ->whereNull('users.deleted_at')
+                    ->count();
+
                 return response()->json([
-                    'success' => false,
+                    'success' => true,
                     'message' => 'Money pool settings not found',
-                    'data' => []
+                    'data' => [
+                        'settings' => [
+                            'total_users' => $totalActiveUsers,
+                        ],
+                    ],
                 ], 200);
             }
 

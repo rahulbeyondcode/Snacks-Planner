@@ -59,6 +59,20 @@ class ContributionController extends Controller
                 'message' => "Successfully updated the contributions status",
                 'data' => $result
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $message = 'Validation failed: ';
+            if (isset($errors['money_pool_settings'])) {
+                $message .= implode(', ', $errors['money_pool_settings']);
+            } else {
+                $message .= 'Unknown validation error';
+            }
+            return apiResponse(
+                false,
+                $message,
+                [],
+                422
+            );
         } catch (\Exception $e) {
             return apiResponse(
                 false,
@@ -156,6 +170,20 @@ class ContributionController extends Controller
                 'Contribution status updated successfully',
                 new \App\Http\Resources\ContributionResource($contribution),
                 200
+            );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $message = 'Validation failed: ';
+            if (isset($errors['money_pool_settings'])) {
+                $message .= implode(', ', $errors['money_pool_settings']);
+            } else {
+                $message .= 'Unknown validation error';
+            }
+            return apiResponse(
+                false,
+                $message,
+                [],
+                422
             );
         } catch (\Exception $e) {
             return apiResponse(
