@@ -9,7 +9,7 @@ use App\Services\SubGroupServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 
-class SubGroupController extends Controller
+class SubGroupController extends BaseController
 {
     protected $subGroupService;
 
@@ -27,10 +27,10 @@ class SubGroupController extends Controller
             $subGroups = $this->subGroupService->listSubGroups();
 
             if (! $subGroups) {
-                return response()->notFound(__('sub_group.sub_group_not_found'));
+                return $this->notFoundResponse(__('sub_group.sub_group_not_found'));
             }
 
-            return SubGroupResource::collection($subGroups);
+            return $this->resourceCollectionResponse(SubGroupResource::collection($subGroups));
         } catch (\Exception $e) {
             return Response::internalServerError(__('messages.error'));
         }
@@ -45,7 +45,7 @@ class SubGroupController extends Controller
             $subGroup = $this->subGroupService->getSubGroup($id);
 
             if (! $subGroup) {
-                return response()->notFound(__('sub_group.sub_group_not_found'));
+                return $this->notFoundResponse(__('sub_group.sub_group_not_found'));
             }
 
             return new SubGroupResource($subGroup);
@@ -63,20 +63,14 @@ class SubGroupController extends Controller
             $validated = $request->validated();
 
             $subGroup = $this->subGroupService->createSubGroup($validated);
-            dd($subGroup instanceof JsonResponse);
-            if ($subGroup instanceof JsonResponse && $subGroup->getStatusCode() == 422) {
-                return response()->unprocessableEntity($subGroup->getData()->message);
+            if (is_object($subGroup) && method_exists($subGroup, 'getStatusCode') && $subGroup->getStatusCode() == 422) {
+                return $this->validationErrorResponse($subGroup->getData()->message);
             } elseif (! $subGroup) {
-                return response()->notFound(__('sub_group.group_not_found'));
-            } else {
-
-                dd($subGroup);
+                return $this->notFoundResponse(__('sub_group.group_not_found'));
             }
 
-            return new SubGroupResource($subGroup);
+            return $this->createdResponse(new SubGroupResource($subGroup));
         } catch (\Exception $e) {
-            dd($e);
-
             return Response::internalServerError(__('messages.error'));
         }
     }
@@ -90,13 +84,13 @@ class SubGroupController extends Controller
             $validated = $request->validated();
             $subGroup = $this->subGroupService->updateSubGroup($id, $validated);
 
-            if ($subGroup instanceof JsonResponse && $subGroup->getStatusCode() == 422) {
-                return response()->unprocessableEntity($subGroup->getData()->message);
+            if (is_object($subGroup) && method_exists($subGroup, 'getStatusCode') && $subGroup->getStatusCode() == 422) {
+                return $this->validationErrorResponse($subGroup->getData()->message);
             } elseif (! $subGroup) {
-                return response()->notFound(__('sub_group.group_not_found'));
+                return $this->notFoundResponse(__('sub_group.group_not_found'));
             }
 
-            return new SubGroupResource($subGroup);
+            return $this->updatedResponse(new SubGroupResource($subGroup));
         } catch (\Exception $e) {
             return Response::internalServerError(__('messages.error'));
         }
@@ -110,10 +104,10 @@ class SubGroupController extends Controller
         try {
             $deleted = $this->subGroupService->deleteSubGroup($id);
             if (! $deleted) {
-                return response()->notFound(__('sub_group.sub_group_not_found'));
+                return $this->notFoundResponse(__('sub_group.sub_group_not_found'));
             }
 
-            return response()->noContent();
+            return $this->noContentResponse();
         } catch (\Exception $e) {
             return Response::internalServerError(__('messages.error'));
         }

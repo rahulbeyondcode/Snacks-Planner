@@ -47,8 +47,8 @@ class Shop extends Model
     public function snackItems()
     {
         return $this->belongsToMany(SnackItem::class, 'snack_shop_mapping', 'shop_id', 'snack_item_id')
-                    ->withPivot('snack_price', 'is_available')
-                    ->withTimestamps();
+            ->withPivot('snack_price', 'is_available')
+            ->withTimestamps();
     }
 
     /**

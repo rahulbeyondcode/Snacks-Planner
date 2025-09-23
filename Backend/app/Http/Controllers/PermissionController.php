@@ -8,7 +8,7 @@ use App\Http\Resources\PermissionResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class PermissionController extends Controller
+class PermissionController extends BaseController
 {
     /**
      * Get all permissions
@@ -17,10 +17,7 @@ class PermissionController extends Controller
     {
         $permissions = Permission::with('roles')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => PermissionResource::collection($permissions)
-        ]);
+        return $this->resourceCollectionResponse(PermissionResource::collection($permissions));
     }
 
     /**
@@ -30,10 +27,7 @@ class PermissionController extends Controller
     {
         $permissions = Permission::forModule($module)->with('roles')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => PermissionResource::collection($permissions)
-        ]);
+        return $this->resourceCollectionResponse(PermissionResource::collection($permissions));
     }
 
     /**
@@ -50,11 +44,7 @@ class PermissionController extends Controller
 
         $permission = Permission::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Permission created successfully',
-            'data' => new PermissionResource($permission)
-        ], 201);
+        return $this->createdResponse(new PermissionResource($permission), 'Permission created successfully');
     }
 
     /**
@@ -73,11 +63,7 @@ class PermissionController extends Controller
 
         $permission->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Permission updated successfully',
-            'data' => new PermissionResource($permission)
-        ]);
+        return $this->updatedResponse(new PermissionResource($permission), 'Permission updated successfully');
     }
 
     /**
@@ -88,11 +74,7 @@ class PermissionController extends Controller
         $permission = Permission::findOrFail($id);
         $permission->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Permission deleted successfully',
-            'data' => []
-        ]);
+        return $this->deletedResponse('Permission deleted successfully');
     }
 
     /**
@@ -109,13 +91,9 @@ class PermissionController extends Controller
 
         $role->assignPermissions($validated['permission_ids']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Permissions assigned to role successfully',
-            'data' => [
-                'role' => $role,
-                'permissions' => PermissionResource::collection($role->permissions)
-            ]
+        return $this->successResponse('Permissions assigned to role successfully', [
+            'role' => $role,
+            'permissions' => PermissionResource::collection($role->permissions)
         ]);
     }
 
@@ -126,12 +104,9 @@ class PermissionController extends Controller
     {
         $role = Role::with('permissions')->findOrFail($roleId);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'role' => $role,
-                'permissions' => PermissionResource::collection($role->permissions)
-            ]
+        return $this->successResponse('success', [
+            'role' => $role,
+            'permissions' => PermissionResource::collection($role->permissions)
         ]);
     }
 
@@ -169,11 +144,7 @@ class PermissionController extends Controller
             }
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Bulk permissions created successfully',
-                'data' => []
-            ], 201);
+            return $this->createdResponse([], 'Bulk permissions created successfully');
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
@@ -207,13 +178,10 @@ class PermissionController extends Controller
             ],
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'resource_modules' => $resourceModules,
-                'available_actions' => ['create', 'read', 'update', 'delete', 'list'],
-                'available_resources' => array_keys($resourceModules),
-            ]
+        return $this->successResponse('success', [
+            'resource_modules' => $resourceModules,
+            'available_actions' => ['create', 'read', 'update', 'delete', 'list'],
+            'available_resources' => array_keys($resourceModules),
         ]);
     }
 
@@ -230,9 +198,6 @@ class PermissionController extends Controller
             });
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $groupedPermissions
-        ]);
+        return $this->successResponse('success', $groupedPermissions);
     }
 }

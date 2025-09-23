@@ -11,7 +11,7 @@ use App\Models\OfficeHoliday;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
-class NoSnacksDayController extends Controller
+class NoSnacksDayController extends BaseController
 {
     protected $officeHolidayService;
 
@@ -42,39 +42,27 @@ class NoSnacksDayController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'snack_manager') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access denied. Only snack managers can view no snacks days.',
-                'data' => []
-            ], 403);
-        }
+        return $this->executeWithAuth(function ($user) use ($request) {
+            if ($user->role->name !== 'snack_manager') {
+                return $this->forbiddenResponse('Access denied. Only snack managers can view no snacks days.');
+            }
 
-        // Get user's group
-        $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
-        if (!$groupMember) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User is not a snack manager in any group',
-                'data' => []
-            ], 400);
-        }
+            $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
+            if (!$groupMember) {
+                return $this->errorResponse('User is not a snack manager in any group', [], 400);
+            }
 
-        // Get year and month from request parameters
-        $year = $request->get('year', now()->year);
-        $month = $request->get('month', now()->month);
+            $year = $request->get('year', now()->year);
+            $month = $request->get('month', now()->month);
 
-        $noSnacksDays = $this->officeHolidayService->getNoSnacksDaysForGroup(
-            $groupMember->group_id,
-            $year,
-            $month
-        );
+            $noSnacksDays = $this->officeHolidayService->getNoSnacksDaysForGroup(
+                $groupMember->group_id,
+                $year,
+                $month
+            );
 
-        return response()->json([
-            'success' => true,
-            'data' => OfficeHolidayResource::collection($noSnacksDays)
-        ]);
+            return $this->resourceCollectionResponse(OfficeHolidayResource::collection($noSnacksDays));
+        }, null, 'Failed to retrieve no snacks days');
     }
 
     /**
@@ -82,43 +70,29 @@ class NoSnacksDayController extends Controller
      */
     public function store(StoreNoSnacksDayRequest $request)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'snack_manager') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access denied. Only snack managers can create no snacks days.',
-                'data' => []
-            ], 403);
-        }
+        return $this->executeWithAuth(function ($user) use ($request) {
+            if ($user->role->name !== 'snack_manager') {
+                return $this->forbiddenResponse('Access denied. Only snack managers can create no snacks days.');
+            }
 
-        // Get user's group
-        $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
-        if (!$groupMember) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User is not a snack manager in any group',
-                'data' => []
-            ], 400);
-        }
+            $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
+            if (!$groupMember) {
+                return $this->errorResponse('User is not a snack manager in any group', [], 400);
+            }
 
-        $data = $request->validated();
+            $data = $request->validated();
+            if (isset($data['holiday_date'])) {
+                $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
+            }
 
-        // Convert date format
-        if (isset($data['holiday_date'])) {
-            $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
-        }
+            $data['user_id'] = $user->user_id;
+            $data['type'] = OfficeHoliday::TYPE_NO_SNACKS_DAY;
+            $data['group_id'] = $groupMember->group_id;
 
-        $data['user_id'] = $user->user_id;
-        $data['type'] = OfficeHoliday::TYPE_NO_SNACKS_DAY;
-        $data['group_id'] = $groupMember->group_id;
+            $noSnacksDay = $this->officeHolidayService->createHoliday($data);
 
-        $noSnacksDay = $this->officeHolidayService->createHoliday($data);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'No snacks day created successfully',
-            'data' => new OfficeHolidayResource($noSnacksDay)
-        ], 201);
+            return $this->createdResponse(new OfficeHolidayResource($noSnacksDay), 'No snacks day created successfully');
+        }, null, 'Failed to create no snacks day');
     }
 
     /**
@@ -126,61 +100,37 @@ class NoSnacksDayController extends Controller
      */
     public function update(UpdateNoSnacksDayRequest $request, $id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'snack_manager') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access denied. Only snack managers can update no snacks days.',
-                'data' => []
-            ], 403);
-        }
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
+            if ($user->role->name !== 'snack_manager') {
+                return $this->forbiddenResponse('Access denied. Only snack managers can update no snacks days.');
+            }
 
-        // Get user's group
-        $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
-        if (!$groupMember) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User is not a snack manager in any group',
-                'data' => []
-            ], 400);
-        }
+            $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
+            if (!$groupMember) {
+                return $this->errorResponse('User is not a snack manager in any group', [], 400);
+            }
 
-        // Check if the no snacks day belongs to the user's group
-        $noSnacksDay = OfficeHoliday::where('holiday_id', $id)
-            ->where('type', OfficeHoliday::TYPE_NO_SNACKS_DAY)
-            ->where('group_id', $groupMember->group_id)
-            ->first();
+            $noSnacksDay = OfficeHoliday::where('holiday_id', $id)
+                ->where('type', OfficeHoliday::TYPE_NO_SNACKS_DAY)
+                ->where('group_id', $groupMember->group_id)
+                ->first();
 
-        if (!$noSnacksDay) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No snacks day not found or not accessible',
-                'data' => []
-            ], 404);
-        }
+            if (!$noSnacksDay) {
+                return $this->notFoundResponse('No snacks day not found or not accessible');
+            }
 
-        $data = $request->validated();
+            $data = $request->validated();
+            if (isset($data['holiday_date'])) {
+                $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
+            }
 
-        // Convert date format
-        if (isset($data['holiday_date'])) {
-            $data['holiday_date'] = Carbon::createFromFormat('d-M-Y', $data['holiday_date'])->format('Y-m-d');
-        }
+            $updated = $this->officeHolidayService->updateHoliday($id, $data);
+            if (!$updated) {
+                return $this->notFoundResponse('No snacks day not found');
+            }
 
-        $updated = $this->officeHolidayService->updateHoliday($id, $data);
-
-        if (!$updated) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No snacks day not found',
-                'data' => []
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'No snacks day updated successfully',
-            'data' => new OfficeHolidayResource($updated)
-        ]);
+            return $this->updatedResponse(new OfficeHolidayResource($updated), 'No snacks day updated successfully');
+        }, null, 'Failed to update no snacks day');
     }
 
     /**
@@ -188,53 +138,31 @@ class NoSnacksDayController extends Controller
      */
     public function destroy($id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'snack_manager') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access denied. Only snack managers can delete no snacks days.',
-                'data' => []
-            ], 403);
-        }
+        return $this->executeWithAuth(function ($user) use ($id) {
+            if ($user->role->name !== 'snack_manager') {
+                return $this->forbiddenResponse('Access denied. Only snack managers can delete no snacks days.');
+            }
 
-        // Get user's group
-        $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
-        if (!$groupMember) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User is not a snack manager in any group',
-                'data' => []
-            ], 400);
-        }
+            $groupMember = $user->groupMembers()->where('role_id', \App\Models\Role::SNACK_MANAGER)->first();
+            if (!$groupMember) {
+                return $this->errorResponse('User is not a snack manager in any group', [], 400);
+            }
 
-        // Check if the no snacks day belongs to the user's group
-        $noSnacksDay = OfficeHoliday::where('holiday_id', $id)
-            ->where('type', OfficeHoliday::TYPE_NO_SNACKS_DAY)
-            ->where('group_id', $groupMember->group_id)
-            ->first();
+            $noSnacksDay = OfficeHoliday::where('holiday_id', $id)
+                ->where('type', OfficeHoliday::TYPE_NO_SNACKS_DAY)
+                ->where('group_id', $groupMember->group_id)
+                ->first();
 
-        if (!$noSnacksDay) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No snacks day not found or not accessible',
-                'data' => []
-            ], 404);
-        }
+            if (!$noSnacksDay) {
+                return $this->notFoundResponse('No snacks day not found or not accessible');
+            }
 
-        $deleted = $this->officeHolidayService->deleteHoliday($id);
+            $deleted = $this->officeHolidayService->deleteHoliday($id);
+            if (!$deleted) {
+                return $this->notFoundResponse('No snacks day not found');
+            }
 
-        if (!$deleted) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No snacks day not found',
-                'data' => []
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'No snacks day deleted successfully',
-            'data' => []
-        ]);
+            return $this->deletedResponse('No snacks day deleted successfully');
+        }, null, 'Failed to delete no snacks day');
     }
 }

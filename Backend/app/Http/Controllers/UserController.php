@@ -15,27 +15,19 @@ use Illuminate\Support\Facades\Hash;
 use App\Exceptions\UnauthorizedActionException;
 use App\Exceptions\UserNotFoundException;
 
-class UserController extends Controller
+class UserController extends BaseController
 {
     // Update own profile
     public function updateProfile(UpdateUserProfileRequest $request)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Authentication required to update profile',
-                'data' => []
-            ], 401);
-        }
+        return $this->executeWithAuth(function ($user) use ($request) {
+            $updatedUser = $this->userService->updateUser($user->user_id, $request->validated());
 
-        $updatedUser = $this->userService->updateUser($user->user_id, $request->validated());
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Profile updated successfully',
-            'data' => new UserResource($updatedUser)
-        ]);
+            return $this->updatedResponse(
+                new UserResource($updatedUser),
+                'Profile updated successfully'
+            );
+        }, null, 'Failed to update profile');
     }
 
     protected $userService;
@@ -48,22 +40,12 @@ class UserController extends Controller
     // List users (admin only)
     public function index(Request $request)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access denied. Only account managers can list users.',
-                'data' => []
-            ], 403);
-        }
+        return $this->executeWithAuth(function ($user) use ($request) {
+            $filters = $request->only(['role_id', 'search']);
+            $users = $this->userService->listUsers($filters);
 
-        $filters = $request->only(['role_id', 'search']);
-        $users = $this->userService->listUsers($filters);
-
-        return response()->json([
-            'success' => true,
-            'data' => UserResource::collection($users)
-        ]);
+            return $this->resourceCollectionResponse(UserResource::collection($users));
+        }, 'account_manager', 'Failed to retrieve users');
     }
 
     // Show user details (admin only)

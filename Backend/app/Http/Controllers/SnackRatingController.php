@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreSnackRatingRequest;
 
-class SnackRatingController extends Controller
+class SnackRatingController extends BaseController
 {
     // Employee can rate a snack
     public function store(StoreSnackRatingRequest $request)
@@ -19,7 +19,7 @@ class SnackRatingController extends Controller
             'rating' => $validated['rating'],
             'comment' => $validated['comment'] ?? null,
         ]);
-        return response()->json($rating, 201);
+        return $this->createdResponse($rating);
     }
 
     // List all ratings for a snack item
@@ -29,6 +29,6 @@ class SnackRatingController extends Controller
         if ($request->has('snack_item_id')) {
             $query->where('snack_item_id', $request->snack_item_id);
         }
-        return response()->json($query->latest()->get());
+        return $this->successResponse('success', $query->latest()->get());
     }
 }

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Log;
 
-class MoneyPoolController extends Controller
+class MoneyPoolController extends BaseController
 {
     public function __construct(
         private readonly MoneyPoolServiceInterface $moneyPoolService,
@@ -30,11 +30,7 @@ class MoneyPoolController extends Controller
         $user = Auth::user();
 
         if (!$user || !$user->role) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access',
-                'data' => []
-            ], 401);
+            return $this->unauthorizedResponse('Unauthorized access');
         }
 
         $roleName = $user->role->name;
@@ -60,12 +56,8 @@ class MoneyPoolController extends Controller
                 ], 200);
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Money pool settings retrieved successfully',
-                'data' => [
-                    'settings' => new MoneyPoolSettingsResource($settings)
-                ]
+            return $this->successResponse('Money pool settings retrieved successfully', [
+                'settings' => new MoneyPoolSettingsResource($settings)
             ]);
         }
 
@@ -75,13 +67,9 @@ class MoneyPoolController extends Controller
 
             if (!$pool) {
                 $settings = $this->moneyPoolSettingsService->getSettings();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Money pool not found',
-                    'data' => [
-                        'settings' => new MoneyPoolSettingsResource($settings)
-                    ]
-                ], 200);
+                return $this->successResponse('Money pool not found', [
+                    'settings' => new MoneyPoolSettingsResource($settings)
+                ]);
             }
 
             // Get contribution counts similar to getTotalContributions
@@ -103,19 +91,11 @@ class MoneyPoolController extends Controller
                 ]
             ];
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Money pool retrieved successfully',
-                'data' => $poolData
-            ]);
+            return $this->successResponse('Money pool retrieved successfully', $poolData);
         }
 
         // For other roles, deny access
-        return response()->json([
-            'success' => false,
-            'message' => 'Access denied. Insufficient permissions.',
-            'data' => []
-        ], 403);
+        return $this->forbiddenResponse('Access denied. Insufficient permissions.');
     }
 
     public function storeBlock(StoreMoneyPoolBlockRequest $request): JsonResponse
@@ -126,24 +106,12 @@ class MoneyPoolController extends Controller
 
             // Handle error responses from service
             if (is_array($result) && isset($result['error']) && $result['error']) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result['message'],
-                    'data' => []
-                ], $result['code']);
+                return $this->errorResponse($result['message'], [], $result['code']);
             } elseif (! $result) {
-                return response()->json([
-                    'success' => false,
-                    'message' => __('money_pool_blocks.block_not_found'),
-                    'data' => []
-                ], 404);
+                return $this->notFoundResponse(__('money_pool_blocks.block_not_found'));
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Money pool block created successfully',
-                'data' => $this->getBlocks($result->money_pool_id)
-            ], 201);
+            return $this->createdResponse($this->getBlocks($result->money_pool_id), 'Money pool block created successfully');
         } catch (\Exception $e) {
             // Log the actual error for debugging
             Log::error('MoneyPoolController::storeBlock Error: ' . $e->getMessage(), [
@@ -152,11 +120,7 @@ class MoneyPoolController extends Controller
                 'line' => $e->getLine()
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => __('messages.error'),
-                'data' => []
-            ], 500);
+            return $this->errorResponse(__('messages.error'));
         }
     }
 
@@ -168,24 +132,12 @@ class MoneyPoolController extends Controller
 
             // Handle error responses from service
             if (is_array($result) && isset($result['error']) && $result['error']) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result['message'],
-                    'data' => []
-                ], $result['code']);
+                return $this->errorResponse($result['message'], [], $result['code']);
             } elseif (! $result) {
-                return response()->json([
-                    'success' => false,
-                    'message' => __('money_pool_blocks.block_not_found'),
-                    'data' => []
-                ], 404);
+                return $this->notFoundResponse(__('money_pool_blocks.block_not_found'));
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Money pool block updated successfully',
-                'data' => $this->getBlocks($result->money_pool_id)
-            ]);
+            return $this->updatedResponse($this->getBlocks($result->money_pool_id), 'Money pool block updated successfully');
         } catch (\Exception $e) {
             // Log the actual error for debugging
             Log::error('MoneyPoolController::updateBlock Error: ' . $e->getMessage(), [
@@ -194,11 +146,7 @@ class MoneyPoolController extends Controller
                 'line' => $e->getLine()
             ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => __('messages.error'),
-                'data' => []
-            ], 500);
+            return $this->errorResponse(__('messages.error'));
         }
     }
 
@@ -215,16 +163,12 @@ class MoneyPoolController extends Controller
             $moneyPoolId = $this->moneyPoolBlockService->deleteBlock($blockId);
 
             if (! $moneyPoolId) {
-                return Response::notFound(__('money_pool_blocks.block_not_found'));
+                return $this->notFoundResponse(__('money_pool_blocks.block_not_found'));
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Money pool block deleted successfully',
-                'data' => $this->getBlocks($moneyPoolId)
-            ]);
+            return $this->successResponse('Money pool block deleted successfully', $this->getBlocks($moneyPoolId));
         } catch (\Exception $e) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->errorResponse(__('messages.error'));
         }
     }
 }

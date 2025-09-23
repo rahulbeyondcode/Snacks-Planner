@@ -7,7 +7,7 @@ use App\Http\Requests\UpdateWorkingDaysRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class WorkingDayController extends Controller
+class WorkingDayController extends BaseController
 {
     protected $service;
 
@@ -22,10 +22,7 @@ class WorkingDayController extends Controller
         $current = $this->service->getCurrent();
         $workingDays = $current ? $current->working_days : [];
 
-        return response()->json([
-            'success' => true,
-            'data' => $workingDays
-        ]);
+        return $this->successResponse('success', $workingDays);
     }
 
     // Update working days
@@ -35,10 +32,6 @@ class WorkingDayController extends Controller
         $days = $request->input('working_days');
         $updated = $this->service->update($days, $userId);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Working days updated successfully',
-            'data' => $updated->working_days
-        ]);
+        return $this->updatedResponse($updated->working_days, 'Working days updated successfully');
     }
 }

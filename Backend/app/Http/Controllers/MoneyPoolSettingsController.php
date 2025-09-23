@@ -7,7 +7,7 @@ use App\Http\Resources\MoneyPoolSettingsResource;
 use App\Services\MoneyPoolSettingsServiceInterface;
 use Illuminate\Support\Facades\Response;
 
-class MoneyPoolSettingsController extends Controller
+class MoneyPoolSettingsController extends BaseController
 {
     protected $moneyPoolSettingsService;
 
@@ -34,7 +34,7 @@ class MoneyPoolSettingsController extends Controller
             $settings = $this->moneyPoolSettingsService->getSettings();
 
             if (! $settings) {
-                return response()->notFound(__('money_pool_settings.pool_settings_not_found'));
+                return $this->notFoundResponse(__('money_pool_settings.pool_settings_not_found'));
             }
 
             return new MoneyPoolSettingsResource($settings);

@@ -7,7 +7,7 @@ use App\Http\Requests\UpdateContributionStatusRequest;
 use App\Services\ContributionServiceInterface;
 use Illuminate\Support\Facades\Auth;
 
-class ContributionController extends Controller
+class ContributionController extends BaseController
 {
     /**
      * Bulk insert or update status for multiple contributions for the current month.
@@ -15,17 +15,7 @@ class ContributionController extends Controller
      */
     public function bulkUpdateStatus(Request $request)
     {
-        try {
-            $user = Auth::user();
-            if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
-                return apiResponse(
-                    false,
-                    'Access denied. Only snack managers and operations can bulk update contribution status.',
-                    [],
-                    403
-                );
-            }
-
+        return $this->executeWithAuth(function ($user) use ($request) {
             $data = $request->validate([
                 'contributors' => 'required|array|min:1',
                 'contributors.*' => 'required|integer|exists:users,user_id',
@@ -54,49 +44,14 @@ class ContributionController extends Controller
             $result['paid_contributions'] = $counts['paid_contributions'];
             $result['unpaid_records'] = $counts['unpaid_records'];
 
-            return response()->json([
-                'success' => true,
-                'message' => "Successfully updated the contributions status",
-                'data' => $result
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $errors = $e->errors();
-            $message = 'Validation failed: ';
-            if (isset($errors['money_pool_settings'])) {
-                $message .= implode(', ', $errors['money_pool_settings']);
-            } else {
-                $message .= 'Unknown validation error';
-            }
-            return apiResponse(
-                false,
-                $message,
-                [],
-                422
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to bulk update contribution status: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
+            return $this->successResponse("Successfully updated the contributions status", $result);
+        }, ['snack_manager', 'operation'], 'Failed to bulk update contribution status');
     }
 
     // Listing of all contributions with filters/pagination (snack_manager and operation only)
     public function index(Request $request)
     {
-        try {
-            $user = Auth::user();
-            if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
-                return apiResponse(
-                    false,
-                    'Access denied. Only snack managers and operations can view contributions.',
-                    [],
-                    403
-                );
-            }
-
+        return $this->executeWithAuth(function ($user) use ($request) {
             $filters = $request->only(['user_id', 'status', 'from', 'to', 'per_page']);
             // Add support for employee name search (case-insensitive)
             if ($request->filled('search')) {
@@ -119,18 +74,8 @@ class ContributionController extends Controller
             $result['paid_contributions'] = $counts['paid_contributions'];
             $result['unpaid_records'] = $counts['unpaid_records'];
 
-            return response()->json([
-                'success' => true,
-                'data' => $result
-            ]);
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to retrieve contributions: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
+            return $this->successResponse('Contributions retrieved successfully', $result);
+        }, ['snack_manager', 'operation'], 'Failed to retrieve contributions');
     }
     protected $contributionService;
 
@@ -142,88 +87,31 @@ class ContributionController extends Controller
     // Only account_manager can mark paid/unpaid
     public function updateStatus(UpdateContributionStatusRequest $request, $id)
     {
-        try {
-            $user = Auth::user();
-            if (!$user || !in_array($user->role->name, ['snack_manager', 'operation'])) {
-                return apiResponse(
-                    false,
-                    'Access denied. Only snack managers and operations can update contribution status.',
-                    [],
-                    403
-                );
-            }
-
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
             $validated = $request->validated();
             $contribution = $this->contributionService->updateContribution($id, ['status' => $validated['status']]);
 
             if (!$contribution) {
-                return apiResponse(
-                    false,
-                    'Contribution not found',
-                    [],
-                    404
-                );
+                return $this->notFoundResponse('Contribution not found');
             }
 
-            return apiResponse(
-                true,
-                'Contribution status updated successfully',
+            return $this->updatedResponse(
                 new \App\Http\Resources\ContributionResource($contribution),
-                200
+                'Contribution status updated successfully'
             );
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $errors = $e->errors();
-            $message = 'Validation failed: ';
-            if (isset($errors['money_pool_settings'])) {
-                $message .= implode(', ', $errors['money_pool_settings']);
-            } else {
-                $message .= 'Unknown validation error';
-            }
-            return apiResponse(
-                false,
-                $message,
-                [],
-                422
-            );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to update contribution status: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
+        }, ['snack_manager', 'operation'], 'Failed to update contribution status');
     }
 
     // User can view their own contribution history
     public function myContributions()
     {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return apiResponse(
-                    false,
-                    'Authentication required to view contributions',
-                    [],
-                    401
-                );
-            }
-
+        return $this->executeWithAuth(function ($user) {
             $contributions = $this->contributionService->getUserContributions($user->user_id);
 
-            return apiResponse(
-                true,
-                'Your contributions retrieved successfully',
+            return $this->resourceCollectionResponse(
                 \App\Http\Resources\ContributionResource::collection($contributions),
-                200
+                'Your contributions retrieved successfully'
             );
-        } catch (\Exception $e) {
-            return apiResponse(
-                false,
-                'Failed to retrieve your contributions: ' . $e->getMessage(),
-                [],
-                500
-            );
-        }
+        }, null, 'Failed to retrieve your contributions');
     }
 }

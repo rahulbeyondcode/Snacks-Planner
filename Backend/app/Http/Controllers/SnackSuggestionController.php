@@ -7,7 +7,7 @@ use App\Http\Requests\StoreSnackSuggestionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class SnackSuggestionController extends Controller
+class SnackSuggestionController extends BaseController
 {
     // Employee can suggest a snack
     public function store(StoreSnackSuggestionRequest $request)
@@ -17,7 +17,7 @@ class SnackSuggestionController extends Controller
             'snack_name' => $request->validated()['snack_name'],
             'comment' => $request->validated()['comment'] ?? null,
         ]);
-        return response()->json($suggestion, 201);
+        return $this->createdResponse($suggestion);
     }
 
     // List all suggestions (optionally filter by user)
@@ -27,6 +27,6 @@ class SnackSuggestionController extends Controller
         if ($request->has('user_id')) {
             $query->where('user_id', $request->user_id);
         }
-        return response()->json($query->latest()->get());
+        return $this->successResponse('success', $query->latest()->get());
     }
 }

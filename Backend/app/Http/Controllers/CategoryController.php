@@ -8,7 +8,7 @@ use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use Illuminate\Http\Request;
 
-class CategoryController extends Controller
+class CategoryController extends BaseController
 {
     protected $repo;
     public function __construct(CategoryRepository $repo)
@@ -27,54 +27,31 @@ class CategoryController extends Controller
 
     public function index()
     {
-        return response()->json([
-            'success' => true,
-            'data' => $this->getAllActiveCategories()
-        ]);
+        return $this->resourceCollectionResponse($this->getAllActiveCategories());
     }
 
     public function store(StoreCategoryRequest $request)
     {
         $category = $this->repo->create($request->validated());
-        return response()->json([
-            'success' => true,
-            'message' => 'Category created successfully',
-            'data' => $this->getAllActiveCategories()
-        ], 201);
+        return $this->createdResponse($this->getAllActiveCategories(), 'Category created successfully');
     }
 
     public function update(UpdateCategoryRequest $request, $id)
     {
         $category = $this->repo->update($id, $request->validated());
         if (!$category) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Category not found',
-                'data' => []
-            ], 404);
+            return $this->notFoundResponse('Category not found');
         }
-        return response()->json([
-            'success' => true,
-            'message' => 'Category updated successfully',
-            'data' => $this->getAllActiveCategories()
-        ]);
+        return $this->updatedResponse($this->getAllActiveCategories(), 'Category updated successfully');
     }
 
     public function destroy($id)
     {
         $category = $this->repo->find($id);
         if (!$category) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Category not found',
-                'data' => []
-            ], 404);
+            return $this->notFoundResponse('Category not found');
         }
         $this->repo->delete($id);
-        return response()->json([
-            'success' => true,
-            'message' => 'Category deleted successfully',
-            'data' => $this->getAllActiveCategories()
-        ]);
+        return $this->successResponse('Category deleted successfully', $this->getAllActiveCategories());
     }
 }

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SnackPlanDetail;
 use Illuminate\Http\Request;
 
-class SnackPlanDetailController extends Controller
+class SnackPlanDetailController extends BaseController
 {
     // List all details for a given snack plan
     public function index(Request $request)
@@ -31,7 +31,7 @@ class SnackPlanDetailController extends Controller
         }
 
         $details = $query->get();
-        return apiResponse(true, __('success'), $details, 200);
+        return $this->successResponse(__('success'), $details);
     }
 
     // Show a specific snack plan detail
@@ -53,8 +53,8 @@ class SnackPlanDetailController extends Controller
         ])->find($id);
 
         if (!$detail) {
-            return apiResponse(false, __('not_found'), null, 404);
+            return $this->notFoundResponse(__('not_found'));
         }
-        return apiResponse(true, __('success'), $detail, 200);
+        return $this->successResponse(__('success'), $detail);
     }
 }

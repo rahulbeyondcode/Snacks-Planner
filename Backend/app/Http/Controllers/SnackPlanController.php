@@ -13,7 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 
-class SnackPlanController extends Controller
+class SnackPlanController extends BaseController
 {
     protected $snackPlanService;
 
@@ -27,14 +27,13 @@ class SnackPlanController extends Controller
         $path = $file->store('receipts');
         $url = url('/storage/' . $path);
 
-        // Optionally update the SnackPlanDetail record
         $detail = SnackPlanDetail::find($detailId);
         if ($detail) {
             $detail->upload_receipt = $url;
             $detail->save();
         }
 
-        return apiResponse(true, __('success'), ['url' => $url, 'detail' => $detail], 201);
+        return $this->createdResponse(['url' => $url, 'detail' => $detail], __('success'));
     }
 
     // List all snack plans (with optional filters)
@@ -42,7 +41,7 @@ class SnackPlanController extends Controller
     {
         $filters = $request->only(['snack_plan_id', 'snack_date', 'user_id', 'total_amount']);
         $plans = $this->snackPlanService->listSnackPlans($filters);
-        return SnackPlanResource::collection($plans);
+        return $this->resourceCollectionResponse(SnackPlanResource::collection($plans));
     }
 
     public function __construct(SnackPlanServiceInterface $snackPlanService)
@@ -52,28 +51,14 @@ class SnackPlanController extends Controller
 
     public function store(StoreSnackPlanRequest $request)
     {
-        try {
+        return $this->executeWithAuth(function ($user) use ($request) {
             $validated = $request->validated();
             $snackItems = $validated['snack_items'];
 
-            // Check if user is authenticated
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not authenticated',
-                ], 401);
-            }
-
-            // Convert date from d-m-Y to Y-m-d format for database
             try {
                 $snackDate = Carbon::createFromFormat('d-m-Y', trim($validated['snack_date']))->format('Y-m-d');
             } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid date format. Please use DD-MM-YYYY format.',
-                    'error' => $e->getMessage()
-                ], 400);
+                return $this->errorResponse('Invalid date format. Please use DD-MM-YYYY format.', ['error' => $e->getMessage()], 400);
             }
 
             $planData = [
@@ -82,7 +67,6 @@ class SnackPlanController extends Controller
                 'total_amount' => $validated['total_amount'],
             ];
 
-            // Handle file uploads for each snack item
             foreach ($snackItems as $i => $item) {
                 if (isset($item['upload_receipt']) && $request->hasFile("snack_items.$i.upload_receipt")) {
                     $file = $request->file("snack_items.$i.upload_receipt");
@@ -95,39 +79,33 @@ class SnackPlanController extends Controller
 
             $snackPlan = $this->snackPlanService->planFullSnackDay($planData, $snackItems);
 
-            return (new SnackPlanResource($snackPlan))->response()->setStatusCode(201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create snack plan: ' . $e->getMessage(),
-            ], 500);
-        }
+            return $this->createdResponse(new SnackPlanResource($snackPlan));
+        }, null, 'Failed to create snack plan');
     }
 
     public function show($id)
     {
         $snackPlan = $this->snackPlanService->getSnackPlan($id);
         if (!$snackPlan) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->notFoundResponse(__('messages.error'));
         }
-        return apiResponse(true, __('success'), $snackPlan, 200);
+        return $this->successResponse(__('success'), $snackPlan);
     }
 
     // Update a snack plan
     public function update(UpdateSnackPlanRequest $request, $id)
     {
-        try {
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
             $validated = $request->all();
             $snackItems = $validated['snack_items'] ?? [];
 
-            // Convert date from d-m-Y to Y-m-d format for database if provided
             $planData = [];
             if (isset($validated['snack_date'])) {
                 try {
                     $snackDate = Carbon::createFromFormat('d-m-Y', trim($validated['snack_date']))->format('Y-m-d');
                     $planData['snack_date'] = $snackDate;
                 } catch (\Exception $e) {
-                    return Response::internalServerError(__('Invalid date format. Please use DD-MM-YYYY format'));
+                    return $this->validationErrorResponse(__('Invalid date format. Please use DD-MM-YYYY format'));
                 }
             }
 
@@ -135,14 +113,8 @@ class SnackPlanController extends Controller
                 $planData['total_amount'] = $validated['total_amount'];
             }
 
-            // Check if user is authenticated for update
-            $user = Auth::user();
-            if (!$user) {
-                return Response::internalServerError(__('User not authenticated'));
-            }
             $planData['user_id'] = $user->user_id;
 
-            // Handle file uploads for each snack item if provided
             if (!empty($snackItems)) {
                 foreach ($snackItems as $i => $item) {
                     if (isset($item['upload_receipt']) && $request->hasFile("snack_items.$i.upload_receipt")) {
@@ -157,30 +129,22 @@ class SnackPlanController extends Controller
 
             $updated = $this->snackPlanService->updateSnackPlan($id, $planData, $snackItems);
             if (!$updated) {
-                return Response::internalServerError(__('Snack Plan not found'));
+                return $this->notFoundResponse(__('Snack Plan not found'));
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Snack plan updated successfully',
-                'data' => $updated
-            ], 200);
-        } catch (\Exception $e) {
-            return Response::internalServerError(__('Failed to update snack plan'));
-        }
+            return $this->updatedResponse($updated, 'Snack plan updated successfully');
+        }, null, 'Failed to update snack plan');
     }
 
     // Delete a snack plan
     public function destroy($id)
     {
-        try {
+        return $this->executeWithExceptionHandling(function () use ($id) {
             $deleted = $this->snackPlanService->deleteSnackPlan($id);
             if (!$deleted) {
-                return response()->notFound(__('Snack Plan not found'));
+                return $this->notFoundResponse(__('Snack Plan not found'));
             }
-            return response()->noContent();
-        } catch (\Exception $e) {
-            return Response::internalServerError(__('Failed to delete snack plan'));
-        }
+            return $this->noContentResponse();
+        }, 'Failed to delete snack plan');
     }
 }

@@ -8,7 +8,7 @@ use App\Http\Resources\GroupWeeklyOperationResource;
 use App\Services\GroupWeeklyOperationService;
 use Illuminate\Http\Request;
 
-class GroupWeeklyOperationController extends Controller
+class GroupWeeklyOperationController extends BaseController
 {
     protected $service;
 
@@ -21,21 +21,21 @@ class GroupWeeklyOperationController extends Controller
     public function assign(AssignWeeklyOperationRequest $request)
     {
         $assignment = $this->service->assign($request->validated());
-        return new GroupWeeklyOperationResource($assignment->load(['group', 'employee', 'assignedBy', 'details']));
+        return $this->createdResponse(new GroupWeeklyOperationResource($assignment->load(['group', 'employee', 'assignedBy', 'details'])));
     }
 
     // Update status (operation or operations_manager)
     public function updateStatus(UpdateWeeklyOperationStatusRequest $request, $id)
     {
         $detail = $this->service->updateDetailStatus($request->input('detail_id'), $request->input('status'));
-        return response()->json(['message' => 'Status updated', 'detail' => $detail]);
+        return $this->updatedResponse($detail, 'Status updated');
     }
 
     // List assignments (operations_manager or operation)
     public function index(Request $request)
     {
         $assignments = $this->service->listAssignments($request->all());
-        return GroupWeeklyOperationResource::collection($assignments);
+        return $this->resourceCollectionResponse(GroupWeeklyOperationResource::collection($assignments));
     }
 
     // View assignment details
@@ -43,7 +43,7 @@ class GroupWeeklyOperationController extends Controller
     {
         $assignment = $this->service->getAssignment($id);
         if (!$assignment) {
-            return response()->json(['message' => 'Not found'], 404);
+            return $this->notFoundResponse('Not found');
         }
         return new GroupWeeklyOperationResource($assignment->load(['group', 'employee', 'assignedBy', 'details']));
     }

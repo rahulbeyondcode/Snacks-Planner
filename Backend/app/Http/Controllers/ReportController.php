@@ -7,7 +7,7 @@ use App\Services\ReportServiceInterface;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\DownloadReportRequest;
 
-class ReportController extends Controller
+class ReportController extends BaseController
 {
     protected $reportService;
 
@@ -21,12 +21,12 @@ class ReportController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return $this->forbiddenResponse('Forbidden');
         }
 
         $report = $this->reportService->generateReport($request->validated());
         if (!$report) {
-            return response()->json(['message' => 'No data found for report'], 404);
+            return $this->notFoundResponse('No data found for report');
         }
 
         $filename = $report['filename'];

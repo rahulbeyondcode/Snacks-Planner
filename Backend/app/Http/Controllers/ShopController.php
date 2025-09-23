@@ -9,7 +9,7 @@ use App\Http\Requests\StoreShopRequest;
 use App\Http\Requests\UpdateShopRequest;
 use App\Http\Resources\ShopResource;
 
-class ShopController extends Controller
+class ShopController extends BaseController
 {
     /**
      * Get all active shops with payment methods
@@ -26,10 +26,7 @@ class ShopController extends Controller
     {
         $shops = $this->getAllActiveShops();
 
-        return response()->json([
-            'success' => true,
-            'data' => ShopResource::collection($shops)
-        ]);
+        return $this->resourceCollectionResponse(ShopResource::collection($shops));
     }
 
     // Show a single shop
@@ -38,20 +35,13 @@ class ShopController extends Controller
         $shop = Shop::whereNull('deleted_at')->find($id);
 
         if (!$shop) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Shop not found',
-                'data' => null
-            ], 404);
+            return $this->notFoundResponse('Shop not found');
         }
 
         // Get all active shops for response
         $shops = $this->getAllActiveShops();
 
-        return response()->json([
-            'success' => true,
-            'data' => ShopResource::collection($shops)
-        ]);
+        return $this->resourceCollectionResponse(ShopResource::collection($shops));
     }
 
     // Create a shop (admin only)
@@ -67,11 +57,10 @@ class ShopController extends Controller
         // Get all active shops for response (including the newly created one)
         $shops = $this->getAllActiveShops();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Shop created successfully',
-            'data' => ShopResource::collection($shops)
-        ], 201);
+        return $this->createdResponse(
+            ShopResource::collection($shops),
+            'Shop created successfully'
+        );
     }
 
     // Update a shop (admin only)

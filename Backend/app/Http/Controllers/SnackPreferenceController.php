@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class SnackPreferenceController extends Controller
+class SnackPreferenceController extends BaseController
 {
     /**
      * Static snack preference options
@@ -75,21 +75,14 @@ class SnackPreferenceController extends Controller
         // Check access control
         $accessCheck = $this->checkAccess();
         if ($accessCheck) {
-            return response()->json([
-                'success' => $accessCheck['success'],
-                'message' => $accessCheck['message'],
-                'data' => $accessCheck['data']
-            ], $accessCheck['status']);
+            return $this->errorResponse($accessCheck['message'], $accessCheck['data'], $accessCheck['status']);
         }
 
         $user = Auth::user();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'options' => self::$snackOptions,
-                'current_preference' => $user->preference
-            ]
+        return $this->successResponse('success', [
+            'options' => self::$snackOptions,
+            'current_preference' => $user->preference
         ]);
     }
 
@@ -102,11 +95,7 @@ class SnackPreferenceController extends Controller
         // Check access control
         $accessCheck = $this->checkAccess();
         if ($accessCheck) {
-            return response()->json([
-                'success' => $accessCheck['success'],
-                'message' => $accessCheck['message'],
-                'data' => $accessCheck['data']
-            ], $accessCheck['status']);
+            return $this->errorResponse($accessCheck['message'], $accessCheck['data'], $accessCheck['status']);
         }
 
         $user = Auth::user();
@@ -120,13 +109,9 @@ class SnackPreferenceController extends Controller
         $selectedOption = collect(self::$snackOptions)
             ->firstWhere('value', $validated['preference']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Snack preference updated successfully.',
-            'data' => [
-                'preference' => $validated['preference'],
-                'label' => $selectedOption['label'] ?? 'Unknown preference'
-            ]
-        ]);
+        return $this->updatedResponse([
+            'preference' => $validated['preference'],
+            'label' => $selectedOption['label'] ?? 'Unknown preference'
+        ], 'Snack preference updated successfully.');
     }
 }

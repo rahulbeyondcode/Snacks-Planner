@@ -16,7 +16,7 @@ use App\Http\Requests\UpdateGroupRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class GroupController extends Controller
+class GroupController extends BaseController
 {
 
     protected $groupService;
@@ -26,59 +26,45 @@ class GroupController extends Controller
         $this->groupService = $groupService;
     }
 
-    private function error500($message)
-    {
-        return response()->json(['message' => $message], 500);
-    }
 
     // List groups (admin only)
     public function index(Request $request)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return $this->error500(__('Forbidden'));
-        }
-        $filters = $request->only(['search']);
-        $groups = $this->groupService->listGroups($filters);
-        return GroupResource::collection($groups);
+        return $this->executeWithAuth(function ($user) use ($request) {
+            $filters = $request->only(['search']);
+            $groups = $this->groupService->listGroups($filters);
+            return $this->resourceCollectionResponse(GroupResource::collection($groups));
+        }, 'account_manager', 'Failed to retrieve groups');
     }
 
     // Show group details (admin only)
     public function show($id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return $this->error500(__('Forbidden'));
-        }
-        $group = $this->groupService->getGroup($id);
-        if (!$group) {
-            return $this->error500(__('Group not found'));
-        }
+        return $this->executeWithAuth(function ($user) use ($id) {
+            $group = $this->groupService->getGroup($id);
+            if (!$group) {
+                return $this->notFoundResponse(__('Group not found'));
+            }
 
-        return new GroupResource($group);
+            return $this->resourceResponse(new GroupResource($group));
+        }, 'account_manager', 'Failed to retrieve group');
     }
 
     // Create group (admin only)
 
     public function store(StoreGroupRequest $request)
     {
-        $user = Auth::user();
-
-        if (!$user || $user->role->name !== 'account_manager') {
-            return $this->error500(__('Forbidden'));
-        }
-
-        try {
+        return $this->executeWithAuth(function ($user) use ($request) {
             $validated = $request->validated();
 
             // Check if account manager's user_id is included in employees or snack_managers
             $currentUserId = $user->user_id;
             if (in_array($currentUserId, $validated['employees'])) {
-                return Response::internalServerError(__('Account manager cannot be added as an employee.'));
+                return $this->errorResponse(__('Account manager cannot be added as an employee.'), [], 422);
             }
 
             if (in_array($currentUserId, $validated['snack_managers'])) {
-                return Response::internalServerError(__('Account manager cannot be added as a snack manager.'));
+                return $this->errorResponse(__('Account manager cannot be added as a snack manager.'), [], 422);
             }
 
             // Collect all user IDs from employees and snack_managers
@@ -121,39 +107,29 @@ class GroupController extends Controller
 
                 $finalMessage = implode('. ', $errorMessages);
 
-                return Response::internalServerError($finalMessage);
+                return $this->errorResponse($finalMessage, [], 422);
             }
 
             $newGroup = $this->groupService->createGroup($validated);
 
-            return (new GroupResource($newGroup))->response()->setStatusCode(201);
-        } catch (ValidationException $e) {
-            return Response::internalServerError(__('Validation failed'));
-        } catch (\Exception $e) {
-            Log::error('Error creating group: ' . $e->getMessage());
-            return Response::internalServerError(__('An error occurred while creating the group'));
-        }
+            return $this->createdResponse(new GroupResource($newGroup), 'Group created successfully');
+        }, 'account_manager', 'An error occurred while creating the group');
     }
 
     // Update group (admin only)
     public function update(UpdateGroupRequest $request, $id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return apiResponse(false, __('messages.forbidden'), null, 403);
-        }
-
-        try {
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
             $validated = $request->validated();
 
             // Check if account manager's user_id is included in employees or snack_managers
             $currentUserId = $user->user_id;
             if (in_array($currentUserId, $validated['employees'])) {
-                return Response::internalServerError(__('Account manager cannot be added as an employee.'));
+                return $this->errorResponse(__('Account manager cannot be added as an employee.'), [], 422);
             }
 
             if (in_array($currentUserId, $validated['snack_managers'])) {
-                return Response::internalServerError(__('Account manager cannot be added as a snack manager.'));
+                return $this->errorResponse(__('Account manager cannot be added as a snack manager.'), [], 422);
             }
 
             // Collect all user IDs from employees and snack_managers
@@ -197,111 +173,92 @@ class GroupController extends Controller
 
                 $finalMessage = implode('. ', $errorMessages);
 
-                return Response::internalServerError($finalMessage);
+                return $this->errorResponse($finalMessage, [], 422);
             }
 
             $updatedGroup = $this->groupService->updateGroup($id, $validated);
             if (!$updatedGroup) {
-                return Response::internalServerError(__('Group not found'));
+                return $this->notFoundResponse(__('Group not found'));
             }
 
-            return (new GroupResource($updatedGroup))->response()->setStatusCode(201);
-        } catch (ValidationException $e) {
-            return Response::internalServerError(__('Validation failed'));
-        } catch (\Exception $e) {
-            Log::error('Error updating group: ' . $e->getMessage());
-            return Response::internalServerError(__('An error occurred while updating the group'));
-        }
+            return $this->updatedResponse(new GroupResource($updatedGroup), 'Group updated successfully');
+        }, 'account_manager', 'An error occurred while updating the group');
     }
 
     // Delete group (admin only)
     public function destroy($id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return Response::internalServerError(__('Forbidden'));
-        }
-        $deleted = $this->groupService->deleteGroup($id);
-        if (!$deleted) {
-            return Response::internalServerError(__('Group not found'));
-        }
+        return $this->executeWithAuth(function ($user) use ($id) {
+            $deleted = $this->groupService->deleteGroup($id);
+            if (!$deleted) {
+                return $this->notFoundResponse(__('Group not found'));
+            }
 
-        return response()->noContent();
+            return $this->noContentResponse();
+        }, 'account_manager', 'Failed to delete group');
     }
 
     // List members of a group (admin only)
     public function members($id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return Response::internalServerError(__('Forbidden'));
-        }
-        $members = $this->groupService->listMembers($id);
-        if ($members === null) {
-            return $this->error500(__('Group not found'));
-        }
-        return GroupResource::collection($members);
+        return $this->executeWithAuth(function ($user) use ($id) {
+            $members = $this->groupService->listMembers($id);
+            if ($members === null) {
+                return $this->notFoundResponse(__('Group not found'));
+            }
+            return $this->resourceCollectionResponse(GroupResource::collection($members));
+        }, 'account_manager', 'Failed to retrieve group members');
     }
 
     // Add members to group (admin only)
     public function addMembers(Request $request, $id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return $this->error500(__('Forbidden'));
-        }
-        $validated = $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,user_id',
-        ]);
-        $members = $this->groupService->addMembers($id, $validated['user_ids']);
-        if ($members === null) {
-            return Response::internalServerError(__('Group not found'));
-        }
-        return GroupResource::collection($members);
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
+            $validated = $request->validate([
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'exists:users,user_id',
+            ]);
+            $members = $this->groupService->addMembers($id, $validated['user_ids']);
+            if ($members === null) {
+                return $this->notFoundResponse(__('Group not found'));
+            }
+            return $this->resourceCollectionResponse(GroupResource::collection($members));
+        }, 'account_manager', 'Failed to add members to group');
     }
 
     // Remove members from group (admin only)
     public function removeMembers(Request $request, $id)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return Response::internalServerError(__('Forbidden'));
-        }
-        $validated = $request->validate([
-            'user_ids' => 'required|array',
-            'user_ids.*' => 'exists:users,user_id',
-        ]);
-        $members = $this->groupService->removeMembers($id, $validated['user_ids']);
-        if ($members === null) {
-            return Response::internalServerError(__('Group not found'));
-        }
-        return GroupResource::collection($members);
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
+            $validated = $request->validate([
+                'user_ids' => 'required|array',
+                'user_ids.*' => 'exists:users,user_id',
+            ]);
+            $members = $this->groupService->removeMembers($id, $validated['user_ids']);
+            if ($members === null) {
+                return $this->notFoundResponse(__('Group not found'));
+            }
+            return $this->resourceCollectionResponse(GroupResource::collection($members));
+        }, 'account_manager', 'Failed to remove members from group');
     }
 
     public function setSortOrder(Request $request)
     {
-        // Add authorization check
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return Response::internalServerError(__('Forbidden'));
-        }
+        return $this->executeWithAuth(function ($user) use ($request) {
+            $sortOrders = $request->input('sort_orders');
 
-        $sortOrders = $request->input('sort_orders');
-
-        // Improved validation
-        if (!is_array($sortOrders) || empty($sortOrders)) {
-            return $this->error500(__('Invalid input format. Expected a non-empty array.'));
-        }
-
-        // Validate sort order values are numeric
-        foreach ($sortOrders as $groupId => $sortOrder) {
-            if (!is_numeric($sortOrder) || $sortOrder < 0) {
-                return $this->error500(__('Invalid sort order value. Expected non-negative numbers.'));
+            // Improved validation
+            if (!is_array($sortOrders) || empty($sortOrders)) {
+                return $this->errorResponse(__('Invalid input format. Expected a non-empty array.'), [], 422);
             }
-        }
 
-        try {
+            // Validate sort order values are numeric
+            foreach ($sortOrders as $groupId => $sortOrder) {
+                if (!is_numeric($sortOrder) || $sortOrder < 0) {
+                    return $this->errorResponse(__('Invalid sort order value. Expected non-negative numbers.'), [], 422);
+                }
+            }
+
             // Use database transaction for data consistency
             DB::transaction(function () use ($sortOrders) {
                 $groupIds = array_keys($sortOrders);
@@ -320,14 +277,7 @@ class GroupController extends Controller
                 }
             });
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Group sort orders updated successfully',
-                'data' => $sortOrders
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Error updating group sort orders: ' . $e->getMessage());
-            return $this->error500(__('An error occurred while updating sort orders'));
-        }
+            return $this->successResponse('Group sort orders updated successfully', $sortOrders);
+        }, 'account_manager', 'An error occurred while updating sort orders');
     }
 }

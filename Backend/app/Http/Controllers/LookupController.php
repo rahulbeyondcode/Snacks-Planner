@@ -14,7 +14,7 @@ use App\Services\WorkingDayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class LookupController extends Controller
+class LookupController extends BaseController
 {
     protected $categoryRepo;
     protected $paymentMethodRepo;
@@ -41,36 +41,25 @@ class LookupController extends Controller
     {
         $user = Auth::user();
 
-        // Get permissions and transform to nested structure
         $permissionsData = $this->getPermissionsStructure();
 
-        // Get working days
         $current = $this->workingDayService->getCurrent();
         $workingDays = $current ? $current->working_days : [];
 
-        // Get office holidays
-        if ($user && $user->role->name === 'account_manager') {
-            $holidays = $this->officeHolidayService->getOfficeHolidays();
-        } else {
-            // For shared access, return all holidays for backward compatibility
-            $holidays = $this->officeHolidayService->getAllHolidays();
-        }
+        $holidays = $user && $user->role->name === 'account_manager'
+            ? $this->officeHolidayService->getOfficeHolidays()
+            : $this->officeHolidayService->getAllHolidays();
 
-        // Get payment methods
         $paymentMethods = $this->paymentMethodRepo->all();
 
-        // Get categories
         $categories = $this->categoryRepo->all();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'permissions' => $permissionsData,
-                'working_days' => $workingDays,
-                'holidays' => OfficeHolidayResource::collection($holidays),
-                'payment_methods' => PaymentMethodResource::collection($paymentMethods),
-                'categories' => CategoryResource::collection($categories)
-            ]
+        return $this->successResponse('success', [
+            'permissions' => $permissionsData,
+            'working_days' => $workingDays,
+            'holidays' => OfficeHolidayResource::collection($holidays),
+            'payment_methods' => PaymentMethodResource::collection($paymentMethods),
+            'categories' => CategoryResource::collection($categories)
         ]);
     }
 

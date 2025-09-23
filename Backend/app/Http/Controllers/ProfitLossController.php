@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ProfitLossServiceInterface;
 
-class ProfitLossController extends Controller
+class ProfitLossController extends BaseController
 {
     protected $profitLossService;
 
@@ -18,11 +18,12 @@ class ProfitLossController extends Controller
     // GET /profit-loss (account_manager only)
     public function index(Request $request)
     {
-        $user = Auth::user();
-        if (!$user || $user->role->name !== 'account_manager') {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-        $summary = $this->profitLossService->getProfitLossSummary($request->all());
-        return response()->json($summary);
+        return $this->executeWithAuth(function ($user) use ($request) {
+            if ($user->role->name !== 'account_manager') {
+                return $this->forbiddenResponse('Forbidden');
+            }
+            $summary = $this->profitLossService->getProfitLossSummary($request->all());
+            return $this->successResponse('success', $summary);
+        });
     }
 }
