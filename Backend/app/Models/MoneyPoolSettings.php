@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MoneyPoolSettings extends Model
+class MoneyPoolSettings extends BaseModel
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $primaryKey = 'money_pool_setting_id';
 

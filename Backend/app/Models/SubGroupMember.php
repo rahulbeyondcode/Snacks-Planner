@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SubGroupMember extends Model
+class SubGroupMember extends BaseModel
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $primaryKey = 'sub_group_member_id';
 

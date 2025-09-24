@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Role extends Model
+class Role extends BaseModel
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasPermissions;
 
     // Role ID constants
     public const ACCOUNT_MANAGER = 1;
@@ -43,30 +41,6 @@ class Role extends Model
     public function users()
     {
         return $this->hasMany(User::class, 'role_id', 'role_id');
-    }
-
-    /**
-     * Check if role has a specific permission.
-     */
-    public function hasPermission($module, $action, $resource = null)
-    {
-        return $this->permissions()
-            ->where('module', $module)
-            ->where('action', $action)
-            ->where('resource', $resource)
-            ->wherePivot('is_active', true)
-            ->exists();
-    }
-
-    /**
-     * Check if role has any permission for a module.
-     */
-    public function hasModulePermission($module)
-    {
-        return $this->permissions()
-            ->where('module', $module)
-            ->wherePivot('is_active', true)
-            ->exists();
     }
 
     /**

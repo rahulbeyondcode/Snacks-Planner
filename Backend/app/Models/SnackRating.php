@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SnackRating extends Model
+class SnackRating extends BaseModel
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
     protected $primaryKey = 'snack_rating_id';
     protected $fillable = [
         'user_id',

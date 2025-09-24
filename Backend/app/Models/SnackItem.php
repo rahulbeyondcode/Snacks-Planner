@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\HasHiddenTimestamps;
 
 class SnackItem extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasHiddenTimestamps;
 
     protected $primaryKey = 'snack_item_id';
 
@@ -21,11 +22,7 @@ class SnackItem extends Model
         'deleted_at',
     ];
 
-    protected $hidden = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
+
 
     public function snackPlanDetails()
     {
@@ -46,7 +43,7 @@ class SnackItem extends Model
     public function shops()
     {
         return $this->belongsToMany(Shop::class, 'snack_shop_mapping', 'snack_item_id', 'shop_id')
-                    ->withPivot('snack_price', 'is_available')
-                    ->withTimestamps();
+            ->withPivot('snack_price', 'is_available')
+            ->withTimestamps();
     }
 }

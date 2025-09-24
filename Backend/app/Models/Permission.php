@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Permission extends Model
+class Permission extends BaseModel
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $primaryKey = 'permission_id';
 
@@ -29,8 +27,8 @@ class Permission extends Model
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'role_permissions', 'permission_id', 'role_id')
-                    ->withPivot('is_active')
-                    ->withTimestamps();
+            ->withPivot('is_active')
+            ->withTimestamps();
     }
 
     /**
@@ -64,4 +62,4 @@ class Permission extends Model
     {
         return "{$this->module}.{$this->action}" . ($this->resource ? ".{$this->resource}" : '');
     }
-} 
+}

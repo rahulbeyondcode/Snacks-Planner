@@ -16,7 +16,7 @@ class User extends Authenticatable
     protected $keyType = 'int';
     public $timestamps = true;
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasPermissions;
 
     /**
      * The attributes that are mass assignable.
@@ -106,22 +106,6 @@ class User extends Authenticatable
     public function groupSnackSupplyDaysSet()
     {
         return $this->hasMany(GroupSnackSupplyDay::class, 'set_by', 'user_id');
-    }
-
-    /**
-     * Check if user has a specific permission.
-     */
-    public function hasPermission($module, $action, $resource = null)
-    {
-        return $this->role && $this->role->hasPermission($module, $action, $resource);
-    }
-
-    /**
-     * Check if user has any permission for a module.
-     */
-    public function hasModulePermission($module)
-    {
-        return $this->role && $this->role->hasModulePermission($module);
     }
 
     /**

@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class OfficeHoliday extends Model
+class OfficeHoliday extends BaseModel
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     // Type constants
     public const TYPE_OFFICE_HOLIDAY = 'office_holiday';

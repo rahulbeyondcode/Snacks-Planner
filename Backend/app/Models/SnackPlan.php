@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\HasHiddenTimestamps;
 
 class SnackPlan extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasHiddenTimestamps;
 
     protected $primaryKey = 'snack_plan_id';
 
@@ -23,11 +24,7 @@ class SnackPlan extends Model
         'total_amount' => 'decimal:2',
     ];
 
-    protected $hidden = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
+
 
     public function user()
     {
