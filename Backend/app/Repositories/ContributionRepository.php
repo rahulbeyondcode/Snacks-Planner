@@ -2,187 +2,217 @@
 
 namespace App\Repositories;
 
-use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Contribution;
 use App\Models\MoneyPool;
 use App\Models\MoneyPoolSettings;
+use App\Repositories\Traits\DateHelperTrait;
+use App\Repositories\Traits\RoleFilterTrait;
+use App\Repositories\Traits\TransactionHelperTrait;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Exception;
 
-class ContributionRepository implements ContributionRepositoryInterface
+class ContributionRepository extends BaseRepository implements ContributionRepositoryInterface
 {
+    use DateHelperTrait, RoleFilterTrait, TransactionHelperTrait;
+
+    public function __construct(Contribution $model)
+    {
+        parent::__construct($model);
+    }
+
+    /**
+     * Apply filters to contribution query
+     */
+    protected function applyFilters($query, array $filters): void
+    {
+        // Qualify the column to avoid ambiguity when joins are present
+        $this->applyCurrentMonthFilter($query, 'contributions.created_at');
+
+        if (!empty($filters['search'])) {
+            $searchTerm = strtolower($filters['search']);
+            $query->whereHas('user', function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%']);
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+    }
+
     /**
      * Bulk update status for multiple contributions.
-     * @param array $contributions Array of ['id' => int, 'status' => string]
-     * @return int Number of updated records
-     */
-    /**
-     * Bulk update status for all users for the current month.
-     * @param array $paidUserIds
-     * @return int Number of updated records
      */
     public function bulkUpdateStatus(array $paidUserIds, $userId = null)
     {
-        // Validate that active money pool settings exist before proceeding
-        $activeSettings = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
-        if (!$activeSettings) {
-            $validator = \Illuminate\Support\Facades\Validator::make([], []);
-            $validator->errors()->add('money_pool_settings', 'No active money pool settings found. Please configure money pool settings before accepting contributions.');
-            throw new \Illuminate\Validation\ValidationException($validator);
-        }
+        return $this->executeInTransaction(function () use ($paidUserIds, $userId) {
+            // Validate that active money pool settings exist before proceeding
+            $activeSettings = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+            if (!$activeSettings) {
+                $validator = Validator::make([], []);
+                $validator->errors()->add('money_pool_settings', 'No active money pool settings found. Please configure money pool settings before accepting contributions.');
+                throw new \Illuminate\Validation\ValidationException($validator);
+            }
 
-        $now = now();
-        $monthStart = $now->copy()->startOfMonth();
-        $monthEnd = $now->copy()->endOfMonth();
+            $now = now();
+            $monthStart = $now->copy()->startOfMonth();
+            $monthEnd = $now->copy()->endOfMonth();
 
-        // Get all users excluding account_manager role
-        $allUsers = User::join('roles', 'users.role_id', '=', 'roles.role_id')
-            ->where('roles.name', '!=', 'account_manager')
-            ->pluck('users.user_id')
-            ->toArray();
-        $count = 0;
-        foreach ($allUsers as $targetUserId) {
-            $status = in_array($targetUserId, $paidUserIds) ? 'paid' : 'unpaid';
-            $existing = Contribution::where('user_id', $targetUserId)
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->first();
-            if ($existing) {
-                if ($existing->status !== $status) {
-                    $existing->status = $status;
-                    $existing->save();
+            // Get all users excluding account_manager role
+            $allUsers = User::join('roles', 'users.role_id', '=', 'roles.role_id')
+                ->where('roles.name', '!=', 'account_manager')
+                ->pluck('users.user_id')
+                ->toArray();
+
+            $count = 0;
+            foreach ($allUsers as $targetUserId) {
+                $status = in_array($targetUserId, $paidUserIds) ? 'paid' : 'unpaid';
+                $existing = $this->model->where('user_id', $targetUserId)
+                    ->whereBetween('created_at', [$monthStart, $monthEnd])
+                    ->first();
+
+                if ($existing) {
+                    if ($existing->status !== $status) {
+                        $existing->status = $status;
+                        $existing->save();
+                        $count++;
+                    }
+                } else {
+                    $this->model->create([
+                        'user_id' => $targetUserId,
+                        'status' => $status,
+                        'created_at' => $now
+                    ]);
                     $count++;
                 }
-            } else {
-                Contribution::create([
-                    'user_id' => $targetUserId,
-                    'status' => $status,
-                    'created_at' => $now
-                ]);
-                $count++;
             }
-        }
-        // --- Money Pool Insert/Update Logic ---
-        // 1. Get active money_pool_settings (assuming 'active' means latest or with a status column)
+
+            // Update money pool logic
+            $this->updateMoneyPool($monthStart, $monthEnd, $userId);
+
+            return $count;
+        });
+    }
+
+    /**
+     * Update money pool based on contributions
+     */
+    private function updateMoneyPool($monthStart, $monthEnd, $userId)
+    {
+        // Get active money_pool_settings
         $pool = MoneyPool::whereDate('created_at', '>=', $monthStart)
             ->whereDate('created_at', '<=', $monthEnd)
             ->first();
 
+        $setting = $pool
+            ? MoneyPoolSettings::find($pool->money_pool_setting_id) ?? MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first()
+            : MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+
+        if (!$setting) {
+            return;
+        }
+
+        $perMonthAmount = $setting->per_month_amount;
+        $multiplier = $setting->multiplier;
+
+        // Count paid contributions for this month
+        $paidCount = $this->model->where('status', 'paid')
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->count();
+
+        $totalCollected = $paidCount * $perMonthAmount;
+        $employerContribution = $totalCollected * $multiplier;
+        $totalPoolAmount = $totalCollected + $employerContribution;
+
+        // Calculate total_available_amount based on insert/update case
+        $totalAvailableAmount = $totalPoolAmount; // Default for insert case
+
+        $poolData = [
+            'money_pool_setting_id' => $setting->money_pool_setting_id,
+            'total_collected_amount' => $totalCollected,
+            'employer_contribution' => $employerContribution,
+            'total_pool_amount' => $totalPoolAmount,
+            'total_available_amount' => $totalAvailableAmount,
+        ];
+
         if ($pool) {
-            // On update: use the MoneyPoolSettings associated with the existing pool
-            $setting = MoneyPoolSettings::find($pool->money_pool_setting_id);
-            if (!$setting) {
-                // Fallback: use latest if missing (should not happen)
-                $setting = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
-            }
+            // Update case: Calculate total_available_amount considering blocked_amount
+            $blockedAmount = $pool->blocked_amount ?? 0;
+            $poolData['total_available_amount'] = $totalPoolAmount - $blockedAmount;
+
+            // Only update relevant fields, do not overwrite created_by
+            $pool->update($poolData);
         } else {
-            // On insert: use the latest MoneyPoolSettings
-            $setting = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
+            // Insert case: total_available_amount = total_pool_amount (no blocked amount yet)
+            $poolData['created_by'] = $userId;
+            $poolData['created_at'] = now();
+            $poolData['updated_at'] = now();
+            MoneyPool::create($poolData);
         }
-
-        if ($setting) {
-            $perMonthAmount = $setting->per_month_amount;
-            $multiplier = $setting->multiplier;
-            // 2. Count paid contributions for this month
-            $paidCount = Contribution::where('status', 'paid')
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->count();
-            $totalCollected = $paidCount * $perMonthAmount;
-            $employerContribution = $totalCollected * $multiplier;
-            $totalPoolAmount = $totalCollected + $employerContribution;
-
-            // Calculate total_available_amount based on insert/update case
-            $totalAvailableAmount = $totalPoolAmount; // Default for insert case
-
-            $poolData = [
-                'money_pool_setting_id' => $setting->money_pool_setting_id,
-                'total_collected_amount' => $totalCollected,
-                'employer_contribution' => $employerContribution,
-                'total_pool_amount' => $totalPoolAmount,
-                'total_available_amount' => $totalAvailableAmount,
-            ];
-            if ($pool) {
-                // Update case: Calculate total_available_amount considering blocked_amount
-                $blockedAmount = $pool->blocked_amount ?? 0;
-                $poolData['total_available_amount'] = $totalPoolAmount - $blockedAmount;
-
-                // Only update relevant fields, do not overwrite created_by
-                $pool->update($poolData);
-            } else {
-                // Insert case: total_available_amount = total_pool_amount (no blocked amount yet)
-                $poolData['created_by'] = $userId;
-                $poolData['created_at'] = $now;
-                $poolData['updated_at'] = $now;
-                MoneyPool::create($poolData);
-            }
-        }
-        // --- End Money Pool Logic ---
-        return $count;
     }
 
     /**
      * List all contributions with optional filters and pagination.
-     * @param array $filters
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function listAll(array $filters = [])
     {
-        // Always filter for current month
-        $now = now();
-        $monthStart = $now->copy()->startOfMonth()->toDateString();
-        $monthEnd = $now->copy()->endOfMonth()->toDateString();
-        $query = Contribution::query()
+        $query = $this->model->query()
             ->join('users', 'contributions.user_id', '=', 'users.user_id')
             ->join('roles', 'users.role_id', '=', 'roles.role_id')
             ->select('contributions.*')
-            ->whereDate('contributions.created_at', '>=', $monthStart)
-            ->whereDate('contributions.created_at', '<=', $monthEnd)
             ->where('roles.name', '!=', 'account_manager');
-        if (!empty($filters['search'])) {
-            $searchTerm = strtolower($filters['search']);
-            $query->whereRaw('LOWER(users.name) LIKE ?', ['%' . $searchTerm . '%']);
+
+        if (!empty($filters)) {
+            $this->applyFilters($query, $filters);
         }
-        if (!empty($filters['status'])) {
-            $query->where('contributions.status', $filters['status']);
-        }
+
         $perPage = $filters['per_page'] ?? 100;
         return $query->orderBy('contributions.user_id')->paginate($perPage);
     }
-    public function create(array $data)
+
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
-        return Contribution::create($data);
+        return $this->model->create($data);
     }
 
-    public function find(int $id)
+    public function find(int $id, array $columns = ['*'], array $relations = []): ?\Illuminate\Database\Eloquent\Model
     {
-        return Contribution::find($id);
+        $query = $this->model->query();
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+        return $query->find($id, $columns);
     }
 
     public function findByUser(int $userId)
     {
-        return Contribution::where('user_id', $userId)->orderBy('user_id')->get();
+        return $this->model->where('user_id', $userId)->orderBy('user_id')->get();
     }
 
-    public function update(int $id, array $data)
+    public function update(int $id, array $data): ?\Illuminate\Database\Eloquent\Model
     {
         // Validate that active money pool settings exist before updating contribution status
         if (isset($data['status'])) {
             $activeSettings = MoneyPoolSettings::orderByDesc('money_pool_setting_id')->first();
             if (!$activeSettings) {
-                $validator = \Illuminate\Support\Facades\Validator::make([], []);
+                $validator = Validator::make([], []);
                 $validator->errors()->add('money_pool_settings', 'No active money pool settings found. Please configure money pool settings before accepting contributions.');
                 throw new \Illuminate\Validation\ValidationException($validator);
             }
         }
 
-        $contribution = Contribution::find($id);
+        $contribution = $this->find($id);
         if ($contribution) {
             $contribution->update($data);
         }
         return $contribution;
     }
 
-    public function delete(int $id)
+    public function delete(int $id): bool
     {
-        $contribution = Contribution::find($id);
+        $contribution = $this->find($id);
         if ($contribution) {
             $contribution->delete();
             return true;
@@ -192,42 +222,61 @@ class ContributionRepository implements ContributionRepositoryInterface
 
     public function getTotalContributions()
     {
-        // Get current month date range
-        $now = now();
-        $monthStart = $now->copy()->startOfMonth()->toDateString();
-        $monthEnd = $now->copy()->endOfMonth()->toDateString();
+        $dateRange = $this->getCurrentMonthRange();
 
-        // Get total count of paid contributions for current month, excluding account_manager role
-        $totalPaid = Contribution::query()
+        return [
+            'total_paid' => $this->getTotalByStatus('paid', $dateRange['start'], $dateRange['end']),
+            'total_unpaid' => $this->getTotalByStatus('unpaid', $dateRange['start'], $dateRange['end']),
+            'total_all' => $this->getTotalAll($dateRange['start'], $dateRange['end']),
+            'by_user' => $this->getContributionsByUser($dateRange['start'], $dateRange['end']),
+        ];
+    }
+
+    public function getCurrentMonthCounts()
+    {
+        $dateRange = $this->getCurrentMonthRange();
+
+        return [
+            'paid_contributions' => $this->getTotalByStatus('paid', $dateRange['start'], $dateRange['end']),
+            'unpaid_records' => $this->getTotalByStatus('unpaid', $dateRange['start'], $dateRange['end']),
+        ];
+    }
+
+    /**
+     * Get total contributions by status
+     */
+    private function getTotalByStatus(string $status, string $startDate, string $endDate): int
+    {
+        return $this->model->query()
             ->join('users', 'contributions.user_id', '=', 'users.user_id')
             ->join('roles', 'users.role_id', '=', 'roles.role_id')
-            ->whereDate('contributions.created_at', '>=', $monthStart)
-            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->whereDate('contributions.created_at', '>=', $startDate)
+            ->whereDate('contributions.created_at', '<=', $endDate)
             ->where('roles.name', '!=', 'account_manager')
-            ->where('contributions.status', 'paid')
+            ->where('contributions.status', $status)
             ->count();
+    }
 
-        // Get total count of unpaid contributions for current month, excluding account_manager role
-        $totalUnpaid = Contribution::query()
+    /**
+     * Get total contributions count
+     */
+    private function getTotalAll(string $startDate, string $endDate): int
+    {
+        return $this->model->query()
             ->join('users', 'contributions.user_id', '=', 'users.user_id')
             ->join('roles', 'users.role_id', '=', 'roles.role_id')
-            ->whereDate('contributions.created_at', '>=', $monthStart)
-            ->whereDate('contributions.created_at', '<=', $monthEnd)
-            ->where('roles.name', '!=', 'account_manager')
-            ->where('contributions.status', 'unpaid')
-            ->count();
-
-        // Get total count of all records for current month, excluding account_manager role
-        $totalAll = Contribution::query()
-            ->join('users', 'contributions.user_id', '=', 'users.user_id')
-            ->join('roles', 'users.role_id', '=', 'roles.role_id')
-            ->whereDate('contributions.created_at', '>=', $monthStart)
-            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->whereDate('contributions.created_at', '>=', $startDate)
+            ->whereDate('contributions.created_at', '<=', $endDate)
             ->where('roles.name', '!=', 'account_manager')
             ->count();
+    }
 
-        // Get contributions by user with user names and status breakdown for current month
-        $byUser = Contribution::select(
+    /**
+     * Get contributions grouped by user
+     */
+    private function getContributionsByUser(string $startDate, string $endDate): array
+    {
+        return $this->model->select(
             'contributions.user_id',
             'users.name as user_name',
             DB::raw('COUNT(*) as total_records'),
@@ -236,51 +285,27 @@ class ContributionRepository implements ContributionRepositoryInterface
         )
             ->join('users', 'contributions.user_id', '=', 'users.user_id')
             ->join('roles', 'users.role_id', '=', 'roles.role_id')
-            ->whereDate('contributions.created_at', '>=', $monthStart)
-            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->whereDate('contributions.created_at', '>=', $startDate)
+            ->whereDate('contributions.created_at', '<=', $endDate)
             ->where('roles.name', '!=', 'account_manager')
             ->groupBy('contributions.user_id', 'users.name')
             ->orderBy('contributions.user_id')
             ->get()
             ->toArray();
-
-        return [
-            'total_paid' => $totalPaid,
-            'total_unpaid' => $totalUnpaid,
-            'total_all' => $totalAll,
-            'by_user' => $byUser,
-        ];
     }
 
-    public function getCurrentMonthCounts()
+    /**
+     * Get contributions by date range
+     */
+    public function getByDateRange(string $dateFrom, string $dateTo)
     {
-        // Get current month date range
-        $now = now();
-        $monthStart = $now->copy()->startOfMonth()->toDateString();
-        $monthEnd = $now->copy()->endOfMonth()->toDateString();
-
-        // Get counts for current month, excluding account_manager role
-        $paidCount = Contribution::query()
+        return $this->model->query()
             ->join('users', 'contributions.user_id', '=', 'users.user_id')
             ->join('roles', 'users.role_id', '=', 'roles.role_id')
-            ->whereDate('contributions.created_at', '>=', $monthStart)
-            ->whereDate('contributions.created_at', '<=', $monthEnd)
+            ->select('contributions.*', 'users.name as user_name')
+            ->whereBetween('contributions.created_at', [$dateFrom, $dateTo])
             ->where('roles.name', '!=', 'account_manager')
-            ->where('contributions.status', 'paid')
-            ->count();
-
-        $unpaidCount = Contribution::query()
-            ->join('users', 'contributions.user_id', '=', 'users.user_id')
-            ->join('roles', 'users.role_id', '=', 'roles.role_id')
-            ->whereDate('contributions.created_at', '>=', $monthStart)
-            ->whereDate('contributions.created_at', '<=', $monthEnd)
-            ->where('roles.name', '!=', 'account_manager')
-            ->where('contributions.status', 'unpaid')
-            ->count();
-
-        return [
-            'paid_contributions' => $paidCount,
-            'unpaid_records' => $unpaidCount,
-        ];
+            ->orderBy('contributions.created_at', 'desc')
+            ->get();
     }
 }

@@ -3,13 +3,22 @@
 namespace App\Repositories;
 
 use App\Models\User;
+use App\Repositories\Traits\RoleFilterTrait;
 
-class UserRepository implements UserRepositoryInterface
+class UserRepository extends BaseRepository implements UserRepositoryInterface
 {
-    public function all(array $filters = [])
-    {
-        $query = User::query();
+    use RoleFilterTrait;
 
+    public function __construct(User $model)
+    {
+        parent::__construct($model);
+    }
+
+    /**
+     * Apply filters to user query
+     */
+    protected function applyFilters($query, array $filters): void
+    {
         // Exclude soft-deleted users by default
         $query->whereNull('deleted_at');
 
@@ -29,23 +38,44 @@ class UserRepository implements UserRepositoryInterface
                 $q->whereNotIn('name', $filters['exclude_roles']);
             });
         }
-
-        return $query->with('role')->orderBy('name')->get();
     }
 
-    public function find(int $id)
+    public function all(array $columns = ['*'], array $relations = [], array $filters = []): \Illuminate\Database\Eloquent\Collection
     {
-        return User::with('role')->whereNull('deleted_at')->find($id);
+        $query = $this->model->query();
+
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+
+        if (!empty($filters)) {
+            $this->applyFilters($query, $filters);
+        }
+
+        return $query->orderBy('name')->get($columns);
     }
 
-    public function create(array $data)
+    public function find(int $id, array $columns = ['*'], array $relations = []): ?\Illuminate\Database\Eloquent\Model
     {
-        return User::create($data);
+        $query = $this->model->query();
+
+        if (!empty($relations)) {
+            $query->with($relations);
+        } else {
+            $query->with('role'); // Default relationship for users
+        }
+
+        return $query->whereNull('deleted_at')->find($id, $columns);
     }
 
-    public function update(int $id, array $data)
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
-        $user = User::whereNull('deleted_at')->find($id);
+        return $this->model->create($data);
+    }
+
+    public function update(int $id, array $data): ?\Illuminate\Database\Eloquent\Model
+    {
+        $user = $this->find($id);
         if ($user) {
             $user->update($data);
             return $user->fresh('role');
@@ -53,9 +83,9 @@ class UserRepository implements UserRepositoryInterface
         return null;
     }
 
-    public function delete(int $id)
+    public function delete(int $id): bool
     {
-        $user = User::whereNull('deleted_at')->find($id);
+        $user = $this->find($id);
         if ($user) {
             // Soft delete - sets deleted_at timestamp
             $user->delete();
@@ -66,12 +96,43 @@ class UserRepository implements UserRepositoryInterface
 
     public function assignRole(int $userId, int $roleId)
     {
-        $user = User::whereNull('deleted_at')->find($userId);
+        $user = $this->find($userId);
         if ($user) {
             $user->role_id = $roleId;
             $user->save();
             return $user->fresh('role');
         }
         return null;
+    }
+
+    /**
+     * Get users by role name
+     */
+    public function getByRole(string $roleName, array $filters = [])
+    {
+        $query = $this->model->query()
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->where('roles.name', $roleName)
+            ->whereNull('users.deleted_at');
+
+        if (!empty($filters['search'])) {
+            $query->where('users.name', 'like', '%' . $filters['search'] . '%');
+        }
+
+        return $query->select('users.*')->with('role')->get();
+    }
+
+    /**
+     * Get users excluding specific roles
+     */
+    public function getExcludingRoles(array $roleNames)
+    {
+        return $this->model->query()
+            ->join('roles', 'users.role_id', '=', 'roles.role_id')
+            ->whereNotIn('roles.name', $roleNames)
+            ->whereNull('users.deleted_at')
+            ->select('users.*')
+            ->with('role')
+            ->get();
     }
 }

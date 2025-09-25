@@ -21,7 +21,7 @@ class UserService implements UserServiceInterface
     {
         // Apply business rule: exclude account managers from general user listings
         $filters['exclude_roles'] = ['account_manager'];
-        return $this->userRepository->all($filters);
+        return $this->userRepository->all(['*'], ['role'], $filters);
     }
 
     public function getUser(int $id)

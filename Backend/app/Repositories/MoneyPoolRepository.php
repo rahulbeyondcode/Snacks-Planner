@@ -3,17 +3,25 @@
 namespace App\Repositories;
 
 use App\Models\MoneyPool;
+use App\Repositories\Traits\DateHelperTrait;
 
-class MoneyPoolRepository implements MoneyPoolRepositoryInterface
+class MoneyPoolRepository extends BaseRepository implements MoneyPoolRepositoryInterface
 {
+    use DateHelperTrait;
+
+    public function __construct(MoneyPool $model)
+    {
+        parent::__construct($model);
+    }
+
     public function query()
     {
-        return MoneyPool::query();
+        return $this->model->query();
     }
 
     public function getCurrentMonthMoneyPool()
     {
-        return MoneyPool::with(['creator', 'settings', 'blocks.creator'])
+        return $this->model->with(['creator', 'settings', 'blocks.creator'])
             ->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->orderBy('created_at', 'desc')
@@ -22,14 +30,14 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
 
     public function find(int $id)
     {
-        return MoneyPool::with(['creator', 'settings', 'blocks.creator'])->find($id);
+        return $this->model->with(['creator', 'settings', 'blocks.creator'])->find($id);
     }
 
     public function update(int $id, array $data): ?MoneyPool
     {
-        $moneyPool = MoneyPool::find($id);
+        $moneyPool = $this->find($id);
 
-        if (! $moneyPool) {
+        if (!$moneyPool) {
             return null;
         }
 
@@ -40,6 +48,54 @@ class MoneyPoolRepository implements MoneyPoolRepositoryInterface
 
     public function getTotalAvailableAmount(int $moneyPoolId, float $totalBlocked): float
     {
-        return MoneyPool::where('money_pool_id', $moneyPoolId)->first()->total_pool_amount - $totalBlocked;
+        $moneyPool = $this->find($moneyPoolId);
+        return $moneyPool ? $moneyPool->total_pool_amount - $totalBlocked : 0;
+    }
+
+    /**
+     * Get money pools for a specific month
+     */
+    public function getByMonth(string $month)
+    {
+        return $this->model->with(['creator', 'settings', 'blocks.creator'])
+            ->whereRaw('DATE_FORMAT(created_at, "%Y-%m") = ?', [$month])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get money pools within date range
+     */
+    public function getByDateRange(string $dateFrom, string $dateTo)
+    {
+        return $this->model->with(['creator', 'settings', 'blocks.creator'])
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get total blocked amount for a money pool
+     */
+    public function getTotalBlockedAmount(int $moneyPoolId): float
+    {
+        return $this->model->find($moneyPoolId)
+            ->blocks()
+            ->sum('amount');
+    }
+
+    /**
+     * Get money pool with calculated available amount
+     */
+    public function getWithAvailableAmount(int $moneyPoolId): ?MoneyPool
+    {
+        $moneyPool = $this->find($moneyPoolId);
+
+        if ($moneyPool) {
+            $totalBlocked = $this->getTotalBlockedAmount($moneyPoolId);
+            $moneyPool->available_amount = $moneyPool->total_pool_amount - $totalBlocked;
+        }
+
+        return $moneyPool;
     }
 }

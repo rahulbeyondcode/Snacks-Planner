@@ -13,14 +13,24 @@ class RepositoryServiceProvider extends ServiceProvider
     public function register()
     {
         // Repository bindings
-        $this->app->bind(\App\Repositories\SnackPlanRepositoryInterface::class, \App\Repositories\SnackPlanRepository::class);
+        $this->app->bind(\App\Repositories\SnackPlanRepositoryInterface::class, function ($app) {
+            return new \App\Repositories\SnackPlanRepository($app->make(\App\Models\SnackPlan::class));
+        });
         $this->app->bind(\App\Repositories\SnackPlanDetailRepositoryInterface::class, \App\Repositories\SnackPlanDetailRepository::class);
-        $this->app->bind(\App\Repositories\UserRepositoryInterface::class, \App\Repositories\UserRepository::class);
-        $this->app->bind(\App\Repositories\ContributionRepositoryInterface::class, \App\Repositories\ContributionRepository::class);
-        $this->app->bind(\App\Repositories\GroupRepositoryInterface::class, \App\Repositories\GroupRepository::class);
+        $this->app->bind(\App\Repositories\UserRepositoryInterface::class, function ($app) {
+            return new \App\Repositories\UserRepository($app->make(\App\Models\User::class));
+        });
+        $this->app->bind(\App\Repositories\ContributionRepositoryInterface::class, function ($app) {
+            return new \App\Repositories\ContributionRepository($app->make(\App\Models\Contribution::class));
+        });
+        $this->app->bind(\App\Repositories\GroupRepositoryInterface::class, function ($app) {
+            return new \App\Repositories\GroupRepository($app->make(\App\Models\Group::class));
+        });
         $this->app->bind(\App\Repositories\GroupWeeklyOperationRepositoryInterface::class, \App\Repositories\GroupWeeklyOperationRepository::class);
         $this->app->bind(\App\Repositories\GroupWeeklyOperationDetailRepositoryInterface::class, \App\Repositories\GroupWeeklyOperationDetailRepository::class);
-        $this->app->bind(\App\Repositories\MoneyPoolRepositoryInterface::class, \App\Repositories\MoneyPoolRepository::class);
+        $this->app->bind(\App\Repositories\MoneyPoolRepositoryInterface::class, function ($app) {
+            return new \App\Repositories\MoneyPoolRepository($app->make(\App\Models\MoneyPool::class));
+        });
         $this->app->bind(\App\Repositories\MoneyPoolBlockRepositoryInterface::class, \App\Repositories\MoneyPoolBlockRepository::class);
         $this->app->bind(\App\Repositories\MoneyPoolSettingsRepositoryInterface::class, \App\Repositories\MoneyPoolSettingsRepository::class);
         $this->app->bind(\App\Repositories\OfficeHolidayRepositoryInterface::class, \App\Repositories\OfficeHolidayRepository::class);
@@ -38,12 +48,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Services\ProfitLossServiceInterface::class, \App\Services\ProfitLossService::class);
         $this->app->bind(\App\Services\ReportServiceInterface::class, \App\Services\ReportService::class);
         $this->app->bind(\App\Services\SubGroupServiceInterface::class, \App\Services\SubGroupService::class);
-
-        $this->app->bind(SnackPlanRepositoryInterface::class, SnackPlanRepository::class);
-        $this->app->bind(SnackPlanServiceInterface::class, SnackPlanService::class);
-        $this->app->bind(\App\Repositories\SnackPlanDetailRepositoryInterface::class, \App\Repositories\SnackPlanDetailRepository::class);
-        $this->app->bind(\App\Repositories\UserRepositoryInterface::class, \App\Repositories\UserRepository::class);
-        $this->app->bind(\App\Services\UserServiceInterface::class, \App\Services\UserService::class);
     }
 
     public function boot()
