@@ -1,25 +1,37 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 import EmployeeContributionRow from "features/user-contribution/components/employee-contribution-row";
-import type { EmployeeContribution } from "features/user-contribution/helpers/user-contribution-type";
+import { useUserContributionStore } from "features/user-contribution/store";
 
-type EmployeeContributionListProps = {
-  employees: EmployeeContribution[];
-  onTogglePaid: (id: number) => void;
-};
+const EmployeeContributionList: React.FC = () => {
+  const { filter, search, contributionData } = useUserContributionStore();
 
-const EmployeeContributionList: React.FC<EmployeeContributionListProps> = ({
-  employees,
-  onTogglePaid,
-}) => {
+  const filteredEmployees = useMemo(() => {
+    if (!contributionData) return [];
+
+    const allEmployees = Object.values(contributionData.contributions);
+
+    return allEmployees.filter((employee) => {
+      const displayStatus =
+        employee.pending_status !== undefined
+          ? employee.pending_status
+          : employee.status;
+
+      if (filter === "paid" && displayStatus !== "paid") return false;
+      if (filter === "unpaid" && displayStatus !== "unpaid") return false;
+      if (
+        search &&
+        !employee.user_name.toLowerCase().includes(search.toLowerCase())
+      )
+        return false;
+      return true;
+    });
+  }, [contributionData, filter, search]);
+
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
-      {employees.map((emp) => (
-        <EmployeeContributionRow
-          key={emp.id}
-          employee={emp}
-          onTogglePaid={onTogglePaid}
-        />
+      {filteredEmployees.map((employee) => (
+        <EmployeeContributionRow key={employee.user_id} employee={employee} />
       ))}
     </div>
   );

@@ -78,6 +78,9 @@ importers:
       '@tanstack/eslint-plugin-query':
         specifier: ^4.39.1
         version: 4.39.1(eslint@9.31.0(jiti@2.4.2))
+      '@types/lodash.isempty':
+        specifier: ^4.4.9
+        version: 4.4.9
       '@types/node':
         specifier: ^24.1.0
         version: 24.1.0
@@ -984,6 +987,12 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/lodash.isempty@4.4.9':
+    resolution: {integrity: sha512-DPSFfnT2JmZiAWNWOU8IRZws/Ha6zyGF5m06TydfsY+0dVoQqby2J61Na2QU4YtwiZ+moC6cJS6zWYBJq4wBVw==}
+
+  '@types/lodash@4.17.20':
+    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
   '@types/node@24.1.0':
     resolution: {integrity: sha512-ut5FthK5moxFKH2T1CUOC6ctR67rQRvvHdFLCD2Ql6KXmMuCrjsSsRI9UsLCm9M18BMwClv4pn327UvB7eeO1w==}
@@ -2829,6 +2838,12 @@ snapshots:
   '@types/estree@1.0.8': {}
 
   '@types/json-schema@7.0.15': {}
+
+  '@types/lodash.isempty@4.4.9':
+    dependencies:
+      '@types/lodash': 4.17.20
+
+  '@types/lodash@4.17.20': {}
 
   '@types/node@24.1.0':
     dependencies:
