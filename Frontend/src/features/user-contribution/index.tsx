@@ -14,8 +14,8 @@ import {
 } from "shared/helpers/constants";
 
 const UserContributionManagement = () => {
-  const { setContributionData, loadPendingChanges } =
-    useUserContributionStore();
+  const setContributionData = useUserContributionStore()?.setContributionData;
+  const loadPendingChanges = useUserContributionStore()?.loadPendingChanges;
 
   const {
     data: apiContributionData,

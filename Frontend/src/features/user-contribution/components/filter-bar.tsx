@@ -6,7 +6,16 @@ const styles = {
 };
 
 const FilterBar = () => {
-  const { filter, search, setFilter, setSearch } = useUserContributionStore();
+  const filter = useUserContributionStore()?.filter;
+  const search = useUserContributionStore()?.search;
+  const setFilter = useUserContributionStore()?.setFilter;
+  const setSearch = useUserContributionStore()?.setSearch;
+  const paidContributions =
+    useUserContributionStore()?.contributionData?.contribution_status?.paid
+      ?.size;
+  const unpaidContributions =
+    useUserContributionStore()?.contributionData?.contribution_status?.unpaid
+      ?.size;
 
   return (
     <div className="flex items-center justify-between">
@@ -21,13 +30,13 @@ const FilterBar = () => {
           className={`${styles.filterButton} ${filter === "paid" ? "bg-yellow-300" : ""}`}
           onClick={() => setFilter("paid")}
         >
-          Paid
+          Paid ({paidContributions})
         </button>
         <button
           className={`${styles.filterButton} ${filter === "unpaid" ? "bg-yellow-300" : ""}`}
           onClick={() => setFilter("unpaid")}
         >
-          Unpaid
+          Unpaid ({unpaidContributions})
         </button>
       </div>
       <input

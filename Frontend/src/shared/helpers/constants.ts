@@ -11,4 +11,4 @@ export const GET_EMPLOYEE_LIST_RETRY = 3;
 export const GET_CONTRIBUTIONS_RETRY = 3;
 
 // LocalStorage key
-export const STORAGE_KEY = "user-contribution-pending-changes";
+export const STORAGE_KEY = "unsaved_contributions";

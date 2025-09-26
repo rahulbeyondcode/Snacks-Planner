@@ -4,7 +4,9 @@ import EmployeeContributionRow from "features/user-contribution/components/emplo
 import { useUserContributionStore } from "features/user-contribution/store";
 
 const EmployeeContributionList: React.FC = () => {
-  const { filter, search, contributionData } = useUserContributionStore();
+  const filter = useUserContributionStore()?.filter;
+  const search = useUserContributionStore()?.search;
+  const contributionData = useUserContributionStore()?.contributionData;
 
   const filteredEmployees = useMemo(() => {
     if (!contributionData) return [];

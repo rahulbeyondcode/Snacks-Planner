@@ -84,7 +84,6 @@ const BlockFundsForm: React.FC<BlockFundsFormProps> = ({ maxAmount }) => {
   });
 
   const onSubmit = (data: FormValues) => {
-    console.log("data: ", data);
     const payload = {
       reason: data.name,
       block_date: dayjs(data.date).format("YYYY-MM-DD"),

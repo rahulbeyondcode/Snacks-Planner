@@ -20,7 +20,7 @@ const styles = {
 const EmployeeContributionRow: React.FC<EmployeeContributionRowProps> = ({
   employee,
 }) => {
-  const { togglePendingStatus } = useUserContributionStore();
+  const togglePendingStatus = useUserContributionStore()?.togglePendingStatus;
 
   const handleTogglePaid = () => {
     togglePendingStatus(employee.user_id, employee.status);

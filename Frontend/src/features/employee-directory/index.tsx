@@ -101,8 +101,6 @@ const EmployeeDirectory: React.FC = () => {
     }
   };
 
-  console.log("Rendered");
-
   return (
     <div className="px-2 py-6 sm:px-4 md:px-6 max-w-7xl w-full mx-auto">
       <div className="flex items-center justify-between mb-4">

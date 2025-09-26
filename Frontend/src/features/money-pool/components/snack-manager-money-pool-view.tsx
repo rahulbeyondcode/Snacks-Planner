@@ -64,8 +64,6 @@ const SnackManagerMoneyPoolView: React.FC = () => {
   const finalPoolAmount = moneyPoolData.total_pool_amount || 0;
   const availablePoolAmount = finalPoolAmount - totalBlockedAmount;
 
-  console.log("moneyPoolData: ", moneyPoolData);
-
   return (
     <div className="w-full mx-auto mt-6 px-2 sm:px-4">
       <div className="mb-4 sm:mb-6 flex items-center justify-between">
