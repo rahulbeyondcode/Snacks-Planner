@@ -4,21 +4,19 @@ namespace App\Services;
 
 use App\Repositories\SnackPlanRepositoryInterface;
 use App\Repositories\ContributionRepositoryInterface;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class ReportService implements ReportServiceInterface
+class ReportService extends BaseService implements ReportServiceInterface
 {
     protected $snackPlanRepository;
-    protected $contributionRepository;
 
     public function __construct(
         SnackPlanRepositoryInterface $snackPlanRepository,
         ContributionRepositoryInterface $contributionRepository
     ) {
         $this->snackPlanRepository = $snackPlanRepository;
-        $this->contributionRepository = $contributionRepository;
+        $this->repository = $contributionRepository;
     }
 
     public function generateReport(array $params)
@@ -80,7 +78,7 @@ class ReportService implements ReportServiceInterface
     protected function getTotalContributionsData()
     {
         // Example: sum contributions grouped by user or overall
-        return $this->contributionRepository->getTotalContributions();
+        return $this->repository->getTotalContributions();
     }
 
     protected function formatDataForExcel($data, $type)

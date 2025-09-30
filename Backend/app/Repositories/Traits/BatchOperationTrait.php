@@ -105,7 +105,7 @@ trait BatchOperationTrait
     /**
      * Batch update or create records
      */
-    protected function batchUpsert(array $data, array $uniqueBy, array $update = null): bool
+    protected function batchUpsert(array $data, array $uniqueBy, ?array $update = null): bool
     {
         if (empty($data)) {
             return true;

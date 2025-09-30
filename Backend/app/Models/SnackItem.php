@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Traits\HasHiddenTimestamps;
 
 class SnackItem extends Model
 {
-    use HasFactory, SoftDeletes, HasHiddenTimestamps;
+    use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'snack_item_id';
 
@@ -17,6 +16,12 @@ class SnackItem extends Model
         'name',
         'description',
         'price',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    protected $hidden = [
         'created_at',
         'updated_at',
         'deleted_at',

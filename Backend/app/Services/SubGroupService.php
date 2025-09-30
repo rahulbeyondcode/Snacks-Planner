@@ -8,23 +8,21 @@ use App\Models\SubGroup;
 use App\Models\SubGroupMember;
 use App\Repositories\SubGroupRepositoryInterface;
 
-class SubGroupService implements SubGroupServiceInterface
+class SubGroupService extends BaseService implements SubGroupServiceInterface
 {
-    protected $subGroupRepository;
-
     public function __construct(SubGroupRepositoryInterface $subGroupRepository)
     {
-        $this->subGroupRepository = $subGroupRepository;
+        $this->repository = $subGroupRepository;
     }
 
     public function listSubGroups(array $filters = [])
     {
-        return $this->subGroupRepository->all($filters);
+        return $this->all($filters);
     }
 
     public function getSubGroup(int $id)
     {
-        return $this->subGroupRepository->find($id);
+        return $this->find($id);
     }
 
     public function createSubGroup(array $data)
@@ -56,12 +54,12 @@ class SubGroupService implements SubGroupServiceInterface
             }
         }
 
-        return $this->subGroupRepository->create($data);
+        return $this->create($data);
     }
 
     public function updateSubGroup(int $id, array $data)
     {
-        $subGroup = $this->subGroupRepository->find($id);
+        $subGroup = $this->find($id);
         if (! $subGroup) {
             return null;
         }
@@ -89,16 +87,16 @@ class SubGroupService implements SubGroupServiceInterface
             }
         }
 
-        return $this->subGroupRepository->update($id, $data);
+        return $this->update($id, $data);
     }
 
     public function deleteSubGroup(int $id)
     {
-        $subGroup = $this->subGroupRepository->find($id);
+        $subGroup = $this->find($id);
         if (! $subGroup) {
             return null;
         }
 
-        return $this->subGroupRepository->delete($id);
+        return $this->delete($id);
     }
 }

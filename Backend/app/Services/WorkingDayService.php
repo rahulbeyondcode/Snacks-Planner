@@ -3,22 +3,20 @@ namespace App\Services;
 
 use App\Repositories\WorkingDayRepositoryInterface;
 
-class WorkingDayService
+class WorkingDayService extends BaseService
 {
-    protected $workingDayRepo;
-
     public function __construct(WorkingDayRepositoryInterface $workingDayRepo)
     {
-        $this->workingDayRepo = $workingDayRepo;
+        $this->repository = $workingDayRepo;
     }
 
     public function getCurrent()
     {
-        return $this->workingDayRepo->getCurrent();
+        return $this->repository->getCurrent();
     }
 
-    public function update(array $days, $userId)
+    public function updateWorkingDays(array $days, $userId)
     {
-        return $this->workingDayRepo->update($days, $userId);
+        return $this->repository->update($days, $userId);
     }
 }

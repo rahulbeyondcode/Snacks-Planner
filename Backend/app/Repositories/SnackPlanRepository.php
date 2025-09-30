@@ -49,16 +49,17 @@ class SnackPlanRepository extends BaseRepository implements SnackPlanRepositoryI
         return $query->orderByDesc('snack_date')->get();
     }
 
-    public function update(int $id, array $data)
+    public function update(int $id, array $data): ?\Illuminate\Database\Eloquent\Model
     {
         $plan = $this->find($id);
         if ($plan) {
             $plan->update($data);
+            return $plan->fresh();
         }
-        return $plan;
+        return null;
     }
 
-    public function delete(int $id)
+    public function delete(int $id): bool
     {
         $plan = $this->find($id);
         if ($plan) {
@@ -68,19 +69,29 @@ class SnackPlanRepository extends BaseRepository implements SnackPlanRepositoryI
         return false;
     }
 
-    public function create(array $data)
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
         return $this->model->create($data);
     }
 
-    public function find(int $id)
+    public function find(int $id, array $columns = ['*'], array $relations = []): ?\Illuminate\Database\Eloquent\Model
     {
-        return $this->model->select([
-            'snack_plan_id',
-            'snack_date',
-            'user_id',
-            'total_amount'
-        ])->find($id);
+        if ($columns === ['*']) {
+            $columns = [
+                'snack_plan_id',
+                'snack_date',
+                'user_id',
+                'total_amount'
+            ];
+        }
+        
+        $query = $this->model->select($columns);
+        
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+        
+        return $query->find($id);
     }
 
     public function getMonthlyExpense(string $month)

@@ -157,7 +157,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/snack-items', [SnackItemController::class, 'store']);
             Route::put('/snack-items/{id}', [SnackItemController::class, 'update']);
             Route::delete('/snack-items/{id}', [SnackItemController::class, 'destroy']);
-            Route::get('/get-snacks', [SnackItemController::class, 'getSnacks']);
+            Route::get('/get-snacks', [SnackItemController::class, 'index']);
 
             // Shop CRUD
             Route::get('/shops', [ShopController::class, 'index']);

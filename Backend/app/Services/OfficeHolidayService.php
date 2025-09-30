@@ -5,53 +5,52 @@ namespace App\Services;
 use App\Models\OfficeHoliday;
 use App\Repositories\OfficeHolidayRepositoryInterface;
 
-
-class OfficeHolidayService implements OfficeHolidayServiceInterface
+class OfficeHolidayService extends BaseService implements OfficeHolidayServiceInterface
 {
-    public function updateHoliday($id, array $data)
-    {
-        return $this->officeHolidayRepository->update($id, $data);
-    }
-
-    public function deleteHoliday($id)
-    {
-        return $this->officeHolidayRepository->delete($id);
-    }
-    public function getAllHolidays()
-    {
-        return $this->officeHolidayRepository->getAll();
-    }
-    protected $officeHolidayRepository;
-
     public function __construct(OfficeHolidayRepositoryInterface $officeHolidayRepository)
     {
-        $this->officeHolidayRepository = $officeHolidayRepository;
+        $this->repository = $officeHolidayRepository;
+    }
+
+    public function getAllHolidays()
+    {
+        return $this->repository->getAll();
     }
 
     public function setHoliday(array $data)
     {
-        return $this->officeHolidayRepository->create($data);
+        return $this->create($data);
     }
 
     public function createHoliday(array $data)
     {
-        return $this->officeHolidayRepository->create($data);
+        return $this->create($data);
+    }
+
+    public function updateHoliday($id, array $data)
+    {
+        return $this->update($id, $data);
+    }
+
+    public function deleteHoliday($id)
+    {
+        return $this->delete($id);
     }
 
     public function isHolidaySet(string $holidayDate)
     {
-        return $this->officeHolidayRepository->findByDate($holidayDate) !== null;
+        return $this->repository->findByDate($holidayDate) !== null;
     }
 
     public function getOfficeHolidays()
     {
-        return $this->officeHolidayRepository->getByType(OfficeHoliday::TYPE_OFFICE_HOLIDAY);
+        return $this->repository->getByType(OfficeHoliday::TYPE_OFFICE_HOLIDAY);
     }
 
     public function getNoSnacksDaysForGroup(int $groupId, ?int $year = null, ?int $month = null)
     {
         if ($year && $month) {
-            return $this->officeHolidayRepository->getByTypeAndGroupForMonth(
+            return $this->repository->getByTypeAndGroupForMonth(
                 OfficeHoliday::TYPE_NO_SNACKS_DAY,
                 $groupId,
                 $year,
@@ -59,7 +58,7 @@ class OfficeHolidayService implements OfficeHolidayServiceInterface
             );
         }
 
-        return $this->officeHolidayRepository->getByTypeAndGroup(
+        return $this->repository->getByTypeAndGroup(
             OfficeHoliday::TYPE_NO_SNACKS_DAY,
             $groupId
         );
@@ -67,6 +66,6 @@ class OfficeHolidayService implements OfficeHolidayServiceInterface
 
     public function isHolidaySetForTypeAndGroup(string $holidayDate, string $type, ?int $groupId = null)
     {
-        return $this->officeHolidayRepository->findByDateTypeAndGroup($holidayDate, $type, $groupId) !== null;
+        return $this->repository->findByDateTypeAndGroup($holidayDate, $type, $groupId) !== null;
     }
 }

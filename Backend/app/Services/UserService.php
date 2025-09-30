@@ -8,25 +8,23 @@ use App\Exceptions\UserNotFoundException;
 use App\Models\Role;
 use Illuminate\Support\Facades\Auth;
 
-class UserService implements UserServiceInterface
+class UserService extends BaseService implements UserServiceInterface
 {
-    protected $userRepository;
-
     public function __construct(UserRepositoryInterface $userRepository)
     {
-        $this->userRepository = $userRepository;
+        $this->repository = $userRepository;
     }
 
     public function listUsers(array $filters = [])
     {
         // Apply business rule: exclude account managers from general user listings
         $filters['exclude_roles'] = ['account_manager'];
-        return $this->userRepository->all(['*'], ['role'], $filters);
+        return $this->repository->all(['*'], ['role'], $filters);
     }
 
     public function getUser(int $id)
     {
-        $user = $this->userRepository->find($id);
+        $user = $this->find($id);
 
         if (!$user) {
             throw new UserNotFoundException('User not found');
@@ -53,12 +51,12 @@ class UserService implements UserServiceInterface
             }
         }
 
-        return $this->userRepository->create($data);
+        return $this->create($data);
     }
 
     public function updateUser(int $id, array $data)
     {
-        $user = $this->userRepository->find($id);
+        $user = $this->find($id);
 
         if (!$user) {
             throw new UserNotFoundException('User not found');
@@ -72,12 +70,12 @@ class UserService implements UserServiceInterface
             }
         }
 
-        return $this->userRepository->update($id, $data);
+        return $this->update($id, $data);
     }
 
     public function deleteUser(int $id)
     {
-        $user = $this->userRepository->find($id);
+        $user = $this->find($id);
 
         if (!$user) {
             throw new UserNotFoundException('User not found');
@@ -88,12 +86,12 @@ class UserService implements UserServiceInterface
             throw new UnauthorizedActionException('Account manager users cannot be deleted');
         }
 
-        return $this->userRepository->delete($id);
+        return $this->delete($id);
     }
 
     public function assignRole(int $userId, int $roleId)
     {
-        $user = $this->userRepository->find($userId);
+        $user = $this->find($userId);
 
         if (!$user) {
             throw new UserNotFoundException('User not found');
@@ -110,6 +108,6 @@ class UserService implements UserServiceInterface
             }
         }
 
-        return $this->userRepository->assignRole($userId, $roleId);
+        return $this->repository->assignRole($userId, $roleId);
     }
 }

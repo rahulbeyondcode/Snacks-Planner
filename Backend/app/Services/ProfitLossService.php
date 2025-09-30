@@ -6,9 +6,8 @@ use App\Repositories\ContributionRepositoryInterface;
 use App\Repositories\SnackPlanRepositoryInterface;
 use App\Repositories\MoneyPoolRepositoryInterface;
 
-class ProfitLossService implements ProfitLossServiceInterface
+class ProfitLossService extends BaseService implements ProfitLossServiceInterface
 {
-    protected $contributionRepo;
     protected $snackPlanRepo;
     protected $moneyPoolRepo;
 
@@ -17,7 +16,7 @@ class ProfitLossService implements ProfitLossServiceInterface
         SnackPlanRepositoryInterface $snackPlanRepo,
         MoneyPoolRepositoryInterface $moneyPoolRepo
     ) {
-        $this->contributionRepo = $contributionRepo;
+        $this->repository = $contributionRepo;
         $this->snackPlanRepo = $snackPlanRepo;
         $this->moneyPoolRepo = $moneyPoolRepo;
     }
@@ -26,7 +25,7 @@ class ProfitLossService implements ProfitLossServiceInterface
     {
         $month = $filters['month'] ?? null;
         // Contributions - use total_paid for actual contributions
-        $totalContributionsRaw = $this->contributionRepo->getTotalContributions();
+        $totalContributionsRaw = $this->repository->getTotalContributions();
         $totalContributions = is_array($totalContributionsRaw) && isset($totalContributionsRaw['total_paid']) && is_numeric($totalContributionsRaw['total_paid'])
             ? (float)$totalContributionsRaw['total_paid']
             : 0;

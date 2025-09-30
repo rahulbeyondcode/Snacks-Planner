@@ -13,7 +13,7 @@ interface SnackPlanDetailRepositoryInterface
 
 class SnackPlanDetailRepository implements SnackPlanDetailRepositoryInterface
 {
-    public function create(array $data)
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
         return SnackPlanDetail::create($data);
     }

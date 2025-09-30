@@ -31,7 +31,9 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\MoneyPoolRepositoryInterface::class, function ($app) {
             return new \App\Repositories\MoneyPoolRepository($app->make(\App\Models\MoneyPool::class));
         });
-        $this->app->bind(\App\Repositories\MoneyPoolBlockRepositoryInterface::class, \App\Repositories\MoneyPoolBlockRepository::class);
+        $this->app->bind(\App\Repositories\MoneyPoolBlockRepositoryInterface::class, function ($app) {
+            return new \App\Repositories\MoneyPoolBlockRepository($app->make(\App\Models\MoneyPoolBlock::class));
+        });
         $this->app->bind(\App\Repositories\MoneyPoolSettingsRepositoryInterface::class, \App\Repositories\MoneyPoolSettingsRepository::class);
         $this->app->bind(\App\Repositories\OfficeHolidayRepositoryInterface::class, \App\Repositories\OfficeHolidayRepository::class);
         $this->app->bind(\App\Repositories\SubGroupRepositoryInterface::class, \App\Repositories\SubGroupRepository::class);

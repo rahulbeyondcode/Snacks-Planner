@@ -14,7 +14,7 @@ class MoneyPoolRepository extends BaseRepository implements MoneyPoolRepositoryI
         parent::__construct($model);
     }
 
-    public function query()
+    public function query(): \Illuminate\Database\Eloquent\Builder
     {
         return $this->model->query();
     }
@@ -28,12 +28,15 @@ class MoneyPoolRepository extends BaseRepository implements MoneyPoolRepositoryI
             ->first();
     }
 
-    public function find(int $id)
+    public function find(int $id, array $columns = ['*'], array $relations = []): ?\Illuminate\Database\Eloquent\Model
     {
-        return $this->model->with(['creator', 'settings', 'blocks.creator'])->find($id);
+        $defaultRelations = ['creator', 'settings', 'blocks.creator'];
+        $relations = !empty($relations) ? $relations : $defaultRelations;
+        
+        return $this->model->with($relations)->find($id, $columns);
     }
 
-    public function update(int $id, array $data): ?MoneyPool
+    public function update(int $id, array $data): ?\Illuminate\Database\Eloquent\Model
     {
         $moneyPool = $this->find($id);
 

@@ -4,21 +4,31 @@ namespace App\Services;
 
 use App\Repositories\ContributionRepositoryInterface;
 
-class ContributionService implements ContributionServiceInterface
+class ContributionService extends BaseService implements ContributionServiceInterface
 {
-    /**
-     * Bulk update status for multiple contributions.
-     * @param array $contributions Array of ['id' => int, 'status' => string]
-     * @return int Number of updated records
-     */
-    /**
-     * Bulk update status for all users for the current month.
-     * @param array $paidUserIds
-     * @return int Number of updated records
-     */
-    public function bulkUpdateStatus(array $paidUserIds, $userId = null)
+    public function __construct(ContributionRepositoryInterface $contributionRepository)
     {
-        return $this->contributionRepository->bulkUpdateStatus($paidUserIds, $userId);
+        $this->repository = $contributionRepository;
+    }
+
+    public function createContribution(array $data)
+    {
+        return $this->create($data);
+    }
+
+    public function getContribution(int $id)
+    {
+        return $this->find($id);
+    }
+
+    public function updateContribution(int $id, array $data)
+    {
+        return $this->update($id, $data);
+    }
+
+    public function deleteContribution(int $id)
+    {
+        return $this->delete($id);
     }
 
     /**
@@ -28,47 +38,32 @@ class ContributionService implements ContributionServiceInterface
      */
     public function listAllContributions(array $filters = [])
     {
-        return $this->contributionRepository->listAll($filters);
-    }
-    protected $contributionRepository;
-
-    public function __construct(ContributionRepositoryInterface $contributionRepository)
-    {
-        $this->contributionRepository = $contributionRepository;
-    }
-
-    public function createContribution(array $data)
-    {
-        return $this->contributionRepository->create($data);
-    }
-
-    public function getContribution(int $id)
-    {
-        return $this->contributionRepository->find($id);
+        return $this->repository->listAll($filters);
     }
 
     public function getUserContributions(int $userId)
     {
-        return $this->contributionRepository->findByUser($userId);
+        return $this->repository->findByUser($userId);
     }
 
-    public function updateContribution(int $id, array $data)
+    /**
+     * Bulk update status for all users for the current month.
+     * @param array $paidUserIds
+     * @param int|null $userId
+     * @return int Number of updated records
+     */
+    public function bulkUpdateStatus(array $paidUserIds, $userId = null)
     {
-        return $this->contributionRepository->update($id, $data);
-    }
-
-    public function deleteContribution(int $id)
-    {
-        return $this->contributionRepository->delete($id);
+        return $this->repository->bulkUpdateStatus($paidUserIds, $userId);
     }
 
     public function getCurrentMonthCounts()
     {
-        return $this->contributionRepository->getCurrentMonthCounts();
+        return $this->repository->getCurrentMonthCounts();
     }
 
     public function getTotalContributions()
     {
-        return $this->contributionRepository->getTotalContributions();
+        return $this->repository->getTotalContributions();
     }
 }

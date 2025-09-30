@@ -16,21 +16,22 @@ class PaymentMethodRepository
         return PaymentMethod::find($id);
     }
 
-    public function create(array $data)
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
         return PaymentMethod::create($data);
     }
 
-    public function update($id, array $data)
+    public function update($id, array $data): ?\Illuminate\Database\Eloquent\Model
     {
         $method = PaymentMethod::find($id);
         if ($method) {
             $method->update($data);
+            return $method->fresh();
         }
-        return $method;
+        return null;
     }
 
-    public function delete($id)
+    public function delete($id): bool
     {
         $method = PaymentMethod::find($id);
         if ($method) {

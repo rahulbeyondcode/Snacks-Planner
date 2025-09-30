@@ -21,14 +21,17 @@ class GroupWeeklyOperationRepository implements GroupWeeklyOperationRepositoryIn
         return $query->orderByDesc('created_at')->get();
     }
 
-    public function create(array $data)
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
         return GroupWeeklyOperation::create($data);
     }
 
-    public function find(int $id)
+    public function find(int $id, array $columns = ['*'], array $relations = []): ?\Illuminate\Database\Eloquent\Model
     {
-        return GroupWeeklyOperation::with('details')->find($id);
+        $defaultRelations = ['details'];
+        $relations = !empty($relations) ? $relations : $defaultRelations;
+        
+        return GroupWeeklyOperation::with($relations)->find($id, $columns);
     }
 
     public function findByGroupAndWeek(int $groupId, string $weekStartDate)
@@ -39,16 +42,17 @@ class GroupWeeklyOperationRepository implements GroupWeeklyOperationRepositoryIn
             ->first();
     }
 
-    public function update(int $id, array $data)
+    public function update(int $id, array $data): ?\Illuminate\Database\Eloquent\Model
     {
         $operation = GroupWeeklyOperation::find($id);
         if ($operation) {
             $operation->update($data);
+            return $operation->fresh();
         }
-        return $operation;
+        return null;
     }
 
-    public function delete(int $id)
+    public function delete(int $id): bool
     {
         $operation = GroupWeeklyOperation::find($id);
         if ($operation) {

@@ -3,17 +3,23 @@
 namespace App\Repositories;
 
 use App\Models\MoneyPoolBlock;
+use Illuminate\Database\Eloquent\Model;
 
-class MoneyPoolBlockRepository implements MoneyPoolBlockRepositoryInterface
+class MoneyPoolBlockRepository extends BaseRepository implements MoneyPoolBlockRepositoryInterface
 {
-    public function create(array $data): MoneyPoolBlock
+    public function __construct(MoneyPoolBlock $model)
     {
-        return MoneyPoolBlock::create($data);
+        parent::__construct($model);
     }
 
-    public function update(int $id, array $data): ?MoneyPoolBlock
+    public function create(array $data): Model
     {
-        $block = MoneyPoolBlock::find($id);
+        return $this->model->create($data);
+    }
+
+    public function update(int $id, array $data): ?Model
+    {
+        $block = $this->find($id);
 
         if (! $block) {
             return null;
@@ -24,9 +30,12 @@ class MoneyPoolBlockRepository implements MoneyPoolBlockRepositoryInterface
         return $block->fresh();
     }
 
-    public function find(int $id): ?MoneyPoolBlock
+    public function find(int $id, array $columns = ['*'], array $relations = []): ?\Illuminate\Database\Eloquent\Model
     {
-        return MoneyPoolBlock::with(['creator', 'moneyPool'])->find($id);
+        $defaultRelations = ['creator', 'moneyPool'];
+        $relations = !empty($relations) ? $relations : $defaultRelations;
+        
+        return $this->model->with($relations)->find($id, $columns);
     }
 
     public function findByPoolId(int $moneyPoolId)
@@ -44,7 +53,7 @@ class MoneyPoolBlockRepository implements MoneyPoolBlockRepositoryInterface
 
     public function delete(int $blockId): bool
     {
-        $block = MoneyPoolBlock::find($blockId);
+        $block = $this->find($blockId);
 
         if (! $block) {
             return false;

@@ -35,14 +35,21 @@ class SubGroupRepository implements SubGroupRepositoryInterface
         return $query;
     }
 
-    public function find(int $id)
+    public function find(int $id, array $columns = ['*'], array $relations = []): ?\Illuminate\Database\Eloquent\Model
     {
-        return SubGroup::select('sub_group_id', 'group_id', 'name', 'start_date', 'end_date', 'status')
-            ->with(['subGroupMembers'])
+        if ($columns === ['*']) {
+            $columns = ['sub_group_id', 'group_id', 'name', 'start_date', 'end_date', 'status'];
+        }
+        
+        $defaultRelations = ['subGroupMembers'];
+        $relations = !empty($relations) ? $relations : $defaultRelations;
+        
+        return SubGroup::select($columns)
+            ->with($relations)
             ->find($id);
     }
 
-    public function create(array $data)
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
         try {
             DB::beginTransaction();
@@ -70,7 +77,7 @@ class SubGroupRepository implements SubGroupRepositoryInterface
         }
     }
 
-    public function update(int $id, array $data)
+    public function update(int $id, array $data): ?\Illuminate\Database\Eloquent\Model
     {
         try {
             DB::beginTransaction();
@@ -107,7 +114,7 @@ class SubGroupRepository implements SubGroupRepositoryInterface
         }
     }
 
-    public function delete(int $id)
+    public function delete(int $id): bool
     {
         try {
             DB::beginTransaction();
@@ -124,7 +131,7 @@ class SubGroupRepository implements SubGroupRepositoryInterface
         } catch (Exception $e) {
             DB::rollback();
 
-            return null;
+            return false;
         }
     }
 

@@ -7,12 +7,17 @@ use App\Repositories\MoneyPoolRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
+class MoneyPoolBlockService extends BaseService implements MoneyPoolBlockServiceInterface
 {
+    private readonly MoneyPoolRepositoryInterface $moneyPoolRepository;
+
     public function __construct(
-        private readonly MoneyPoolBlockRepositoryInterface $moneyPoolBlockRepository,
-        private readonly MoneyPoolRepositoryInterface $moneyPoolRepository
-    ) {}
+        MoneyPoolBlockRepositoryInterface $moneyPoolBlockRepository,
+        MoneyPoolRepositoryInterface $moneyPoolRepository
+    ) {
+        $this->repository = $moneyPoolBlockRepository;
+        $this->moneyPoolRepository = $moneyPoolRepository;
+    }
 
     public function createBlock(array $data)
     {
@@ -40,7 +45,7 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
             }
 
             $data['created_by'] = Auth::id();
-            $block = $this->moneyPoolBlockRepository->create($data);
+            $block = $this->create($data);
 
             if (! $block) {
                 return null;
@@ -56,7 +61,7 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
     {
         return DB::transaction(function () use ($blockId, $data) {
             // Get current block to find its money_pool_id
-            $existingBlock = $this->moneyPoolBlockRepository->find($blockId);
+            $existingBlock = $this->find($blockId);
 
             if (!$existingBlock) {
                 return null;
@@ -73,7 +78,7 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
                 ];
             }
 
-            $block = $this->moneyPoolBlockRepository->update($blockId, $data);
+            $block = $this->update($blockId, $data);
 
             if (! $block) {
                 return null;
@@ -87,13 +92,13 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
 
     public function getBlocksByPoolId(int $moneyPoolId)
     {
-        return $this->moneyPoolBlockRepository->findByPoolId($moneyPoolId);
+        return $this->repository->findByPoolId($moneyPoolId);
     }
 
     public function deleteBlock(int $blockId)
     {
         return DB::transaction(function () use ($blockId) {
-            $existingBlock = $this->moneyPoolBlockRepository->find($blockId);
+            $existingBlock = $this->find($blockId);
 
             if (! $existingBlock) {
                 return null;
@@ -101,7 +106,7 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
 
             $moneyPoolId = $existingBlock->money_pool_id;
 
-            $deleted = $this->moneyPoolBlockRepository->delete($blockId);
+            $deleted = $this->delete($blockId);
 
             if (! $deleted) {
                 return null;
@@ -115,8 +120,8 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
 
     private function getAmountDetails(array $data, bool $isUpdate, ?int $blockId = null)
     {
-        $totalBlocked = $isUpdate ? $this->moneyPoolBlockRepository->getTotalBlockedAmountWithoutCurrentBlock($data['money_pool_id'], $blockId)
-            : $this->moneyPoolBlockRepository->getTotalBlockedAmount($data['money_pool_id']);
+        $totalBlocked = $isUpdate ? $this->repository->getTotalBlockedAmountWithoutCurrentBlock($data['money_pool_id'], $blockId)
+            : $this->repository->getTotalBlockedAmount($data['money_pool_id']);
         $totalAvailable = $this->moneyPoolRepository->getTotalAvailableAmount($data['money_pool_id'], $totalBlocked);
 
         return [
@@ -127,7 +132,7 @@ class MoneyPoolBlockService implements MoneyPoolBlockServiceInterface
 
     private function updateMoneyPoolBlockedAmount(int $moneyPoolId): void
     {
-        $totalBlocked = $this->moneyPoolBlockRepository->getTotalBlockedAmount($moneyPoolId);
+        $totalBlocked = $this->repository->getTotalBlockedAmount($moneyPoolId);
         $totalAvailable = $this->moneyPoolRepository->getTotalAvailableAmount($moneyPoolId, $totalBlocked);
 
         $this->moneyPoolRepository->update($moneyPoolId, [

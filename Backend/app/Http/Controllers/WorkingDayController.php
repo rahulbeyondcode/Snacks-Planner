@@ -30,7 +30,7 @@ class WorkingDayController extends BaseController
     {
         $userId = Auth::id();
         $days = $request->input('working_days');
-        $updated = $this->service->update($days, $userId);
+        $updated = $this->service->updateWorkingDays($days, $userId);
 
         return $this->updatedResponse($updated->working_days, 'Working days updated successfully');
     }

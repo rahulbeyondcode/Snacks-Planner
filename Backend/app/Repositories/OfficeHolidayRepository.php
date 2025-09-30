@@ -6,16 +6,17 @@ use App\Models\OfficeHoliday;
 
 class OfficeHolidayRepository implements OfficeHolidayRepositoryInterface
 {
-    public function update($id, array $data)
+    public function update($id, array $data): ?\Illuminate\Database\Eloquent\Model
     {
         $holiday = OfficeHoliday::find($id);
         if ($holiday) {
             $holiday->update($data);
+            return $holiday->fresh();
         }
-        return $holiday;
+        return null;
     }
 
-    public function delete($id)
+    public function delete($id): bool
     {
         $holiday = OfficeHoliday::find($id);
         if ($holiday) {
@@ -28,7 +29,7 @@ class OfficeHolidayRepository implements OfficeHolidayRepositoryInterface
     {
         return OfficeHoliday::orderBy('holiday_date', 'asc')->get();
     }
-    public function create(array $data)
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
         return OfficeHoliday::create($data);
     }

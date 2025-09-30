@@ -8,24 +8,31 @@ use App\Models\MoneyPoolSettings;
 
 class MoneyPoolSettingsRepository implements MoneyPoolSettingsRepositoryInterface
 {
-    public function create(array $data)
+    public function create(array $data): \Illuminate\Database\Eloquent\Model
     {
         return MoneyPoolSettings::create($data);
     }
 
-    public function find(int $id)
+    public function find(int $id, array $columns = ['*'], array $relations = []): ?\Illuminate\Database\Eloquent\Model
     {
-        return MoneyPoolSettings::find($id);
+        $query = MoneyPoolSettings::query();
+        
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+        
+        return $query->find($id, $columns);
     }
 
-    public function update(int $id, array $data)
+    public function update(int $id, array $data): ?\Illuminate\Database\Eloquent\Model
     {
         $settings = MoneyPoolSettings::find($id);
         if ($settings) {
             $settings->update($data);
+            return $settings->fresh();
         }
 
-        return $settings;
+        return null;
     }
 
     public function isUsedInMoneyPools(int $id): bool
