@@ -9,7 +9,6 @@ use App\Http\Requests\StoreSnackItemRequest;
 use App\Http\Requests\UpdateSnackItemRequest;
 use App\Http\Resources\SnackItemResource;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Response;
 
 class SnackItemController extends BaseController
 {
@@ -17,7 +16,7 @@ class SnackItemController extends BaseController
     // Get all snacks with their shop mappings
     public function index()
     {
-        try {
+        return $this->executeWithExceptionHandling(function () {
             // Get all snack items with their shop mappings
             $snacks = SnackItem::with(['shopMappings.shop'])
                 ->whereHas('shopMappings')
@@ -38,9 +37,7 @@ class SnackItemController extends BaseController
                 });
 
             return $this->successResponse('Snacks retrieved successfully', $snacks);
-        } catch (\Exception $e) {
-            return $this->errorResponse(__('Failed to retrieve snacks'));
-        }
+        }, 'Failed to retrieve snacks');
     }
 
     // Show a single snack item
@@ -53,15 +50,15 @@ class SnackItemController extends BaseController
         ])->find($id);
 
         if (!$item) {
-            return $this->notFoundResponse(__('Snack Item not found'));
+            return $this->notFoundResponse('Snack Item not found');
         }
-        return new SnackItemResource($item);
+        return $this->resourceResponse(new SnackItemResource($item));
     }
 
     // Create a snack item (admin only)
     public function store(StoreSnackItemRequest $request)
     {
-        try {
+        return $this->executeWithExceptionHandling(function () use ($request) {
             DB::beginTransaction();
 
             $validated = $request->validated();
@@ -88,21 +85,18 @@ class SnackItemController extends BaseController
             $item->load('shopMappings.shop');
 
             return $this->createdResponse(new SnackItemResource($item));
-        } catch (\Exception $e) {
-            DB::rollback();
-            return $this->errorResponse(__('Failed to create snack item'));
-        }
+        }, 'Failed to create snack item');
     }
 
     // Update a snack item (admin only)
     public function update(UpdateSnackItemRequest $request, $id)
     {
-        try {
+        return $this->executeWithExceptionHandling(function () use ($request, $id) {
             DB::beginTransaction();
 
             $item = SnackItem::find($id);
             if (!$item) {
-                return $this->notFoundResponse(__('Snack Item not found'));
+                return $this->notFoundResponse('Snack Item not found');
             }
 
             $validated = $request->validated();
@@ -152,32 +146,26 @@ class SnackItemController extends BaseController
             $item->load('shopMappings.shop');
 
             return $this->updatedResponse(new SnackItemResource($item));
-        } catch (\Exception $e) {
-            DB::rollback();
-            return $this->errorResponse(__('Failed to update snack item'));
-        }
+        }, 'Failed to update snack item');
     }
 
     // Delete a snack item (admin only)
     public function destroy($id)
     {
-        try {
+        return $this->executeWithExceptionHandling(function () use ($id) {
             DB::beginTransaction();
 
             $item = SnackItem::find($id);
 
             if (!$item) {
-                return $this->notFoundResponse(__('Snack Item not found'));
+                return $this->notFoundResponse('Snack Item not found');
             }
 
             $item->shopMappings()->delete();
             $item->delete();
             DB::commit();
 
-            return $this->deletedResponse(__('delete'));
-        } catch (\Exception $e) {
-            DB::rollback();
-            return $this->errorResponse(__('Failed to delete snack item'));
-        }
+            return $this->deletedResponse('Snack item deleted successfully');
+        }, 'Failed to delete snack item');
     }
 }

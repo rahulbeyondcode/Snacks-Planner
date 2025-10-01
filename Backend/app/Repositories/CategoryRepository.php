@@ -3,40 +3,20 @@
 namespace App\Repositories;
 
 use App\Models\Category;
+use Illuminate\Database\Eloquent\Collection;
 
-class CategoryRepository
+class CategoryRepository extends BaseRepository
 {
-    public function all()
+    public function __construct(Category $model)
     {
-        return Category::orderBy('id')->get();
+        parent::__construct($model);
     }
 
-    public function find($id)
+    /**
+     * Get all categories ordered by ID
+     */
+    public function all(array $columns = ['*'], array $relations = [], array $filters = []): Collection
     {
-        return Category::find($id);
-    }
-
-    public function create(array $data)
-    {
-        return Category::create($data);
-    }
-
-    public function update($id, array $data)
-    {
-        $category = Category::find($id);
-        if ($category) {
-            $category->update($data);
-        }
-        return $category;
-    }
-
-    public function delete($id)
-    {
-        $category = Category::find($id);
-        if ($category) {
-            $category->delete();
-            return true;
-        }
-        return false;
+        return $this->model->orderBy('id')->get($columns);
     }
 }

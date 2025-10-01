@@ -7,6 +7,7 @@ use App\Models\GroupMember;
 use App\Models\SubGroup;
 use App\Models\SubGroupMember;
 use App\Repositories\SubGroupRepositoryInterface;
+use Illuminate\Validation\ValidationException;
 
 class SubGroupService extends BaseService implements SubGroupServiceInterface
 {
@@ -35,21 +36,27 @@ class SubGroupService extends BaseService implements SubGroupServiceInterface
 
         // Validate date range
         if ($data['start_date'] >= $data['end_date']) {
-            return response()->unprocessableEntity(__('sub_group.end_date_must_be_after_start_date'));
+            throw ValidationException::withMessages([
+                'end_date' => [__('sub_group.end_date_must_be_after_start_date')]
+            ]);
         }
 
         // Validate members exist if provided
         if (! empty($data['members'])) {
             $existingMembers = GroupMember::whereIn('user_id', $data['members'])->count();
             if ($existingMembers !== count($data['members'])) {
-                return response()->unprocessableEntity(__('sub_group.some_users_do_not_exist'));
+                throw ValidationException::withMessages([
+                    'members' => [__('sub_group.some_users_do_not_exist')]
+                ]);
             }
 
             $subGroups = SubGroup::where('group_id', $group->group_id)->get()->pluck('sub_group_id')->toArray();
             if ($subGroups) {
                 $subGroupMembers = SubGroupMember::whereIn('sub_group_id', $subGroups)->pluck('user_id')->toArray();
                 if (! empty(array_intersect($subGroupMembers, $data['members']))) {
-                    return response()->unprocessableEntity(__('sub_group.some_members_already_in_sub_group'));
+                    throw ValidationException::withMessages([
+                        'members' => [__('sub_group.some_members_already_in_sub_group')]
+                    ]);
                 }
             }
         }
@@ -75,7 +82,9 @@ class SubGroupService extends BaseService implements SubGroupServiceInterface
         // Validate date range if dates are being updated
         if (isset($data['start_date']) && isset($data['end_date'])) {
             if ($data['start_date'] >= $data['end_date']) {
-                return response()->unprocessableEntity(__('sub_group.end_date_must_be_after_start_date'));
+                throw ValidationException::withMessages([
+                    'end_date' => [__('sub_group.end_date_must_be_after_start_date')]
+                ]);
             }
         }
 
@@ -83,7 +92,9 @@ class SubGroupService extends BaseService implements SubGroupServiceInterface
         if (! empty($data['members'])) {
             $existingMembers = GroupMember::whereIn('user_id', $data['members'])->count();
             if ($existingMembers !== count($data['members'])) {
-                return response()->unprocessableEntity(__('sub_group.some_users_do_not_exist'));
+                throw ValidationException::withMessages([
+                    'members' => [__('sub_group.some_users_do_not_exist')]
+                ]);
             }
         }
 

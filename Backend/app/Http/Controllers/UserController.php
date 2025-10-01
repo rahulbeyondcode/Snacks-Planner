@@ -51,145 +51,99 @@ class UserController extends BaseController
     // Show user details (admin only)
     public function show($id)
     {
-        try {
-            $userData = $this->userService->getUser($id);
-
-            return response()->json([
-                'success' => true,
-                'data' => new UserResource($userData)
-            ]);
-        } catch (UserNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 404);
-        } catch (UnauthorizedActionException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 403);
-        }
+        return $this->executeWithAuth(function ($user) use ($id) {
+            try {
+                $userData = $this->userService->getUser($id);
+                return $this->resourceResponse(new UserResource($userData));
+            } catch (UserNotFoundException $e) {
+                return $this->notFoundResponse($e->getMessage());
+            } catch (UnauthorizedActionException $e) {
+                return $this->forbiddenResponse($e->getMessage());
+            }
+        }, 'account_manager', 'Failed to retrieve user');
     }
 
     // Create user (admin only)
     public function store(StoreUserRequest $request)
     {
-        try {
-            $validated = $request->validated();
-            // Use env USER_PASSWORD or default to 'password'
-            $defaultPassword = env('USER_PASSWORD', 'password');
-            $validated['password'] = bcrypt($defaultPassword);
-            $validated['role_id'] = 4; // Always assign Employee role
-            $validated['preference'] = $validated['preference'] ?? 'all_snacks'; // Default to 'all_snacks' if not provided
+        return $this->executeWithAuth(function ($user) use ($request) {
+            try {
+                $validated = $request->validated();
+                // Use env USER_PASSWORD or default to 'password'
+                $defaultPassword = env('USER_PASSWORD', 'password');
+                $validated['password'] = bcrypt($defaultPassword);
+                $validated['role_id'] = 4; // Always assign Employee role
+                $validated['preference'] = $validated['preference'] ?? 'all_snacks'; // Default to 'all_snacks' if not provided
 
-            $created = $this->userService->createUser($validated);
+                $created = $this->userService->createUser($validated);
 
-            // Get all active users for the response
-            $allUsers = $this->userService->listUsers();
+                // Get all active users for the response
+                $allUsers = $this->userService->listUsers();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'User created successfully',
-                'data' => UserResource::collection($allUsers)
-            ], 201);
-        } catch (UnauthorizedActionException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 403);
-        }
+                return $this->createdResponse(UserResource::collection($allUsers), 'User created successfully');
+            } catch (UnauthorizedActionException $e) {
+                return $this->forbiddenResponse($e->getMessage());
+            }
+        }, 'account_manager', 'Failed to create user');
     }
 
     // Update user (admin only)
     public function update(UpdateUserRequest $request, $id)
     {
-        try {
-            $validated = $request->validated();
-            // Always set password using env USER_PASSWORD or default to 'password'
-            $defaultPassword = env('USER_PASSWORD', 'password');
-            $validated['password'] = bcrypt($defaultPassword);
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
+            try {
+                $validated = $request->validated();
+                // Always set password using env USER_PASSWORD or default to 'password'
+                $defaultPassword = env('USER_PASSWORD', 'password');
+                $validated['password'] = bcrypt($defaultPassword);
 
-            $updatedUser = $this->userService->updateUser($id, $validated);
+                $updatedUser = $this->userService->updateUser($id, $validated);
 
-            // Get all active users for the response
-            $allUsers = $this->userService->listUsers();
+                // Get all active users for the response
+                $allUsers = $this->userService->listUsers();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'User updated successfully',
-                'data' => UserResource::collection($allUsers)
-            ]);
-        } catch (UserNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 404);
-        } catch (UnauthorizedActionException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 403);
-        }
+                return $this->updatedResponse(UserResource::collection($allUsers), 'User updated successfully');
+            } catch (UserNotFoundException $e) {
+                return $this->notFoundResponse($e->getMessage());
+            } catch (UnauthorizedActionException $e) {
+                return $this->forbiddenResponse($e->getMessage());
+            }
+        }, 'account_manager', 'Failed to update user');
     }
 
     // Delete user (admin only)
     public function destroy($id)
     {
-        try {
-            $deleted = $this->userService->deleteUser($id);
+        return $this->executeWithAuth(function ($user) use ($id) {
+            try {
+                $deleted = $this->userService->deleteUser($id);
 
-            // Get all active users for the response
-            $allUsers = $this->userService->listUsers();
+                // Get all active users for the response
+                $allUsers = $this->userService->listUsers();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'User deleted successfully',
-                'data' => UserResource::collection($allUsers)
-            ]);
-        } catch (UserNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 404);
-        } catch (UnauthorizedActionException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 403);
-        }
+                return $this->successResponse('User deleted successfully', UserResource::collection($allUsers));
+            } catch (UserNotFoundException $e) {
+                return $this->notFoundResponse($e->getMessage());
+            } catch (UnauthorizedActionException $e) {
+                return $this->forbiddenResponse($e->getMessage());
+            }
+        }, 'account_manager', 'Failed to delete user');
     }
 
     // Assign role (admin only)
     public function assignRole(AssignUserRoleRequest $request, $id)
     {
-        try {
-            $validated = $request->validated();
-            $updatedUser = $this->userService->assignRole($id, $validated['role_id']);
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
+            try {
+                $validated = $request->validated();
+                $updatedUser = $this->userService->assignRole($id, $validated['role_id']);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Role assigned successfully',
-                'data' => new UserResource($updatedUser)
-            ]);
-        } catch (UserNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 404);
-        } catch (UnauthorizedActionException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 403);
-        }
+                return $this->updatedResponse(new UserResource($updatedUser), 'Role assigned successfully');
+            } catch (UserNotFoundException $e) {
+                return $this->notFoundResponse($e->getMessage());
+            } catch (UnauthorizedActionException $e) {
+                return $this->forbiddenResponse($e->getMessage());
+            }
+        }, 'account_manager', 'Failed to assign role');
     }
 }

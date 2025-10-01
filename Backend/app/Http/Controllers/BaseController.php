@@ -160,12 +160,14 @@ abstract class BaseController extends Controller
     protected function handleValidationException(ValidationException $e, string $defaultMessage = 'Validation failed'): JsonResponse
     {
         $errors = $e->errors();
-        $message = $defaultMessage . ': ';
+        $message = $defaultMessage;
 
-        if (isset($errors['money_pool_settings'])) {
-            $message .= implode(', ', $errors['money_pool_settings']);
-        } else {
-            $message .= 'Unknown validation error';
+        // Get first error message if available
+        if (!empty($errors)) {
+            $firstError = array_values($errors)[0];
+            if (is_array($firstError) && !empty($firstError)) {
+                $message .= ': ' . $firstError[0];
+            }
         }
 
         return $this->validationErrorResponse($message, $errors);
@@ -261,5 +263,27 @@ abstract class BaseController extends Controller
 
             return $callback($user);
         }, $errorMessage);
+    }
+
+    /**
+     * Execute a closure with database transaction and exception handling
+     */
+    protected function executeWithTransaction(callable $callback, string $errorMessage = 'Transaction failed'): JsonResponse
+    {
+        return $this->executeWithExceptionHandling(function () use ($callback) {
+            return \DB::transaction($callback);
+        }, $errorMessage);
+    }
+
+    /**
+     * Execute a closure with authorization, transaction, and exception handling
+     */
+    protected function executeWithAuthAndTransaction(callable $callback, string|array $requiredRole = null, string $errorMessage = 'An error occurred'): JsonResponse
+    {
+        return $this->executeWithAuth(function ($user) use ($callback) {
+            return \DB::transaction(function () use ($callback, $user) {
+                return $callback($user);
+            });
+        }, $requiredRole, $errorMessage);
     }
 }

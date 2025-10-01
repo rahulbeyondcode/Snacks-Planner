@@ -110,23 +110,11 @@ Route::prefix('v1')->group(function () {
             Route::post('/money-pool-settings', [MoneyPoolSettingsController::class, 'store']);
             Route::get('/money-pool-settings', [MoneyPoolSettingsController::class, 'index']);
 
-            // User management (admin only)
-            Route::get('/users', [UserController::class, 'index']);
-            Route::get('/users/{id}', [UserController::class, 'show']);
-            Route::post('/users', [UserController::class, 'store']);
-            Route::put('/users/{id}', [UserController::class, 'update']);
-            Route::delete('/users/{id}', [UserController::class, 'destroy']);
+            // User management (admin only) - Already covered above with permissions
             Route::patch('/users/{id}/role', [UserController::class, 'assignRole']);
 
-            // Group management (admin only)
-            Route::prefix('groups')->group(function () {
-                Route::get('/', [GroupController::class, 'index']);
-                Route::get('/{id}', [GroupController::class, 'show']);
-                Route::post('/', [GroupController::class, 'store']);
-                Route::put('/{id}', [GroupController::class, 'update']);
-                Route::delete('/{id}', [GroupController::class, 'destroy']);
-                Route::put('/update-sort-order', [GroupController::class, 'setSortOrder']);
-            });
+            // Group management (admin only) - Already covered above with permissions
+            Route::put('/groups/update-sort-order', [GroupController::class, 'setSortOrder']);
 
             // Reporting
             Route::post('/reports/download', [ReportController::class, 'download']);
@@ -159,12 +147,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('/snack-items/{id}', [SnackItemController::class, 'destroy']);
             Route::get('/get-snacks', [SnackItemController::class, 'index']);
 
-            // Shop CRUD
-            Route::get('/shops', [ShopController::class, 'index']);
-            Route::get('/shops/{id}', [ShopController::class, 'show']);
-            Route::post('/shops', [ShopController::class, 'store']);
-            Route::put('/shops/{id}', [ShopController::class, 'update']);
-            Route::delete('/shops/{id}', [ShopController::class, 'destroy']);
+            // Shop CRUD - Already covered above with permissions
         });
 
         // Profit/Loss (account_manager only)

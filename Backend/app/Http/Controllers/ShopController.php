@@ -12,6 +12,14 @@ use App\Http\Resources\ShopResource;
 class ShopController extends BaseController
 {
     /**
+     * Find an active shop by ID
+     */
+    private function findActiveShop(int $id): ?Shop
+    {
+        return Shop::whereNull('deleted_at')->find($id);
+    }
+
+    /**
      * Get all active shops with payment methods
      */
     private function getAllActiveShops()
@@ -24,99 +32,98 @@ class ShopController extends BaseController
     // List all shops
     public function index(Request $request)
     {
-        $shops = $this->getAllActiveShops();
-
-        return $this->resourceCollectionResponse(ShopResource::collection($shops));
+        return $this->executeWithAuth(function ($user) {
+            $shops = $this->getAllActiveShops();
+            return $this->resourceCollectionResponse(ShopResource::collection($shops));
+        }, ['account_manager', 'snack_manager', 'operation'], 'Failed to retrieve shops');
     }
 
     // Show a single shop
     public function show(Request $request, $id)
     {
-        $shop = Shop::whereNull('deleted_at')->find($id);
+        return $this->executeWithAuth(function ($user) use ($id) {
+            $shop = $this->findActiveShop($id);
 
-        if (!$shop) {
-            return $this->notFoundResponse('Shop not found');
-        }
+            if (!$shop) {
+                return $this->notFoundResponse('Shop not found');
+            }
 
-        // Get all active shops for response
-        $shops = $this->getAllActiveShops();
+            // Get all active shops for response
+            $shops = $this->getAllActiveShops();
 
-        return $this->resourceCollectionResponse(ShopResource::collection($shops));
+            return $this->resourceCollectionResponse(ShopResource::collection($shops));
+        }, ['account_manager', 'snack_manager', 'operation'], 'Failed to retrieve shop');
     }
 
     // Create a shop (admin only)
     public function store(StoreShopRequest $request)
     {
-        $shop = Shop::create($request->validated());
+        return $this->executeWithAuth(function ($user) use ($request) {
+            $shop = Shop::create($request->validated());
 
-        // Handle payment methods if provided
-        if ($request->has('payment_methods')) {
-            $this->attachPaymentMethods($shop, $request->input('payment_methods'));
-        }
+            // Handle payment methods if provided
+            if ($request->has('payment_methods')) {
+                $this->attachPaymentMethods($shop, $request->input('payment_methods'));
+            }
 
-        // Get all active shops for response (including the newly created one)
-        $shops = $this->getAllActiveShops();
+            // Get all active shops for response (including the newly created one)
+            $shops = $this->getAllActiveShops();
 
-        return $this->createdResponse(
-            ShopResource::collection($shops),
-            'Shop created successfully'
-        );
+            return $this->createdResponse(
+                ShopResource::collection($shops),
+                'Shop created successfully'
+            );
+        }, 'account_manager', 'Failed to create shop');
     }
 
     // Update a shop (admin only)
     public function update(UpdateShopRequest $request, $id)
     {
-        $shop = Shop::whereNull('deleted_at')->find($id);
-        if (!$shop) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Shop not found',
-                'data' => null
-            ], 404);
-        }
+        return $this->executeWithAuth(function ($user) use ($request, $id) {
+            $shop = $this->findActiveShop($id);
+            if (!$shop) {
+                return $this->notFoundResponse('Shop not found');
+            }
 
-        $shop->update($request->validated());
+            $shop->update($request->validated());
 
-        // Handle payment methods if provided
-        if ($request->has('payment_methods')) {
-            $this->syncPaymentMethods($shop, $request->input('payment_methods'));
-        }
+            // Handle payment methods if provided
+            if ($request->has('payment_methods')) {
+                $this->syncPaymentMethods($shop, $request->input('payment_methods'));
+            }
 
-        // Get all active shops for response (including the updated one)
-        $shops = $this->getAllActiveShops();
+            // Get all active shops for response (including the updated one)
+            $shops = $this->getAllActiveShops();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Shop updated successfully',
-            'data' => ShopResource::collection($shops)
-        ]);
+            return $this->updatedResponse(
+                ShopResource::collection($shops),
+                'Shop updated successfully'
+            );
+        }, 'account_manager', 'Failed to update shop');
     }
 
     // Delete a shop (admin only)
     public function destroy($id)
     {
-        $shop = Shop::whereNull('deleted_at')->find($id);
-        if (!$shop) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Shop not found',
-                'data' => null
-            ], 404);
-        }
+        return $this->executeWithAuth(function ($user) use ($id) {
+            $shop = $this->findActiveShop($id);
+            if (!$shop) {
+                return $this->notFoundResponse('Shop not found');
+            }
 
-        // Delete related payment methods before deleting the shop
-        $shop->paymentMethods()->delete();
+            // Delete related payment methods before deleting the shop
+            $shop->paymentMethods()->delete();
 
-        $shop->delete();
+            $shop->delete();
 
-        // Get remaining active shops after deletion
-        $shops = $this->getAllActiveShops();
+            // Get remaining active shops after deletion
+            $shops = $this->getAllActiveShops();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Shop deleted successfully',
-            'data' => ShopResource::collection($shops)
-        ]);
+            return $this->successResponse(
+                'Shop deleted successfully',
+                ShopResource::collection($shops)
+            );
+        }, 'account_manager', 'Failed to delete shop');
     }
 
     /**

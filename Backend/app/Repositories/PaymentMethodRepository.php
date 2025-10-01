@@ -3,41 +3,20 @@
 namespace App\Repositories;
 
 use App\Models\PaymentMethod;
+use Illuminate\Database\Eloquent\Collection;
 
-class PaymentMethodRepository
+class PaymentMethodRepository extends BaseRepository
 {
-    public function all()
+    public function __construct(PaymentMethod $model)
     {
-        return PaymentMethod::orderBy('id')->get();
+        parent::__construct($model);
     }
 
-    public function find($id)
+    /**
+     * Get all payment methods ordered by ID
+     */
+    public function all(array $columns = ['*'], array $relations = [], array $filters = []): Collection
     {
-        return PaymentMethod::find($id);
-    }
-
-    public function create(array $data): \Illuminate\Database\Eloquent\Model
-    {
-        return PaymentMethod::create($data);
-    }
-
-    public function update($id, array $data): ?\Illuminate\Database\Eloquent\Model
-    {
-        $method = PaymentMethod::find($id);
-        if ($method) {
-            $method->update($data);
-            return $method->fresh();
-        }
-        return null;
-    }
-
-    public function delete($id): bool
-    {
-        $method = PaymentMethod::find($id);
-        if ($method) {
-            $method->delete();
-            return true;
-        }
-        return false;
+        return $this->model->orderBy('id')->get($columns);
     }
 }

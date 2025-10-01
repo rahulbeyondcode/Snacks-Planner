@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreMoneyPoolSettingsRequest;
 use App\Http\Resources\MoneyPoolSettingsResource;
 use App\Services\MoneyPoolSettingsServiceInterface;
-use Illuminate\Support\Facades\Response;
 
 class MoneyPoolSettingsController extends BaseController
 {
@@ -24,7 +23,7 @@ class MoneyPoolSettingsController extends BaseController
 
             return new MoneyPoolSettingsResource($settings);
         } catch (\Exception $e) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->errorResponse(__('messages.error'), [], 500);
         }
     }
 
@@ -39,7 +38,7 @@ class MoneyPoolSettingsController extends BaseController
 
             return new MoneyPoolSettingsResource($settings);
         } catch (\Exception $e) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->errorResponse(__('messages.error'), [], 500);
         }
     }
 }

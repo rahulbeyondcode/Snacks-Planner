@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateSubGroupRequest;
 use App\Http\Resources\SubGroupResource;
 use App\Services\SubGroupServiceInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
 
 class SubGroupController extends BaseController
 {
@@ -32,7 +31,7 @@ class SubGroupController extends BaseController
 
             return $this->resourceCollectionResponse(SubGroupResource::collection($subGroups));
         } catch (\Exception $e) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->errorResponse(__('messages.error'), [], 500);
         }
     }
 
@@ -50,7 +49,7 @@ class SubGroupController extends BaseController
 
             return new SubGroupResource($subGroup);
         } catch (\Exception $e) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->errorResponse(__('messages.error'), [], 500);
         }
     }
 
@@ -63,15 +62,15 @@ class SubGroupController extends BaseController
             $validated = $request->validated();
 
             $subGroup = $this->subGroupService->createSubGroup($validated);
-            if (is_object($subGroup) && method_exists($subGroup, 'getStatusCode') && $subGroup->getStatusCode() == 422) {
-                return $this->validationErrorResponse($subGroup->getData()->message);
-            } elseif (! $subGroup) {
+            if (! $subGroup) {
                 return $this->notFoundResponse(__('sub_group.group_not_found'));
             }
 
             return $this->createdResponse(new SubGroupResource($subGroup));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationErrorResponse($e->getMessage(), $e->errors());
         } catch (\Exception $e) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->errorResponse(__('messages.error'), [], 500);
         }
     }
 
@@ -84,15 +83,15 @@ class SubGroupController extends BaseController
             $validated = $request->validated();
             $subGroup = $this->subGroupService->updateSubGroup($id, $validated);
 
-            if (is_object($subGroup) && method_exists($subGroup, 'getStatusCode') && $subGroup->getStatusCode() == 422) {
-                return $this->validationErrorResponse($subGroup->getData()->message);
-            } elseif (! $subGroup) {
+            if (! $subGroup) {
                 return $this->notFoundResponse(__('sub_group.group_not_found'));
             }
 
             return $this->updatedResponse(new SubGroupResource($subGroup));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->validationErrorResponse($e->getMessage(), $e->errors());
         } catch (\Exception $e) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->errorResponse(__('messages.error'), [], 500);
         }
     }
 
@@ -109,7 +108,7 @@ class SubGroupController extends BaseController
 
             return $this->noContentResponse();
         } catch (\Exception $e) {
-            return Response::internalServerError(__('messages.error'));
+            return $this->errorResponse(__('messages.error'), [], 500);
         }
     }
 }
